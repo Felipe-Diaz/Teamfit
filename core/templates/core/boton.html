@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predictor de Carga de Horas</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .container {
+      margin-top: 50px;
+    }
+    .predictor-title {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .availability-box {
+      border: 1px solid #000;
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="text-center">
+      <img src="{% static 'core/img/logo.png' %}" alt="Logo" class="img-fluid" style="max-width: 200px;">
+    </div>
+    <h2 class="predictor-title">Predictor de Carga de Horas</h2>
+    <h1 class="predictor-title">{{ datosDB }}</h1>
+    <h1 class="predictor-title">{{ mesg }}</h1>
+    <p class="text-center">Prediga la carga de horas de su equipo profesional en base a la estimación de ventas</p>
+    <div class="text-center mb-4">    </button>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Subir archivo</button>
+        </form>
+        <br><br>
+      <p>O ingréselos a continuación</p>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <h4>Estimación Ventas</h4>
+
+        <form>
+            {% csrf_token %}
+            {% for VentasForm in VentasForms %}
+            <div class="container">
+                <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                    {{ VentasForm.idTipoProyecto}}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                    {{ VentasForm.fecha}}
+                    </div>
+                </div>
+                </div>
+            </div>
+            {% endfor %}
+        </form>
+      </div>
+      <div class="col-md-6">
+        <h4>Disponibilidad de HH</h4>
+        <form method="post">
+            {% csrf_token %}
+            <div class="availability-box">
+                <div class="form-group">
+                    <label for="semana31" class="col-md-6">Semana 31</label>
+                    <input type="number" class="form-control col-md-6" id="semana31" name="semana31">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <button class="btn btn-primary">Predecir</button>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

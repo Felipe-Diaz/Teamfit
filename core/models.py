@@ -53,7 +53,7 @@ class Graficos(models.Model):
         return self.id + " - " + self.idTipoProyecto
     
 class Disponibilidad(models.Model):
-    semana = models.IntegerField(null=False, blank=False, verbose_name="Semana")
+    semana = models.IntegerField(primary_key=True, verbose_name="Semana")
     hh = models.IntegerField(verbose_name="Cantidad de horas estimadas")
 
     def __str__(self):
