@@ -20,10 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, reverse_lazy
 from django.views.generic.base import RedirectView
+from django_plotly_dash.views import add_to_session
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
+    path("django_plotly_dash/", include("django_plotly_dash.urls")),
     #path('api/', include('apirest.urls')),
 ]
 

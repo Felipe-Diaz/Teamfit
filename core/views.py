@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
+from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos
 from .forms import VentasForm, DispForm, UploadFileForm
 from datetime import datetime, timedelta, time
 import random
@@ -9,6 +9,10 @@ from openpyxl import load_workbook
 import csv
 from django.contrib import messages
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from dash import Dash, dcc, html
+from django_plotly_dash import DjangoDash
 
 # Create your views here.
 
@@ -85,6 +89,41 @@ def index(request):
                 
     return render(request, "core/index.html", data)
 
+
+def graficar_Datos(request):
+    #content = otraFuncion()
+    #data = {'content':content}
+    
+    data = Graficos.objects.all()
+    data_list = list(data.values())
+    additional_data = pd.DataFrame(data_list)
+    
+    print(additional_data)
+    
+    bar_chart = dcc.Graph(
+        id='bar-chart',
+        figure=go.Figure(data=[
+            go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
+            go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
+        ]).update_layout(barmode='group', title='Horas Vendidas vs Disponible')
+    )
+    
+    line_chart = dcc.Graph(
+        id='line-chart',
+        figure=px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
+    )
+    
+    app = DjangoDash('dash_integration', serve_locally=True)
+    app.layout = html.Div([
+        html.H1("Gráficos Dash en Django"),
+        bar_chart,
+        line_chart
+    ])
+    data = {'app':app, 'bar':bar_chart, 'line':line_chart}
+
+    return render(request, 'core/dashboard.html', data)
+    
+
 def development_Buttons(request):
     forms = [VentasForm() for _ in range(5)]
     data = {"VentasForms":forms, "DispForm":DispForm}
@@ -146,144 +185,139 @@ def development_Buttons(request):
 def llenar_DB(request):
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
-        numSemana = '33', 
-        hh = 1.8
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '31', 
-        hh = '1'
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '35', 
-        hh = 2.4
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '34', 
+        numSemana = '1', 
         hh = 1.8
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
-        numSemana = '34', 
-        hh = 1.9
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '31', 
-        hh = 3.5
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '35', 
-        hh = 2.1
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '34', 
-        hh = 1.8
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '32', 
-        hh = 3.1
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '34', 
-        hh = '5'
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '34', 
-        hh = '1'
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '31', 
-        hh = 3.4
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '33', 
+        numSemana = '2', 
         hh = 2.8
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
-        numSemana = '33', 
-        hh = '2'
+        numSemana = '3', 
+        hh = 2.4
+        )
+    Perfil_hh_Detalle_Semanal.objects.update_or_create(
+        idTipoProyecto = '1', 
+        numSemana = '4', 
+        hh = 1.8
+        )
+    Perfil_hh_Detalle_Semanal.objects.update_or_create(
+        idTipoProyecto = '1', 
+        numSemana = '5', 
+        hh = 1.9
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '2', 
-        numSemana = '33', 
-        hh = 1.4
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '35', 
-        hh = 4.8
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '33', 
-        hh = 4.4
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '34', 
-        hh = 3.4
+        numSemana = '1', 
+        hh = 3.5
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '2', 
-        numSemana = '31', 
-        hh = 0.4
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '33', 
-        hh = 0.8
+        numSemana = '2', 
+        hh = 2.1
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '2', 
-        numSemana = '35', 
-        hh = '10'
-        )    
+        numSemana = '3', 
+        hh = 1.8
+        )
+    Perfil_hh_Detalle_Semanal.objects.update_or_create(
+        idTipoProyecto = '2', 
+        numSemana = '4', 
+        hh = 3.1
+        )
+    Perfil_hh_Detalle_Semanal.objects.update_or_create(
+        idTipoProyecto = '2', 
+        numSemana = '5', 
+        hh = 5
+        ) #--> Tipo 2 - Semana 5
     return redirect(index)
 
-def join_DB(request):
+#Casi Funcional
+def newCreateJoinDB(request):
     # Obtener todas las ventas
     ventas = Ventas.objects.all()
 
     for venta in ventas:
-        print("se inicio el for en ventas")
         # Buscar el correspondiente Perfil_hh_Detalle_Semanal por idTipoProyecto
-        perfil_hh = Perfil_hh_Detalle_Semanal.objects.filter(idTipoProyecto=venta.idTipoProyecto)
-        print(len(perfil_hh))
-
-        if perfil_hh:
-            for perfil in perfil_hh:
-                
-                ##Obtener la semana a través de código. PERO, de todas los valores
-                #Obtener las fechas de 9 semanas al futuro
-                #Semana 1-> 12/07 + 9 semanas
-                #Semana 2->16/08
-                #...
-                
-                
-                # Calcular el año y la semana a partir de la fecha de Ventas
-                anio = venta.fecha.year
-                semana = venta.fecha.isocalendar()[1]  # Obtener la semana del año
-
-                # Crear una nueva instancia de Hh_Estimado_Detalle_Semanal
-                # nueva_instancia = Hh_Estimado_Detalle_Semanal(
-                #     idVentas=venta,
-                #     idPerfilHhDetalleSemanal=perfil_hh,
-                #     fecha=venta.fecha,
-                #     hh=perfil_hh[0].hh,
-                #     anio=anio,
-                #     semana=semana
-                # )
-                #nueva_instancia.save()
-                #print(nueva_instancia)
+        perfiles_hh = Perfil_hh_Detalle_Semanal.objects.filter(idTipoProyecto=venta.idTipoProyecto)
+        fechaInicial = venta.fecha
+        semanaInicial = fechaInicial.isocalendar()[1]
+        print(str(venta.id) + ": \n")
+        if perfiles_hh:
+            for i, perfil in enumerate(perfiles_hh):
+                fecha = venta.fecha + timedelta(days=(i*7))
+                semanaPredecir = fecha.isocalendar()[1]
+                semanaProyecto = (semanaPredecir - semanaInicial) + 1
+                perfil_HH = Perfil_hh_Detalle_Semanal.objects.filter(idTipoProyecto=venta.idTipoProyecto, numSemana=semanaProyecto)
+                horasHombre = perfil_HH[0].hh
+                anio = fecha.year
+                print("Fecha: " + str(fecha) + " - ID perfilHH: " + str(perfil_HH[0].id) + " - Ventas: " + str(venta.id) + 
+                      " - Año: " + str(anio) + " - Semana del Año: " +  str(semanaPredecir) + " - Horas: " + str(horasHombre) +
+                      "  - Semana Proyecto: " + str(semanaProyecto))
+                hhDetalleSemana = Hh_Estimado_Detalle_Semanal(fecha=fecha, anio=anio, semana=semanaPredecir, idVentas=venta, 
+                                                             idPerfilHhDetalleSemanal=perfil_HH[0], hh=horasHombre)
+                hhDetalleSemana.save()
     return redirect(index)
+
+
+
+def create_additional_table(request):
+    data = Hh_Estimado_Detalle_Semanal.objects.all()
+    data_list = list(data.values())
+    df = pd.DataFrame(data_list)
+    
+    disp = Disponibilidad.objects.all()
+    dispList = list(disp.values())
+    dfDisp = pd.DataFrame(dispList)
+    dfDisp.rename(columns={'hh': 'hh_disp'}, inplace=True)
+    
+    weekly_data = df.groupby('semana')['hh'].sum().reset_index()
+    weekly_data.rename(columns={'hh': 'hh_req'}, inplace=True)
+    weekly_data = pd.merge(dfDisp, weekly_data, on='semana', how='outer')
+    weekly_data['utilizacion'] = round((weekly_data['hh_req'] / weekly_data['hh_disp']) * 100, 1)
+    weekly_data = weekly_data.dropna()
+    
+    for idx, row in weekly_data.iterrows():
+        grafico = Graficos(
+            semana=row['semana'],
+            hhDisponible=row['hh_disp'],
+            hhRequerido=row['hh_req'],
+            utilizacion=row['utilizacion']
+        )
+        grafico.save()
+    
+    return redirect (index)
+
+
+def otraFuncion():
+    data = Graficos.objects.all()
+    data_list = list(data.values())
+    additional_data = pd.DataFrame(data_list)
+    
+    print(additional_data)
+    
+    bar_chart = dcc.Graph(
+        id='bar-chart',
+        figure=go.Figure(data=[
+            go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
+            go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
+        ]).update_layout(barmode='group', title='Horas Vendidas vs Disponible')
+    )
+    
+    line_chart = dcc.Graph(
+        id='line-chart',
+        figure=px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
+    )
+    
+    dash_app = DjangoDash('dash_integration')
+     
+    dash_app.layout = html.Div([
+        html.H1("Gráficos Dash en Django"),
+        bar_chart,
+        line_chart
+    ])
+    
+    return dash_app.serve_locally()

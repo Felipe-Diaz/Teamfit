@@ -19,7 +19,7 @@ class Ventas(models.Model):
     fecha = models.DateTimeField(null=False, blank=False, verbose_name="Fecha")
 
     def __str__(self):
-        return self.id + " - " + self.idTipoProyecto + " - " + str(self.fecha)
+        return str(self.id) + " - " + str(self.idTipoProyecto) + " - " + str(self.fecha)
     
 #Tabla de Perfil horas hombre detalle semanal.
 class Perfil_hh_Detalle_Semanal(models.Model):
@@ -29,7 +29,7 @@ class Perfil_hh_Detalle_Semanal(models.Model):
     hh = models.IntegerField(null=False, blank=False, verbose_name="Cantidad de horas")
 
     def __str__(self):
-        return str(self.id) + " - " + str(self.idTipoProyecto)
+        return str(self.id) + " - " + str(self.idTipoProyecto) + " - " + str(self.numSemana)
 
 
 class Disponibilidad(models.Model):
@@ -55,7 +55,7 @@ class Graficos(models.Model):
     semana = models.IntegerField(null=False, blank=False, verbose_name="Semana")
     hhRequerido = models.IntegerField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
     hhDisponible = models.IntegerField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
-    utilización =  models.FloatField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
+    utilizacion =  models.FloatField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
 
     def __str__(self):
         return self.id + " - " + self.idTipoProyecto
