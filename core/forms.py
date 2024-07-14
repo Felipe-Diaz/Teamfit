@@ -14,8 +14,8 @@ from datetime import date, timedelta
 class VentasForm(forms.Form):
     TIPOS_PROYECTO = [
         ("na", 'Seleccione Tipo de Proyecto'),
-        ('tipo_1', 'Tipo 1'),
-        ('tipo_2', 'Tipo 2'),
+        ('1', 'Tipo 1'),
+        ('2', 'Tipo 2'),
         ('na', 'No Aplica'),
     ]
 
@@ -59,6 +59,8 @@ class DispForm(forms.Form):
         fields = ['semana', 'HorasHombre']
        
 #Formulario para subir archivos 
-#######
+
 class UploadFileForm(forms.Form):
-    file = forms.FileField()
+    file = forms.FileField( label='Selecciona un archivo CSV o XLSX',
+                            help_text=' <br> Solo se permiten archivos CSV y XLSX',
+                            widget=forms.ClearableFileInput(attrs={'accept': '.csv, .xlsx', 'class':'btn btn-primary'}))

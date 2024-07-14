@@ -31,59 +31,99 @@
     <h1 class="predictor-title">{{ datosDB }}</h1>
     <h1 class="predictor-title">{{ mesg }}</h1>
     <p class="text-center">Prediga la carga de horas de su equipo profesional en base a la estimación de ventas</p>
-    <div class="text-center mb-4">    </button>
+    <div class="text-center mb-4"></button>
         <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button class="btn btn-primary" type="submit">Subir archivo</button>
+          {% csrf_token %}
+          {{ form }}
+          <button type="submit">Subir archivo</button>
         </form>
+        {% if error_message %}
+        <script>
+            alert("{{ error_message }}");
+        </script>
+        {% endif %}
         <br><br>
       <p>O ingréselos a continuación</p>
     </div>
-    <div class="row">
-      <div class="col-md-6">
-        <h4>Estimación Ventas</h4>
+    <form method="POST">
+      <div class="row">
+          <div class="col-md-6">
+              <h4>Estimación Ventas</h4>
+              <div class="justify-content-center">
+                  {% csrf_token %}
+                  {% for VentasForm in VentasForms %}
+                  <div class="container">
+                      <div class="row">
+                      <div class="col-md-6">
+                          <div class="form-group">
+                          {{ VentasForm.idTipoProyecto }}
+                          </div>
+                      </div>
+                      <div class="col-md-6">
+                          <div class="form-group">
+                          {{ VentasForm.fecha }}
+                          </div>
+                      </div>
+                      </div>
+                  </div>
+                  {% endfor %}
+                  <!-- <button type="submit" class="btn btn-primary">Enviar</button> -->
+              </div>
+          </div>
+          <div class="col-md-6">
+              <h4>Disponibilidad de HH</h4>
+              <div class="justify-content-center">
+                  {% csrf_token %}
+                  <div class="">
+                      <div class="form-group row align-items-center">
+                          <h6 class="col-md-5 text-center mx-auto">Semana</h6>
+                          <h6 class="col-md-5 text-center mx-auto">Horas Hombre</h6>
+                      </div>
+                      {% for DispForm in DispForms %}
+                      <div class="form-group row align-items-center" id=HorasHombre{{forloop.counter}}>
+                          {{ DispForm.semana }}
+                          {{ DispForm.HorasHombre }}                        
+                      </div>
+                      {% endfor %}
+                  </div>
+                  <br>
+              </div>
+          </div>
+      </div>
+      <div class="text-center mt-4">
+          <button class="btn btn-primary">Predecir</button>
+      </div>
+  </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-        <form>
-            {% csrf_token %}
-            {% for VentasForm in VentasForms %}
-            <div class="container">
-                <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                    {{ VentasForm.idTipoProyecto}}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                    {{ VentasForm.fecha}}
-                    </div>
-                </div>
-                </div>
-            </div>
-            {% endfor %}
-        </form>
-      </div>
-      <div class="col-md-6">
-        <h4>Disponibilidad de HH</h4>
-        <form method="post">
-            {% csrf_token %}
-            <div class="availability-box">
-                <div class="form-group">
-                    <label for="semana31" class="col-md-6">Semana 31</label>
-                    <input type="number" class="form-control col-md-6" id="semana31" name="semana31">
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Enviar</button>
-        </form>
-      </div>
-    </div>
-    <div class="text-center mt-4">
-      <button class="btn btn-primary">Predecir</button>
-    </div>
-  </div>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+  //Busca distintos Divs, para luego agregar una ID específica a cada input
+  document.addEventListener('DOMContentLoaded', function() {
+      //Crea X cantidad de nombres para recorrer cada div de tipo "Horas Hombre"
+      var cant = 5;
+      var listaDivs = [];
+      for (var i = 1; i <= cant; i++) {
+          var semana = "HorasHombre" + i;
+          listaDivs.push(semana);
+      }
+      //Buscar y cambia la ID específica del input dentro del HTML
+      for (var i = 0; i < listaDivs.length; i++) {
+          var nomDiv = listaDivs[i];
+          var ValorDiv1 = document.getElementById(nomDiv);
+          var inputs = ValorDiv1.getElementsByTagName('input');
+          for (var j = 0; j < inputs.length; j++) {
+              if (inputs[j].id === 'id_semana') {
+                  inputs[j].id = 'id_semana' + (i + 1);
+              }
+              if (inputs[j].id === 'id_HorasHombre') {
+                  inputs[j].id = 'id_HorasHombre' + (i + 1);
+              }
+          }
+      }
+  });
+</script>
 </body>
 </html>

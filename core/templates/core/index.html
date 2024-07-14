@@ -29,11 +29,21 @@
     </div>
     <h2 class="predictor-title">Predictor de Carga de Horas</h2>
     <p class="text-center">Prediga la carga de horas de su equipo profesional en base a la estimación de ventas</p>
-    <div class="text-center mb-4">
-      <button class="btn btn-primary">Subir Estimación de Ventas</button>
+    <br>
+    <div class="text-center mb-4"></button>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit" class="btn btn-primary">Subir archivo</button>
+      </form>
+      {% if mesg %}
+        <p>{{ mesg }}</p>
+      {% endif %}
       <br><br>
       <p>O ingréselos a continuación</p>
     </div>
+
+
     <form method="POST">
         <div class="row">
             <div class="col-md-6">
@@ -68,7 +78,7 @@
                             <h6 class="col-md-5 text-center mx-auto">Semana</h6>
                             <h6 class="col-md-5 text-center mx-auto">Horas Hombre</h6>
                         </div>
-                        {% for i in "01234" %}
+                        {% for DispForm in DispForms %}
                         <div class="form-group row align-items-center" id=HorasHombre{{forloop.counter}}>
                             {{ DispForm.semana }}
                             {{ DispForm.HorasHombre }}                        
