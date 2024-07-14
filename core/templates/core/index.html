@@ -34,6 +34,7 @@
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form }}
+        <br>
         <button type="submit" class="btn btn-primary">Subir archivo</button>
       </form>
       {% if mesg %}
@@ -41,6 +42,10 @@
       {% endif %}
       <br><br>
       <p>O ingréselos a continuación</p>
+      <div class="text-center hb">
+        <a href="{% url 'graficar_Datos' %}"> Ver gráficos Desarrollados</a>
+      </div>
+      
     </div>
 
 
@@ -89,7 +94,7 @@
                 </div>
             </div>
         </div>
-        <div class="text-center mt-4">
+        <div class="text-center mt-4 mb-4">
             <button class="btn btn-primary">Predecir</button>
         </div>
     </form>

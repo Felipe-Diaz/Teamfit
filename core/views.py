@@ -20,6 +20,8 @@ def index(request):
     #Obtener y cargar los datos en el formlario
     formsVentas = [VentasForm(prefix=str(i)) for i in range(5)]
     formsDisp = [DispForm(prefix=str(i)) for i in range(5)]
+    nuevasVentas = False
+    nuevasHoras = False
     data = {"VentasForms":formsVentas, "DispForms":formsDisp, 'form':UploadFileForm()}
     
     if request.method == 'POST' and 'file' in request.FILES:
@@ -68,6 +70,7 @@ def index(request):
                             obj = Ventas(idTipoProyecto=idTipoProyecto, fecha=fecha)
                             obj.save()
                             data['mesg'] = 'Se han almacenado ' + str(i) + ' datos de proyectos nuevos' 
+                            nuevasVentas = True
                     else:
                         data['mesg'] = 'Se han encontrado los siguientes errores: ' + form.errors
                 except Exception as e:
@@ -82,45 +85,56 @@ def index(request):
                     obj = Disponibilidad(semana=semana, hh=hh)
                     obj.save()
                     data['mesg'] = 'Se han almacenado ' + str(i) + ' datos de horas disponibles' 
+                    nuevasHoras = True
                 else:
                     data['mesg'] = 'Se han encontrado los siguientes errores: ' + form.errors
             else:
                 continue
-                
+        try:
+            if(nuevasVentas):
+                createDetalle = newCreateJoinDB()
+            if(nuevasHoras):
+                createGraficos = create_additional_table()
+            return redirect(graficar_Datos)
+        except Exception as e:
+            data['mesg'] = 'Han ocurrido errores, por favor, verifique los datos ingresados'
+            print(e)
+        
     return render(request, "core/index.html", data)
 
 
 def graficar_Datos(request):
-    #content = otraFuncion()
-    #data = {'content':content}
-    
-    data = Graficos.objects.all()
-    data_list = list(data.values())
+    graficos = Graficos.objects.all()
+    data_list = list(graficos.values())
     additional_data = pd.DataFrame(data_list)
     
-    print(additional_data)
-    
-    bar_chart = dcc.Graph(
-        id='bar-chart',
-        figure=go.Figure(data=[
-            go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
-            go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
-        ]).update_layout(barmode='group', title='Horas Vendidas vs Disponible')
-    )
-    
-    line_chart = dcc.Graph(
-        id='line-chart',
-        figure=px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
-    )
-    
-    app = DjangoDash('dash_integration', serve_locally=True)
-    app.layout = html.Div([
-        html.H1("Gráficos Dash en Django"),
-        bar_chart,
-        line_chart
+    bar_chart = go.Figure(data=[
+        go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
+        go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
     ])
-    data = {'app':app, 'bar':bar_chart, 'line':line_chart}
-
+    bar_chart = bar_chart.to_html(full_html=False)
+    
+    line_chart = px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
+    line_chart = line_chart.to_html(full_html=False)
+    
+    data = {'bar':bar_chart, 'line':line_chart}
+    
+    sobreU = False
+    subU = False
+    for val in graficos:
+        if(val.utilizacion > 100):
+            sobreU = True
+        elif(val.utilizacion < 80):
+            subU = True
+    if(sobreU and subU):
+        data['mesg'] = 'Se estima subtilización bajo un 80% y sobreutilización mayor a 100%, por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras.'
+    elif (sobreU):
+        data['mesg'] = 'Se estima sobreutilización sobre un 100%,  por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras'
+    elif (subU):
+        data['mesg'] = 'Se estima subtilización bajo un 80%. por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras'
+    else:
+        data['mesg'] = 'No se visualizaron momentos en que haya sobreutilización ni subtulización.'
+    
     return render(request, 'core/dashboard.html', data)
     
 
@@ -180,8 +194,6 @@ def development_Buttons(request):
         data["form"] = form
     return render(request, 'core/boton.html', data)
 
-    #return render(request, "core/boton.html", data)
-
 def llenar_DB(request):
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
@@ -236,7 +248,7 @@ def llenar_DB(request):
     return redirect(index)
 
 #Casi Funcional
-def newCreateJoinDB(request):
+def newCreateJoinDB():
     # Obtener todas las ventas
     ventas = Ventas.objects.all()
 
@@ -260,11 +272,9 @@ def newCreateJoinDB(request):
                 hhDetalleSemana = Hh_Estimado_Detalle_Semanal(fecha=fecha, anio=anio, semana=semanaPredecir, idVentas=venta, 
                                                              idPerfilHhDetalleSemanal=perfil_HH[0], hh=horasHombre)
                 hhDetalleSemana.save()
-    return redirect(index)
+    return True
 
-
-
-def create_additional_table(request):
+def create_additional_table():
     data = Hh_Estimado_Detalle_Semanal.objects.all()
     data_list = list(data.values())
     df = pd.DataFrame(data_list)
@@ -289,35 +299,4 @@ def create_additional_table(request):
         )
         grafico.save()
     
-    return redirect (index)
-
-
-def otraFuncion():
-    data = Graficos.objects.all()
-    data_list = list(data.values())
-    additional_data = pd.DataFrame(data_list)
-    
-    print(additional_data)
-    
-    bar_chart = dcc.Graph(
-        id='bar-chart',
-        figure=go.Figure(data=[
-            go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
-            go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
-        ]).update_layout(barmode='group', title='Horas Vendidas vs Disponible')
-    )
-    
-    line_chart = dcc.Graph(
-        id='line-chart',
-        figure=px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
-    )
-    
-    dash_app = DjangoDash('dash_integration')
-     
-    dash_app.layout = html.Div([
-        html.H1("Gráficos Dash en Django"),
-        bar_chart,
-        line_chart
-    ])
-    
-    return dash_app.serve_locally()
+    return True

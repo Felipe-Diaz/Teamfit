@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,9 +9,18 @@
     {{ app.callback_dependencies }}
 </head>
 <body>
+    <div class="text-left mt-3"></divclass>
+        <a href="{% url 'index' %}"> Volver</a>
+    </div>
     <div>
-        {{ app.layout }}
-        <!-- Renderizar el layout de Dash -->
+        <h1>
+            {{mesg}}
+        </h1>
+        
+    </div>
+    <div>
+        {{ bar|safe }}
+        {{ line|safe }}
     </div>
 </body>
 </html>

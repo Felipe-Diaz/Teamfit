@@ -58,4 +58,4 @@ class Graficos(models.Model):
     utilizacion =  models.FloatField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
 
     def __str__(self):
-        return self.id + " - " + self.idTipoProyecto
+        return str(self.id) + " - " + str(self.idTipoProyecto)
