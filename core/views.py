@@ -179,13 +179,13 @@ def development_Buttons(request):
             data['VentasForms'] = forms
             return render(request, 'core/boton.html', data)
             
-            #forms = [VentasForm(initial=datos) for datos in datos_formularios]
-            #data['VentasForms'] = forms
-            #return render(request, 'core/boton.html', {'VentasForms': forms})
+            # forms = [VentasForm(initial=datos) for datos in datos_formularios]
+            # data['VentasForms'] = forms
+            # return render(request, 'core/boton.html', {'VentasForms': forms})
             
             # Aquí puedes procesar el archivo según tus necesidades
             # Por ejemplo, guardarlo en la base de datos o procesarlo de alguna manera
-            # return HttpResponse('Archivo subido correctamente.')
+            # return HttpResponse('Archivo subido correctamente.') 
         else:
             data["mesg"] = "El formulario en inválido"
             return render(request, 'core/boton.html', data)
@@ -266,15 +266,21 @@ def newCreateJoinDB():
                 perfil_HH = Perfil_hh_Detalle_Semanal.objects.filter(idTipoProyecto=venta.idTipoProyecto, numSemana=semanaProyecto)
                 horasHombre = perfil_HH[0].hh
                 anio = fecha.year
-                print("Fecha: " + str(fecha) + " - ID perfilHH: " + str(perfil_HH[0].id) + " - Ventas: " + str(venta.id) + 
-                      " - Año: " + str(anio) + " - Semana del Año: " +  str(semanaPredecir) + " - Horas: " + str(horasHombre) +
-                      "  - Semana Proyecto: " + str(semanaProyecto))
+                # print("Fecha: " + str(fecha) + " - ID perfilHH: " + str(perfil_HH[0].id) + " - Ventas: " + str(venta.id) + 
+                #       " - Año: " + str(anio) + " - Semana del Año: " +  str(semanaPredecir) + " - Horas: " + str(horasHombre) +
+                #       "  - Semana Proyecto: " + str(semanaProyecto))
                 hhDetalleSemana = Hh_Estimado_Detalle_Semanal(fecha=fecha, anio=anio, semana=semanaPredecir, idVentas=venta, 
                                                              idPerfilHhDetalleSemanal=perfil_HH[0], hh=horasHombre)
-                hhDetalleSemana.save()
+                checkData = Hh_Estimado_Detalle_Semanal.objects.filter(semana=semanaPredecir, idVentas=venta, anio=anio)
+                checkData = checkData[0]
+                if(checkData is None ):
+                    hhDetalleSemana.save()
+                else:
+                    continue
     return True
 
 def create_additional_table():
+    Graficos.objects.all().delete()
     data = Hh_Estimado_Detalle_Semanal.objects.all()
     data_list = list(data.values())
     df = pd.DataFrame(data_list)
