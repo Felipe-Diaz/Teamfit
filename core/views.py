@@ -93,6 +93,7 @@ def index(request):
         try:
             if(nuevasVentas):
                 createDetalle = newCreateJoinDB()
+                createGraficos = create_additional_table()
             if(nuevasHoras):
                 createGraficos = create_additional_table()
             return redirect(graficar_Datos)
@@ -266,16 +267,22 @@ def newCreateJoinDB():
                 perfil_HH = Perfil_hh_Detalle_Semanal.objects.filter(idTipoProyecto=venta.idTipoProyecto, numSemana=semanaProyecto)
                 horasHombre = perfil_HH[0].hh
                 anio = fecha.year
+                
                 # print("Fecha: " + str(fecha) + " - ID perfilHH: " + str(perfil_HH[0].id) + " - Ventas: " + str(venta.id) + 
                 #       " - Año: " + str(anio) + " - Semana del Año: " +  str(semanaPredecir) + " - Horas: " + str(horasHombre) +
                 #       "  - Semana Proyecto: " + str(semanaProyecto))
+                
                 hhDetalleSemana = Hh_Estimado_Detalle_Semanal(fecha=fecha, anio=anio, semana=semanaPredecir, idVentas=venta, 
                                                              idPerfilHhDetalleSemanal=perfil_HH[0], hh=horasHombre)
                 checkData = Hh_Estimado_Detalle_Semanal.objects.filter(semana=semanaPredecir, idVentas=venta, anio=anio)
-                checkData = checkData[0]
-                if(checkData is None ):
+                checkData = list(checkData.values())
+                checkData = len(checkData)
+                    
+                if(checkData == 0):
+                    print("Datos Guardados")
                     hhDetalleSemana.save()
                 else:
+                    print("Datos NO guardados")
                     continue
     return True
 
