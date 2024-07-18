@@ -26,7 +26,7 @@ class Perfil_hh_Detalle_Semanal(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="ID Detalle Semanal")
     idTipoProyecto = models.CharField(max_length=10, blank=False, null=False, verbose_name="Tipo de Proyecto")
     numSemana = models.IntegerField(null=False, blank=False, verbose_name="Número de Semana")
-    hh = models.IntegerField(null=False, blank=False, verbose_name="Cantidad de horas")
+    hh = models.DecimalField(max_digits=10, decimal_places=1, null=False, blank=False, verbose_name="Cantidad de horas")
 
     def __str__(self):
         return str(self.id) + " - " + str(self.idTipoProyecto) + " - " + str(self.numSemana)
@@ -34,7 +34,7 @@ class Perfil_hh_Detalle_Semanal(models.Model):
 
 class Disponibilidad(models.Model):
     semana = models.IntegerField(primary_key=True, verbose_name="Semana")
-    hh = models.IntegerField(verbose_name="Cantidad de horas estimadas")
+    hh = models.DecimalField(max_digits=10, decimal_places=1, verbose_name="Cantidad de horas estimadas")
 
     def __str__(self):
         return self.semana + " - " + self.hh 
@@ -46,15 +46,16 @@ class Hh_Estimado_Detalle_Semanal(models.Model):
     semana = models.IntegerField(null=False, blank=False, verbose_name="Semana")
     idVentas = models.ForeignKey(Ventas, on_delete=models.DO_NOTHING)
     idPerfilHhDetalleSemanal = models.ForeignKey(Perfil_hh_Detalle_Semanal, on_delete=models.DO_NOTHING)
-    hh = models.IntegerField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
+    ##CAMBIAR A FLOAT
+    hh = models.DecimalField(max_digits=10, decimal_places=1, null=False, blank=False, verbose_name="Cantidad de horas estimadas")
 
     def __str__(self):
         return str(self.id) + " - " + str(self.anio) + "/" + str(self.semana)
 
 class Graficos(models.Model):
     semana = models.IntegerField(null=False, blank=False, verbose_name="Semana")
-    hhRequerido = models.IntegerField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
-    hhDisponible = models.IntegerField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
+    hhRequerido = models.DecimalField(max_digits=10, decimal_places=1, null=False, blank=False, verbose_name="Cantidad de horas estimadas")
+    hhDisponible = models.DecimalField(max_digits=10, decimal_places=1, null=False, blank=False, verbose_name="Cantidad de horas estimadas")
     utilizacion =  models.FloatField(null=False, blank=False, verbose_name="Cantidad de horas estimadas")
 
     def __str__(self):

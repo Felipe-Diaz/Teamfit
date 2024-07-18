@@ -106,25 +106,19 @@
   <script>
     //Busca distintos Divs, para luego agregar una ID específica a cada input
     document.addEventListener('DOMContentLoaded', function() {
-        //Crea X cantidad de nombres para recorrer cada div de tipo "Horas Hombre"
-        var cant = 5;
-        var listaDivs = [];
-        for (var i = 1; i <= cant; i++) {
-            var semana = "HorasHombre" + i;
-            listaDivs.push(semana);
-        }
         //Buscar y cambia la ID específica del input dentro del HTML
-        for (var i = 0; i < listaDivs.length; i++) {
-            var nomDiv = listaDivs[i];
-            var ValorDiv1 = document.getElementById(nomDiv);
-            var inputs = ValorDiv1.getElementsByTagName('input');
-            for (var j = 0; j < inputs.length; j++) {
-                if (inputs[j].id === 'id_semana') {
-                    inputs[j].id = 'id_semana' + (i + 1);
-                }
-                if (inputs[j].id === 'id_HorasHombre') {
-                    inputs[j].id = 'id_HorasHombre' + (i + 1);
-                }
+        for (var i = 0; i < 5; i++) {
+            var idTextBoxHh = 'id_' + i + '-HorasHombre';
+            var idTextBoxSem = 'id_' + i + '-semana';
+
+            var TextBoxSem = document.getElementById(idTextBoxSem);
+            TextBoxSem.value = '3' + (i+1);
+
+            var TextBoxHh = document.getElementById(idTextBoxHh);
+            if(i <= 1){
+              TextBoxHh.value = 5
+            }else{
+              TextBoxHh.value = 6
             }
         }
     });

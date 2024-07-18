@@ -50,9 +50,11 @@ class DispForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control col-md-5 text-center mx-auto', 'placeholder': '31'}),
     )
     
-    HorasHombre = forms.IntegerField(
+    HorasHombre = forms.DecimalField(
         required=False,
         widget=forms.NumberInput(attrs={'class': 'form-control col-md-5 text-center mx-auto', 'placeholder': '5'}),
+        decimal_places=1,
+        max_digits=10
     )
     
     class Meta:

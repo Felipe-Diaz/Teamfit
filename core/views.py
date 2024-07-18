@@ -204,48 +204,28 @@ def llenar_DB(request):
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
         numSemana = '2', 
-        hh = 2.8
+        hh = 2.1
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
         numSemana = '3', 
-        hh = 2.4
+        hh = 1.9
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
         numSemana = '4', 
-        hh = 1.8
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '5', 
-        hh = 1.9
+        hh = 1.5
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '2', 
         numSemana = '1', 
-        hh = 3.5
+        hh = 1.5
         )
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '2', 
         numSemana = '2', 
-        hh = 2.1
+        hh = 3
         )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '3', 
-        hh = 1.8
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '4', 
-        hh = 3.1
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '5', 
-        hh = 5
-        ) #--> Tipo 2 - Semana 5
     return redirect(index)
 
 #Casi Funcional
