@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos
-from .forms import VentasForm, DispForm, UploadFileForm
+from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios
+from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from datetime import datetime, timedelta, time
 import random
 import requests
@@ -13,6 +13,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from django_plotly_dash import DjangoDash
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -196,6 +198,28 @@ def development_Buttons(request):
     return render(request, 'core/boton.html', data)
 
 def llenar_DB(request):
+    User.objects.all().delete()
+    Hh_Estimado_Detalle_Semanal.objects.all().delete()
+    Perfil_hh_Detalle_Semanal.objects.all().delete()
+    
+    #Usuario de testing
+    usuario = User.objects.create_user(username="admin", password='Admin@123')
+    usuario.first_name = "Admin"
+    usuario.last_name = "Admin 1"
+    usuario.email = "admin@admin.com"
+    usuario.is_superuser = True
+    usuario.is_staff = True
+    usuario.save()
+    
+    #Crear un usuario inactivo y modificar el login para no dejarlo loguearse
+    usuario = User.objects.create_user(username="admin", password='Admin@123')
+    usuario.first_name = "Admin"
+    usuario.last_name = "Admin 1"
+    usuario.email = "admin@admin.com"
+    usuario.is_superuser = True
+    usuario.is_staff = True
+    usuario.save()
+    
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
         numSemana = '1', 
@@ -293,3 +317,65 @@ def create_additional_table():
         grafico.save()
     
     return True
+
+def iniciar_sesion(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect(pagina_principal)
+            else:
+                data = {'mesg':'Usuario o contraseña incorrectos', 'form':LoginForm}
+                #form.add_error(None, 'Usuario o contraseña incorrectos')
+    else:
+         data = {'form': LoginForm}
+    return render(request, 'core/login.html', data)
+
+#Crear un cerrar sesión
+def cerrar_sesion(request):
+    return render(request, 'core/login.html')
+
+def crear_usuarios(request):
+    data = {'form':CrearUsuarioAdmin}
+    return render(request, 'core/crearUsuarios.html', data)
+
+def pagina_principal(request):
+    data = {}
+    return render(request, 'core/index1.html', data)
+
+
+def almacenarHistorial(fecha, desc, tipoInfo, usuario):
+    histCambios = historialCambios()   
+    try:
+        formato = '%d/%m/%Y - %H:%M:%S'
+        fecha = datetime.strptime(fecha,formato)
+        histCambios.fecha = fecha
+    except Exception as e:
+        print('Fecha no válida')
+        print(e)
+        errorFatal = True
+        
+    if(len(desc) > 300):
+        desc = desc[:300]
+        print("Demasiados caracteres en la descripción")
+    histCambios.desc = desc
+        
+    tiposInformaciones = {"1":"Modificación en la DB", "2": "Informativo", "3":"Error", "4":"Otro"}
+    if(tipoInfo not in tiposInformaciones):
+        tipoInfo = "4"
+    histCambios.tipoInfo = tiposInformaciones[tipoInfo]
+    
+    if(usuario is None):
+        print("El usuario es inexistente")
+        errorFatal = True
+        #usuario = User.objects.get(Realizar un usuario anónimo para guardar los datos de ese usuario)
+    histCambios.usuario = usuario
+    if errorFatal:
+        return False
+    histCambios.save()
+    return True
+    

@@ -8,6 +8,12 @@ from django.contrib.auth.forms import UserCreationForm
 from pkg_resources import require
 from .models import Ventas, Disponibilidad
 from datetime import date, timedelta
+from django.core.exceptions import ValidationError
+
+#Validaciones en Django Python
+def validar_longitud_maxima(value):
+    if len(str(value)) > 12:
+        raise ValidationError('El número no puede tener más de 12 dígitos.')
 
 
 #Formulario de Ventas
@@ -66,3 +72,46 @@ class UploadFileForm(forms.Form):
     file = forms.FileField( label='Selecciona un archivo CSV o XLSX',
                             help_text=' <br> Solo se permiten archivos CSV y XLSX',
                             widget=forms.ClearableFileInput(attrs={'accept': '.csv, .xlsx', 'class':'btn btn-primary'}))
+    class Meta:
+        fields = ['file']
+
+
+#formulario para validar sesion
+class LoginForm(forms.Form):
+    username = forms.CharField(label='Usuario', max_length=100)
+    password = forms.CharField(label='Contraseña', widget=forms.PasswordInput)
+    
+        
+class CrearUsuarioAdmin(UserCreationForm):
+    NUMRUT = forms.IntegerField(
+                                label="Rut", 
+                                required=True, 
+                                validators=[validar_longitud_maxima],
+                                widget=forms.NumberInput(attrs={'class':'form-control'})
+                                )
+    DVRUN = forms.CharField(
+                            label="Dígito verificador",
+                            required=True,
+                            max_length=1,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    fechaNacimiento = forms.DateField(
+                                        label="Fecha de Nacimiento",
+                                        required=True,
+                                        widget=forms.DateInput(attrs={'class':'form-control'})
+                                      )
+    cargo = forms.CharField(
+                            label="Cargo",
+                            required=True,
+                            max_length=150,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    telefono = forms.IntegerField(
+                                    label="Número de contacto",
+                                    required=True,
+                                    validators=[validar_longitud_maxima],
+                                    widget=forms.NumberInput(attrs={'class':'form-control'})
+                                  )
+    class Meta:
+        model = User
+        fields = ['username', 'first_name','last_name', 'email', 'is_staff', 'NUMRUT', 'DVRUN','fechaNacimiento','cargo','telefono']

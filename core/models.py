@@ -60,3 +60,19 @@ class Graficos(models.Model):
 
     def __str__(self):
         return str(self.id) + " - " + str(self.idTipoProyecto)
+
+class PerfilUsuario(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    NUMRUT = models.IntegerField(blank=False, null=False, verbose_name="Numero RUT")
+    DVRUN = models.CharField(max_length=1, null=False, blank=False, verbose_name="Digito Verificador")
+    fechaNacimiento = models.DateField(null=False, blank=False, verbose_name="Fecha de Nacimiento")
+    cargo = models.CharField(max_length=150, null=False, blank=False, verbose_name="Cargo Empleado")
+    telefono = models.CharField(max_length=12, null=False, blank=False, verbose_name="Número de contacto")
+    
+    
+class historialCambios(models.Model):
+    idHist = models.AutoField(primary_key=True, verbose_name="ID Historial")
+    fecha = models.DateTimeField(blank=False, null=False, verbose_name="Fecha Accion")
+    desc = models.CharField(max_length=300, blank=False, null=False, verbose_name="Descripción")
+    tipoInfo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de información")
+    usuario = models.ForeignKey(User, on_delete=models.DO_NOTHING)

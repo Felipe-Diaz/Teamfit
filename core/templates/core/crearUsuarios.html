@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Usuarios - Roda</title>
+</head>
+<body>
+    <div class="text-left mt-3"></divclass>
+        <a href="{% url 'index' %}"> Volver</a>
+    </div>
+    <div>
+        <h1>
+            Pancito
+        </h1>
+        
+    </div>
+    <div>
+        {% csrf_token %} {{ form.as_table }}
+    </div>
+
+</body>
+</html>
