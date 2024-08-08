@@ -13,8 +13,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from django_plotly_dash import DjangoDash
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.utils import timezone
+import pytz
 
 # Create your views here.
 
@@ -34,19 +36,23 @@ def index(request):
                 data['mesg'] = 'Archivo no compatible. Por favor, selecciona un archivo CSV o XLSX.'
             else:
                 df = pd.read_excel(file) if file.name.endswith('.xlsx') else pd.read_csv(file)
-                required_columns = ['idTipoProyecto', 'fecha']
+                required_columns = ['id', 'Proyecto', 'Línea de Negocio', 'tipo', 'cliente', 'pm', 'create_date', 
+                                    'Cierre', 'Primer Timesheet', 'Último Timesheet', 'Egresos No HH CLP', 'Monto Oferta CLP',
+                                    'C/Agencia', 'Desfase Inicio (días)', 'Ocupación Al Iniciar (%)']
                 if not all(col in df.columns for col in required_columns):
                     data['mesg'] = 'El archivo no contiene las columnas requeridas (idTipoProyecto, fecha). Por favor, sube un archivo con estas columnas.'
                 else:
                     datos_formularios = df.to_dict(orient='records')
                     forms = []
                     for i, datos in enumerate(datos_formularios):
+                        #Modificar para implementar las nuevas columnas
                         fecha=str(datos['fecha'])
                         fecha = fecha[:10]
                         initial_data = {
                             'idTipoProyecto': datos['idTipoProyecto'],
                             'fecha': fecha
                         }
+                        #Modificar y crear un nuevo formulario
                         form = VentasForm(initial=initial_data, prefix=str(i))
                         forms.append(form)
                     data['VentasForms'] = forms
@@ -55,6 +61,7 @@ def index(request):
             return render(request, 'core/boton.html', data)
         
     #Guardar los datos en la DB
+    #Modifica para nuevo tipo de archivo
     if request.method == "POST" and not ('file' in request.FILES):
         formsVentas = [VentasForm(request.POST, prefix=str(i)) for i in range(150)]
         for i, form in enumerate(formsVentas):
@@ -78,6 +85,7 @@ def index(request):
                 except Exception as e:
                     print(e)
                 
+        ##No considerar
         formsDisp = [DispForm(request.POST, prefix=str(i)) for i in range(5)]
         for form in formsDisp:
             if form.has_changed():
@@ -92,6 +100,7 @@ def index(request):
                     data['mesg'] = 'Se han encontrado los siguientes errores: ' + form.errors
             else:
                 continue
+        #No considerar
         try:
             if(nuevasVentas):
                 createDetalle = newCreateJoinDB()
@@ -212,13 +221,14 @@ def llenar_DB(request):
     usuario.save()
     
     #Crear un usuario inactivo y modificar el login para no dejarlo loguearse
-    usuario = User.objects.create_user(username="admin", password='Admin@123')
-    usuario.first_name = "Admin"
-    usuario.last_name = "Admin 1"
-    usuario.email = "admin@admin.com"
-    usuario.is_superuser = True
-    usuario.is_staff = True
-    usuario.save()
+    usuarioAnon = User.objects.create_user(username="Anon", password='anon') #ZKfg!)nkLSp163SD
+    usuarioAnon.first_name = "Anonimo"
+    usuarioAnon.last_name = "anon"
+    usuarioAnon.email = "none"
+    usuarioAnon.is_superuser = False
+    usuarioAnon.is_staff = False
+    usuarioAnon.is_active = False
+    usuarioAnon.save()
     
     Perfil_hh_Detalle_Semanal.objects.update_or_create(
         idTipoProyecto = '1', 
@@ -327,6 +337,11 @@ def iniciar_sesion(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
+                nombre = user.first_name
+                apellido = user.last_name
+                desc = f"El usuario {nombre} {apellido} ha iniciado sesión"
+                almacenado = almacenarHistorial(desc, "2", user)
+                print(almacenado)
                 return redirect(pagina_principal)
             else:
                 data = {'mesg':'Usuario o contraseña incorrectos', 'form':LoginForm}
@@ -337,7 +352,13 @@ def iniciar_sesion(request):
 
 #Crear un cerrar sesión
 def cerrar_sesion(request):
-    return render(request, 'core/login.html')
+    nombre = request.user.first_name
+    apellido = request.user.last_name
+    user = request.user
+    desc = f"El usuario {nombre} {apellido} ha cerrado sesión"
+    almacenado = almacenarHistorial(desc, "2", user)
+    logout(request)
+    return redirect(iniciar_sesion) 
 
 def crear_usuarios(request):
     data = {'form':CrearUsuarioAdmin}
@@ -347,17 +368,15 @@ def pagina_principal(request):
     data = {}
     return render(request, 'core/index1.html', data)
 
-
-def almacenarHistorial(fecha, desc, tipoInfo, usuario):
+#Almacena el historial solicitando desc, tipoInfo y usuario
+def almacenarHistorial(desc, tipoInfo, usuario):
     histCambios = historialCambios()   
-    try:
-        formato = '%d/%m/%Y - %H:%M:%S'
-        fecha = datetime.strptime(fecha,formato)
-        histCambios.fecha = fecha
-    except Exception as e:
-        print('Fecha no válida')
-        print(e)
-        errorFatal = True
+
+    fecha = timezone.now()
+    print(fecha)
+    histCambios.fecha = fecha
+    
+    print(histCambios.fecha)
         
     if(len(desc) > 300):
         desc = desc[:300]
@@ -371,11 +390,11 @@ def almacenarHistorial(fecha, desc, tipoInfo, usuario):
     
     if(usuario is None):
         print("El usuario es inexistente")
-        errorFatal = True
-        #usuario = User.objects.get(Realizar un usuario anónimo para guardar los datos de ese usuario)
+        usuario = User.objects.get(username="Anon")
+        histCambios.usuario = usuario
+        
     histCambios.usuario = usuario
-    if errorFatal:
-        return False
     histCambios.save()
-    return True
+    #return True
+    return histCambios
     

@@ -9,6 +9,8 @@ from django.db import models
 from django.forms import IntegerField 
 from django.contrib.auth.models import User
 from datetime import datetime
+import pytz
+from django.utils import timezone
 
 # Create your models here.
 
@@ -69,6 +71,9 @@ class PerfilUsuario(models.Model):
     cargo = models.CharField(max_length=150, null=False, blank=False, verbose_name="Cargo Empleado")
     telefono = models.CharField(max_length=12, null=False, blank=False, verbose_name="Número de contacto")
     
+    def __str__(self):
+        return str(self.NUMRUT) + " - " + str(self.DVRUN)
+    
     
 class historialCambios(models.Model):
     idHist = models.AutoField(primary_key=True, verbose_name="ID Historial")
@@ -76,3 +81,26 @@ class historialCambios(models.Model):
     desc = models.CharField(max_length=300, blank=False, null=False, verbose_name="Descripción")
     tipoInfo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de información")
     usuario = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    
+    def __str__(self):
+        return str(self.idHist) + " - " + str(self.desc) + " - " + str(self.usuario)
+    
+class proyectosAAgrupar(models.Model):
+    id = models.IntegerField(primary_key=True, verbose_name="ID Proyecto")
+    proyecto = models.CharField(max_length=12, blank=False, null=False, verbose_name="Proyecto")
+    lineaNegocio = models.CharField(max_length=6, blank=False, null=False, verbose_name="Línea de Negocio")
+    tipo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de Proyecto")
+    cliente = models.IntegerField(blank=True, null=True, verbose_name="ID Cliente")
+    pm = models.CharField(max_length=60, blank=False, null=False, verbose_name="Correo JP") ##Verificar
+    createDate = models.DateTimeField(null=False, blank=False, verbose_name="Fecha de creación")
+    cierre = models.DateField(null=False, blank=False, verbose_name="Cierre del proyecto")
+    primeraTarea = models.DateField(null=False, blank=False, verbose_name="Primera Tarea Realizada")
+    ultimaTarea = models.DateField(null=False, blank=False, verbose_name="Última tarea realizada")
+    egresosNoHHCLP = models.IntegerField(null=False, blank=False, verbose_name="Egresos no HH CLP")
+    montoOfertaCLP = models.IntegerField(null=False, blank=False, verbose_name="Monto Oferta CLP")
+    usoAgencia = models.BooleanField(null=False, blank=False, default=0, verbose_name="Apoyo de Agencia")
+    desfaseDias = models.IntegerField(null=False, blank=False, default=0, verbose_name="Desfase de días para el inicio del proyecto")
+    ocupacionInicio = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, verbose_name="Porcentaje de uso inicial")
+
+    def __str__(self):
+        return str(self.proyecto) + " - " + str(self.lineaNegocio) + " - " + str(self.tipo)

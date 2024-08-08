@@ -115,3 +115,6 @@ class CrearUsuarioAdmin(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'first_name','last_name', 'email', 'is_staff', 'NUMRUT', 'DVRUN','fechaNacimiento','cargo','telefono']
+
+
+#Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.
