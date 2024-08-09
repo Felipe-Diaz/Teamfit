@@ -11,8 +11,8 @@ from django.contrib import messages
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Dash, dcc, html
-from django_plotly_dash import DjangoDash
+# from dash import Dash, dcc, html
+# from django_plotly_dash import DjangoDash
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone

@@ -2,7 +2,6 @@ from asyncio.windows_events import NULL
 from distutils.command.upload import upload
 from email.policy import default
 from pickle import TRUE
-from sre_parse import Verbose
 from tabnanny import verbose
 from tkinter import CASCADE
 from django.db import models
