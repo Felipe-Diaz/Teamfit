@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
 import random
 import requests
 import json
@@ -113,11 +113,38 @@ def index(request):
     return render(request, "core/index.html", data)
 
 
+from django.shortcuts import render
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+from datetime import date
+from .models import Graficos
+
 def graficar_Datos(request):
     graficos = Graficos.objects.all()
     data_list = list(graficos.values())
     additional_data = pd.DataFrame(data_list)
     
+    # Imprimir los nombres de las columnas y los datos para depuración
+    print("Column names:", additional_data.columns.tolist())
+    print("Datos cargados:", additional_data)
+    
+    # Asegúrate de que la columna 'semana' existe en el DataFrame
+    if 'semana' not in additional_data.columns:
+        raise KeyError("La columna 'semana' no se encuentra en el DataFrame")
+
+    # Asegúrate de que la columna 'semana' sea numérica
+    additional_data['semana'] = pd.to_numeric(additional_data['semana'], errors='coerce')
+    
+    # Obtener la fecha actual y el número de la semana actual
+    today = date.today()
+    current_week_number = today.isocalendar()[1]
+
+    # Filtrar los datos para que solo se muestren las semanas disponibles en los datos
+    weeks_in_data = additional_data['semana'].dropna().unique()
+    additional_data = additional_data[additional_data['semana'].isin(weeks_in_data) & (additional_data['semana'] >= current_week_number)]
+    
+    # Crear gráficos
     bar_chart = go.Figure(data=[
         go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
         go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
@@ -127,23 +154,25 @@ def graficar_Datos(request):
     line_chart = px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
     line_chart = line_chart.to_html(full_html=False)
     
-    data = {'bar':bar_chart, 'line':line_chart}
+    data = {'bar': bar_chart, 'line': line_chart}
     
+    # Evaluar utilización
     sobreU = False
     subU = False
-    for val in graficos:
-        if(val.utilizacion > 100):
+    for val in additional_data.itertuples():
+        if val.utilizacion > 100:
             sobreU = True
-        elif(val.utilizacion < 80):
+        elif val.utilizacion < 80:
             subU = True
-    if(sobreU and subU):
-        data['mesg'] = 'Se estima subtilización bajo un 80% y sobreutilización mayor a 100%, por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras.'
-    elif (sobreU):
-        data['mesg'] = 'Se estima sobreutilización sobre un 100%,  por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras'
-    elif (subU):
-        data['mesg'] = 'Se estima subtilización bajo un 80%. por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras'
+    
+    if sobreU and subU:
+        data['mesg'] = 'Se estima subutilización bajo un 80% y sobreutilización mayor a 100%, por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras.'
+    elif sobreU:
+        data['mesg'] = 'Se estima sobreutilización sobre un 100%, por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras.'
+    elif subU:
+        data['mesg'] = 'Se estima subutilización bajo un 80%, por lo que se sugiere ajustar la disponibilidad de equipo de proyecto o modificar requerimientos de horas futuras.'
     else:
-        data['mesg'] = 'No se visualizaron momentos en que haya sobreutilización ni subtulización.'
+        data['mesg'] = 'No se visualizaron momentos en que haya sobreutilización ni subutilización.'
     
     return render(request, 'core/dashboard.html', data)
     
@@ -208,7 +237,7 @@ def llenar_DB(request):
     Hh_Estimado_Detalle_Semanal.objects.all().delete()
     Perfil_hh_Detalle_Semanal.objects.all().delete()
     User.objects.all().delete()
-    
+
     #Usuario de testing
     usuario = User.objects.create_user(username="admin", password='Admin@123')
     usuario.first_name = "Admin"
@@ -300,26 +329,49 @@ def newCreateJoinDB():
 
 #Aqui crear validaciones
 def create_additional_table():
+    # Eliminar datos anteriores
     Graficos.objects.all().delete()
-    #agregar datos de hoy en adelante
-    data = Hh_Estimado_Detalle_Semanal.objects.all()
-    #validaciones para detalle semanal
+    
+    # Obtener el número de la semana actual y la fecha actual
+    today = date.today()
+    current_week_number = today.isocalendar()[1]
+    current_year = today.isocalendar()[0]
+
+    # Obtener la fecha de inicio de la semana actual
+    start_of_week = today - timedelta(days=today.weekday())
+
+    # Filtrar datos a partir de la fecha de inicio de la semana actual
+    data = Hh_Estimado_Detalle_Semanal.objects.filter(semana__gte=current_week_number)
     data_list = list(data.values())
     df = pd.DataFrame(data_list)
     
-    disp = Disponibilidad.objects.all()
-    #validaciones para disponibilidad
+    # Convertir el número de semana en fechas de inicio de semana
+    df['start_date'] = df['semana'].apply(lambda x: date.fromisocalendar(current_year, x, 1))
+    df = df[df['start_date'] >= start_of_week]
+    
+    disp = Disponibilidad.objects.filter(semana__gte=current_week_number)
     dispList = list(disp.values())
     dfDisp = pd.DataFrame(dispList)
     dfDisp.rename(columns={'hh': 'hh_disp'}, inplace=True)
+    dfDisp['start_date'] = dfDisp['semana'].apply(lambda x: date.fromisocalendar(current_year, x, 1))
+    dfDisp = dfDisp[dfDisp['start_date'] >= start_of_week]
+
+    # Verificar si hay semanas fuera del rango
+    all_weeks = set(Hh_Estimado_Detalle_Semanal.objects.values_list('semana', flat=True))
+    filtered_weeks = set(df['semana'].unique())
+    weeks_out_of_range = all_weeks - filtered_weeks
     
-    #validaciones con el dataframe listo
+    if weeks_out_of_range:
+        print(f"Semanas fuera del rango: {weeks_out_of_range}")
+    
+    # Agrupar y calcular la utilización
     weekly_data = df.groupby('semana')['hh'].sum().reset_index()
     weekly_data.rename(columns={'hh': 'hh_req'}, inplace=True)
     weekly_data = pd.merge(dfDisp, weekly_data, on='semana', how='outer')
     weekly_data['utilizacion'] = round((weekly_data['hh_req'] / weekly_data['hh_disp']) * 100, 1)
     weekly_data = weekly_data.dropna()
     
+    # Guardar en la base de datos
     for idx, row in weekly_data.iterrows():
         grafico = Graficos(
             semana=row['semana'],
