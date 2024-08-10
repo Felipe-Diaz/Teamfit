@@ -36,9 +36,7 @@ def index(request):
                 data['mesg'] = 'Archivo no compatible. Por favor, selecciona un archivo CSV o XLSX.'
             else:
                 df = pd.read_excel(file) if file.name.endswith('.xlsx') else pd.read_csv(file)
-                required_columns = ['id', 'Proyecto', 'Línea de Negocio', 'tipo', 'cliente', 'pm', 'create_date', 
-                                    'Cierre', 'Primer Timesheet', 'Último Timesheet', 'Egresos No HH CLP', 'Monto Oferta CLP',
-                                    'C/Agencia', 'Desfase Inicio (días)', 'Ocupación Al Iniciar (%)']
+                required_columns = ['idTipoProyecto', 'fecha']
                 if not all(col in df.columns for col in required_columns):
                     data['mesg'] = 'El archivo no contiene las columnas requeridas (idTipoProyecto, fecha). Por favor, sube un archivo con estas columnas.'
                 else:
@@ -207,9 +205,9 @@ def development_Buttons(request):
     return render(request, 'core/boton.html', data)
 
 def llenar_DB(request):
-    User.objects.all().delete()
     Hh_Estimado_Detalle_Semanal.objects.all().delete()
     Perfil_hh_Detalle_Semanal.objects.all().delete()
+    User.objects.all().delete()
     
     #Usuario de testing
     usuario = User.objects.create_user(username="admin", password='Admin@123')
@@ -300,17 +298,22 @@ def newCreateJoinDB():
                     continue
     return True
 
+#Aqui crear validaciones
 def create_additional_table():
     Graficos.objects.all().delete()
+    #agregar datos de hoy en adelante
     data = Hh_Estimado_Detalle_Semanal.objects.all()
+    #validaciones para detalle semanal
     data_list = list(data.values())
     df = pd.DataFrame(data_list)
     
     disp = Disponibilidad.objects.all()
+    #validaciones para disponibilidad
     dispList = list(disp.values())
     dfDisp = pd.DataFrame(dispList)
     dfDisp.rename(columns={'hh': 'hh_disp'}, inplace=True)
     
+    #validaciones con el dataframe listo
     weekly_data = df.groupby('semana')['hh'].sum().reset_index()
     weekly_data.rename(columns={'hh': 'hh_req'}, inplace=True)
     weekly_data = pd.merge(dfDisp, weekly_data, on='semana', how='outer')
