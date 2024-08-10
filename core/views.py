@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios
-from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
+from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios, proyectosAAgrupar
+from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm
 from datetime import datetime, timedelta, time
 import random
 import requests
@@ -11,8 +11,6 @@ from django.contrib import messages
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Dash, dcc, html
-from django_plotly_dash import DjangoDash
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -20,13 +18,36 @@ import pytz
 
 # Create your views here.
 
-def index(request):
-    #Obtener y cargar los datos en el formlario
-    formsVentas = [VentasForm(prefix=str(i)) for i in range(5)]
-    formsDisp = [DispForm(prefix=str(i)) for i in range(5)]
-    nuevasVentas = False
-    nuevasHoras = False
-    data = {"VentasForms":formsVentas, "DispForms":formsDisp, 'form':UploadFileForm()}
+def subirProyectos(request, upload='Sh'):
+    data = {'form':UploadFileForm()}
+    showTable = False
+    
+    if(upload=="Can"):
+        request.session.pop('df_proyectos')
+        return redirect (subirProyectos)
+    if(upload=="Up"):
+        df = cambiarFormatoAlmacenarDb(request.session['df_proyectos'])
+        for _, row in df.iterrows():
+            proyecto = proyectosAAgrupar(
+                id=row['id'],
+                proyecto=row['proyecto'],
+                lineaNegocio=row['lineaNegocio'],
+                tipo=row['tipo'],
+                cliente=row['cliente'],
+                pm=row['pm'],
+                createDate=row['createDate'],
+                cierre=row['cierre'],
+                primeraTarea=row['primeraTarea'],
+                ultimaTarea=row['ultimaTarea'],
+                egresosNoHHCLP=row['egresosNoHHCLP'],
+                montoOfertaCLP=row['montoOfertaCLP'],
+                usoAgencia=row['usoAgencia'],
+                desfaseDias=row['desfaseDias'],
+                ocupacionInicio=row['ocupacionInicio']
+            )
+            proyecto.save()
+        request.session.pop('df_proyectos')
+        return redirect(ver_proyectos)
     
     if request.method == 'POST' and 'file' in request.FILES:
         form = UploadFileForm(request.POST, request.FILES)
@@ -42,78 +63,55 @@ def index(request):
                 if not all(col in df.columns for col in required_columns):
                     data['mesg'] = 'El archivo no contiene las columnas requeridas (idTipoProyecto, fecha). Por favor, sube un archivo con estas columnas.'
                 else:
-                    datos_formularios = df.to_dict(orient='records')
-                    forms = []
-                    for i, datos in enumerate(datos_formularios):
-                        #Modificar para implementar las nuevas columnas
-                        fecha=str(datos['fecha'])
-                        fecha = fecha[:10]
-                        initial_data = {
-                            'idTipoProyecto': datos['idTipoProyecto'],
-                            'fecha': fecha
-                        }
-                        #Modificar y crear un nuevo formulario
-                        form = VentasForm(initial=initial_data, prefix=str(i))
-                        forms.append(form)
-                    data['VentasForms'] = forms
+                    df = cambiarFormatoAlmacenarDf(df)
+                    datosDfDict = df.to_dict(orient='records')
+                    data["proyectos"] = datosDfDict
+                    request.session['df_proyectos'] = datosDfDict
+                    showTable = True
         else:
             data["mesg"] = "El valor es inválido"
-            return render(request, 'core/boton.html', data)
+    data["showTable"] = showTable
         
-    #Guardar los datos en la DB
-    #Modifica para nuevo tipo de archivo
-    if request.method == "POST" and not ('file' in request.FILES):
-        formsVentas = [VentasForm(request.POST, prefix=str(i)) for i in range(150)]
-        for i, form in enumerate(formsVentas):
-            fecha = request.POST.get(f"{i}-fecha", None)
-            if(form['idTipoProyecto'] == 'na' or fecha==None):
-                break
-            else:
-                try:
-                    if form.is_valid(): 
-                        if(form.cleaned_data['idTipoProyecto'] == 'na'):
-                            print("Datos No Seleccionables")
-                        else:
-                            idTipoProyecto = form.cleaned_data['idTipoProyecto']
-                            fecha = form.cleaned_data['fecha']
-                            obj = Ventas(idTipoProyecto=idTipoProyecto, fecha=fecha)
-                            obj.save()
-                            data['mesg'] = 'Se han almacenado ' + str(i) + ' datos de proyectos nuevos' 
-                            nuevasVentas = True
-                    else:
-                        data['mesg'] = 'Se han encontrado los siguientes errores: ' + form.errors
-                except Exception as e:
-                    print(e)
-                
-        ##No considerar
-        formsDisp = [DispForm(request.POST, prefix=str(i)) for i in range(5)]
-        for form in formsDisp:
-            if form.has_changed():
-                if form.is_valid():
-                    semana = form.cleaned_data['semana']
-                    hh = form.cleaned_data['HorasHombre']
-                    obj = Disponibilidad(semana=semana, hh=hh)
-                    obj.save()
-                    data['mesg'] = 'Se han almacenado ' + str(i) + ' datos de horas disponibles' 
-                    nuevasHoras = True
-                else:
-                    data['mesg'] = 'Se han encontrado los siguientes errores: ' + form.errors
-            else:
-                continue
-        #No considerar
-        try:
-            if(nuevasVentas):
-                createDetalle = newCreateJoinDB()
-                createGraficos = create_additional_table()
-            if(nuevasHoras):
-                createGraficos = create_additional_table()
-            return redirect(graficar_Datos)
-        except Exception as e:
-            data['mesg'] = 'Han ocurrido errores, por favor, verifique los datos ingresados'
-            print(e)
-        
-    return render(request, "core/index.html", data)
+    return render(request, "core/subirProyectos.html", data)
 
+def cambiarFormatoAlmacenarDf(df):
+    df = df
+    df['create_date'] = df['create_date'].astype(str)
+    df['Cierre'] = df['Cierre'].astype(str)
+    df['Primer Timesheet'] = df['Primer Timesheet'].astype(str)
+    df['Último Timesheet'] = df['Último Timesheet'].astype(str)
+    df.rename(columns={'Proyecto': 'proyecto'}, inplace=True)
+    df.rename(columns={'Línea de Negocio': 'lineaNegocio'}, inplace=True)
+    df.rename(columns={'create_date': 'createDate'}, inplace=True)
+    df.rename(columns={'Cierre': 'cierre'}, inplace=True)
+    df.rename(columns={'Primer Timesheet': 'primeraTarea'}, inplace=True)
+    df.rename(columns={'Último Timesheet': 'ultimaTarea'}, inplace=True)
+    df.rename(columns={'Egresos No HH CLP': 'egresosNoHHCLP'}, inplace=True)
+    df.rename(columns={'Monto Oferta CLP': 'montoOfertaCLP'}, inplace=True)    
+    df.rename(columns={'C/Agencia': 'usoAgencia'}, inplace=True)
+    df.rename(columns={'Desfase Inicio (días)': 'desfaseDias'}, inplace=True)
+    df.rename(columns={'Ocupación Al Iniciar (%)': 'ocupacionInicio'}, inplace=True)
+    df['ocupacionInicio'] = df['ocupacionInicio'].round(2)
+    df['ocupacionInicio'] = df['ocupacionInicio'] * 100
+    
+    return df
+
+def cambiarFormatoAlmacenarDb(df):
+    df = pd.DataFrame(df)
+    df['createDate'] = pd.to_datetime(df['createDate'])
+    df['cierre'] = pd.to_datetime(df['cierre'])
+    df['primeraTarea'] = pd.to_datetime(df['primeraTarea'])
+    df['ultimaTarea'] = pd.to_datetime(df['ultimaTarea'])
+    df['cliente'] = df['cliente'].fillna(0)
+    df['cliente'] = df['cliente'].astype(int)
+    df['usoAgencia'] = df['usoAgencia'].fillna(0)
+    df['usoAgencia'] = df['usoAgencia'].replace({'Sí': 1, 'no': 0}).astype(bool)
+    df['montoOfertaCLP'] = df['montoOfertaCLP'].fillna(0)
+    df['montoOfertaCLP'] = df['montoOfertaCLP'].astype(int)
+    df['desfaseDias'] = df['desfaseDias'].fillna(0)
+    df['desfaseDias'] = df['desfaseDias'].astype(int) 
+    df['ocupacionInicio'] = df['ocupacionInicio'].astype(float) 
+    return df
 
 def graficar_Datos(request):
     graficos = Graficos.objects.all()
@@ -207,14 +205,35 @@ def development_Buttons(request):
     return render(request, 'core/boton.html', data)
 
 def llenar_DB(request):
-    User.objects.all().delete()
     Hh_Estimado_Detalle_Semanal.objects.all().delete()
     Perfil_hh_Detalle_Semanal.objects.all().delete()
+    historialCambios.objects.all().delete()
+    proyectosAAgrupar.objects.all().delete()
+    User.objects.all().delete()
+
+    
+    proyecto1 = proyectosAAgrupar.objects.update_or_create(
+            id = 446,
+            proyecto = 'PRY2023-106',
+            lineaNegocio = 'SGE',
+            tipo = 'Reportabilidad y Plataforma',
+            cliente = 6057,
+            pm = 'katherina@rodaenergia.cl', 
+            createDate = datetime.strptime('2023-05-10 21:20:14', "%Y-%m-%d %H:%M:%S"),
+            cierre = datetime.strptime('2023-05-10', "%Y-%m-%d").date(),
+            primeraTarea = datetime.strptime('2023-05-04', "%Y-%m-%d").date(),
+            ultimaTarea = datetime.strptime('2023-05-10', "%Y-%m-%d").date(),
+            egresosNoHHCLP = 0,
+            montoOfertaCLP = 1530218,
+            usoAgencia = False,
+            desfaseDias = 0,
+            ocupacionInicio = 69.0
+    )
     
     #Usuario de testing
     usuario = User.objects.create_user(username="admin", password='Admin@123')
-    usuario.first_name = "Admin"
-    usuario.last_name = "Admin 1"
+    usuario.first_name = "Pedro"
+    usuario.last_name = "Martinez"
     usuario.email = "admin@admin.com"
     usuario.is_superuser = True
     usuario.is_staff = True
@@ -260,7 +279,7 @@ def llenar_DB(request):
         numSemana = '2', 
         hh = 3
         )
-    return redirect(index)
+    return redirect(pagina_principal)
 
 #Casi Funcional
 def newCreateJoinDB():
@@ -365,6 +384,9 @@ def crear_usuarios(request):
     return render(request, 'core/crearUsuarios.html', data)
 
 def pagina_principal(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     data = {}
     return render(request, 'core/index1.html', data)
 
@@ -395,6 +417,10 @@ def almacenarHistorial(desc, tipoInfo, usuario):
         
     histCambios.usuario = usuario
     histCambios.save()
-    #return True
     return histCambios
     
+def ver_proyectos(request):
+    #data = {}
+    #return render(request, 'core/verProyectos.html', data)
+    proyectos = proyectosAAgrupar.objects.all()
+    return render(request, 'core/verProyectos.html', {'proyectos': proyectos})

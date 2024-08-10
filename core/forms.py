@@ -118,3 +118,46 @@ class CrearUsuarioAdmin(UserCreationForm):
 
 
 #Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.
+class proyectosForm(forms.Form):
+    
+    idProy = forms.CharField(
+        label="ID Proyecto",
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control text-center mx-auto'})
+    )
+    
+    proyecto = forms.CharField(
+        label="Proyecto",
+        required=True,
+        max_length=12,
+        widget=forms.TextInput(attrs={'class': 'form-control text-center mx-auto'})
+    )
+    
+    lineaNegocio = forms.CharField(
+        label="Linea de Negocio",
+        required=True,
+        max_length=6,
+        widget=forms.TextInput(attrs={'class': 'form-control text-center mx-auto'})
+    )
+    
+    tipo = forms.CharField(
+        label="Tipo Proyecto",
+        required=True,
+        max_length=50,
+        widget=forms.TextInput(attrs={'class': 'form-control text-center mx-auto'})
+    )
+    
+    usoAgencia = forms.BooleanField(
+        label="Participación de Agencia Energética",
+        required=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input mx-auto col-lg-12'})
+    )
+    
+    ocupacionInicio = forms.DecimalField(
+        label="Ocupación de personal",
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control text-center mx-auto'})
+    )
+    
+    class Meta:
+        fields = ['idProy', 'proyecto', 'lineaNegocio', 'tipo', 'usoAgencia', 'ocupacionInicio']

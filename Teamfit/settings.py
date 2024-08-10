@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'django_plotly_dash',
+    #'django_plotly_dash',
     #'apirest',
 ]
 
@@ -152,7 +152,6 @@ LOGOUT_REDIRECT_URL = 'login'
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django_plotly_dash.finders.DashAssetFinder',
 ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

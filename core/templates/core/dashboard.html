@@ -5,8 +5,6 @@
     <meta charset="UTF-8">
     <title>Dashboard</title>
     <!-- Incluir estilos y scripts necesarios -->
-    {% load plotly_dash %}
-    {{ app.callback_dependencies }}
     <!-- Fonts and icons -->
     <script src="{% static 'core/js/plugin/webfont/webfont.min.js' %}"></script>
     <script>
@@ -42,7 +40,7 @@
             <div class="sidebar-logo">
             <!-- Logo Header -->
             <div class="logo-header" data-background-color="dark">
-                <a href="{% url 'index1' %}" class="logo">
+                <a href="{% url 'index' %}" class="logo">
                 <img
                     src="{% static 'core/img/roda-logo.png' %}"
                     alt="navbar brand"
@@ -104,14 +102,14 @@
                     <div class="collapse" id="base">
                     <ul class="nav nav-collapse">
                         <li>
-                        <a href="components/avatars.html">
-                            <span class="sub-item">Subir Proyectos</span>
-                        </a>
+                            <a href="{% url 'subirProyectos' %}">
+                                <span class="sub-item">Subir Proyectos</span>
+                            </a>
                         </li>
                         <li>
-                        <a href="components/buttons.html">
-                            <span class="sub-item">Ver Proyectos</span>
-                        </a>
+                            <a href="{% url 'verProyectos' %}">
+                                <span class="sub-item">Ver Proyectos</span>
+                            </a>
                         </li>
                     </div>
                 </li>
@@ -145,7 +143,7 @@
                     <div class="collapse" id="forms">
                     <ul class="nav nav-collapse">
                         <li>
-                        <a href="{% url 'index' %}">
+                        <a href="">
                             <span class="sub-item">Carga Horas</span>
                         </a>
                         </li>

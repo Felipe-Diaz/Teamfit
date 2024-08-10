@@ -2,7 +2,6 @@ from asyncio.windows_events import NULL
 from distutils.command.upload import upload
 from email.policy import default
 from pickle import TRUE
-from sre_parse import Verbose
 from tabnanny import verbose
 from tkinter import CASCADE
 from django.db import models
@@ -70,6 +69,9 @@ class PerfilUsuario(models.Model):
     fechaNacimiento = models.DateField(null=False, blank=False, verbose_name="Fecha de Nacimiento")
     cargo = models.CharField(max_length=150, null=False, blank=False, verbose_name="Cargo Empleado")
     telefono = models.CharField(max_length=12, null=False, blank=False, verbose_name="Número de contacto")
+        
+    class Meta:
+        db_table = 'PERFIL_USUARIO'
     
     def __str__(self):
         return str(self.NUMRUT) + " - " + str(self.DVRUN)
@@ -81,6 +83,9 @@ class historialCambios(models.Model):
     desc = models.CharField(max_length=300, blank=False, null=False, verbose_name="Descripción")
     tipoInfo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de información")
     usuario = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    
+    class Meta:
+        db_table = 'HISTORIAL_CAMBIOS'
     
     def __str__(self):
         return str(self.idHist) + " - " + str(self.desc) + " - " + str(self.usuario)
@@ -101,6 +106,9 @@ class proyectosAAgrupar(models.Model):
     usoAgencia = models.BooleanField(null=False, blank=False, default=0, verbose_name="Apoyo de Agencia")
     desfaseDias = models.IntegerField(null=False, blank=False, default=0, verbose_name="Desfase de días para el inicio del proyecto")
     ocupacionInicio = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, verbose_name="Porcentaje de uso inicial")
+
+    class Meta:
+        db_table = 'PROYECTOS_A_AGRUPAR'
 
     def __str__(self):
         return str(self.proyecto) + " - " + str(self.lineaNegocio) + " - " + str(self.tipo)

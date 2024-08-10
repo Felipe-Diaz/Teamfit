@@ -79,7 +79,7 @@
     <div class="sidebar-logo">
       <!-- Logo Header -->
       <div class="logo-header" data-background-color="dark">
-        <a href="{% url 'index1' %}" class="logo">
+        <a href="{% url 'index' %}" class="logo">
           <img
             src="{% static 'core/img/roda-logo.png' %}"
             alt="navbar brand"
@@ -141,12 +141,12 @@
             <div class="collapse" id="base">
               <ul class="nav nav-collapse">
                 <li>
-                  <a href="components/avatars.html">
+                  <a href="{% url 'subirProyectos' %}">
                     <span class="sub-item">Subir Proyectos</span>
                   </a>
                 </li>
                 <li>
-                  <a href="components/buttons.html">
+                  <a href="{% url 'verProyectos' %}">
                     <span class="sub-item">Ver Proyectos</span>
                   </a>
                 </li>
@@ -182,7 +182,7 @@
             <div class="collapse" id="forms">
               <ul class="nav nav-collapse">
                 <li>
-                  <a href="{% url 'index' %}">
+                  <a href="">
                     <span class="sub-item">Carga Horas</span>
                   </a>
                 </li>
@@ -713,6 +713,7 @@
       <!-- End Navbar -->
     </div>
   <br>
+  {% if not showTable %}
   <div class="container">
     <h1 class="predictor-title text-center" 
         style="
@@ -746,64 +747,135 @@
       <!-- <a href="{% url 'crearUsuarios' %}"> Agregar Usuarios</a> -->
     </div>
     <br>
+    <!-- Formulario de un proyecto -->
+    {% if proyectoForms %}
     <form method="POST">
-        <div class="row">
-            <div class="col-md-6">
-                <h4 class="text-center">Estimación Ventas</h4>
-              <div class="form-group row align-items-center">
-                <h6 class="col-md-5 text-center mx-auto">Proyecto</h6>
-                <h6 class="col-md-5 text-center mx-auto">Fecha</h6>
+      <div class="row">
+          <div class="col-md-12">
+              <h4 class="text-center">Estimación Ventas</h4>
+              <div class="justify-content-center">
+                  {% csrf_token %}
+                  <table class="table">
+                      <tbody>
+                          <tr>
+                              <td>{{ proyectoForms.idProy.label_tag }}</td>
+                              <td>{{ proyectoForms.idProy }}</td>
+                          </tr>
+                          <tr>
+                              <td>{{ proyectoForms.proyecto.label_tag }}</td>
+                              <td>{{ proyectoForms.proyecto }}</td>
+                          </tr>
+                          <tr>
+                              <td>{{ proyectoForms.lineaNegocio.label_tag }}</td>
+                              <td>{{ proyectoForms.lineaNegocio }}</td>
+                          </tr>
+                          <tr>
+                              <td>{{ proyectoForms.tipo.label_tag }}</td>
+                              <td>{{ proyectoForms.tipo }}</td>
+                          </tr>
+                          <tr>
+                              <td>{{ proyectoForms.usoAgencia.label_tag }}</td>
+                              <td>{{ proyectoForms.usoAgencia }}</td>
+                          </tr>
+                          <tr>
+                              <td>{{ proyectoForms.ocupacionInicio.label_tag }}</td>
+                              <td>{{ proyectoForms.ocupacionInicio }}</td>
+                          </tr>
+                      </tbody>
+                  </table>
               </div>
-                <div class="justify-content-center">
-                    {% csrf_token %}
-                    {% for VentasForm in VentasForms %}
-                    <div class="container">
-                        <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                            {{ VentasForm.idTipoProyecto }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                            {{ VentasForm.fecha }}
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    <!-- <button type="submit" class="btn btn-primary">Enviar</button> -->
-                </div>
-            </div>
-            <div class="col-md-6">
-                <h4 class="text-center">Disponibilidad de HH</h4>
-                <div class="justify-content-center">
-                    {% csrf_token %}
-                    <div class="">
-                        <div class="form-group row align-items-center">
-                            <h6 class="col-md-5 text-center mx-auto">Semana</h6>
-                            <h6 class="col-md-5 text-center mx-auto">Horas Hombre</h6>
-                        </div>
-                        {% for DispForm in DispForms %}
-                        <div class="form-group row align-items-center"  id=HorasHombre{{forloop.counter}}>
-                          <h6 class="col-md-5 text-center mx-auto">{{ DispForm.semana }}</h6>
-                          <h6 class="col-md-5 text-center mx-auto">{{ DispForm.HorasHombre }}</h6>                        
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <br>
-                </div>
-            </div>
-        </div>
-        <div class="text-center mt-4 mb-4">
+          </div>
+      </div>
+      <div class="text-center mt-4 mb-4">
           <button class="btn btn-primary">Predecir</button>
-        </div>
-        <div class="text-center mt-4 mb-4">
-          <button class="btn btn-primary" href="{% url 'graficar_Datos' %}"> 
-            Ver gráficos Desarrollados
-          </button>
-        </div>
+      </div>
+      <div class="text-center mt-4 mb-4">
+          <a class="btn btn-primary" href="{% url 'graficar_Datos' %}"> 
+              Ver gráficos Desarrollados
+          </a>
+      </div>
     </form>
+    {% endif %}
+  {% endif %}
+  {% if showTable %}
+  <div class="row"> 
+    <div class="col-md-12">
+        <br>
+        <br> 
+        <br>
+        <br> 
+        <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Proyectos a Subir</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+            <table id="multi-filter-select" class="display table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Proyecto</th>
+                        <th>Tipo</th>
+                        <th>Linea de trabajo</th>
+                        <th>P.A.E</th>
+                        <th>Carga Trabajo</th>
+                    </tr>
+                </thead>
+                    <tbody>
+                        {% for proyectos in proyectos %}
+                        <tr class="project-row">
+                            <td>{{ proyectos.id }}</td>
+                            <td>{{ proyectos.proyecto }}</td>
+                            <td>{{ proyectos.tipo }}</td>
+                            <td>{{ proyectos.lineaNegocio }}</td>
+                            {% if proyectos.usoAgencia %}
+                            <td> Si </td>
+                            {% else %}
+                            <td>No</td>
+                            {% endif %}
+                            <!-- <td>{{ proyectos.usoAgencia }}</td> -->
+                            <td>{{ proyectos.ocupacionInicio }}</td>
+                        </tr>
+                        {% empty %}
+                    <tr>
+                        <td colspan="6">No hay productos disponibles</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                <tr>
+                    <th>ID</th>
+                    <th>Proyecto</th>
+                    <th>Tipo</th>
+                    <th>Linea de trabajo</th>
+                    <th>P.A.E</th>
+                    <th>Carga Trabajo</th>
+                </tr>
+                </tfoot>
+                <tbody>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        </div>
+    </div>
+  </div>
+  <div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-6 text-center">
+          <a href="{% url 'decidirSubida' 'Can' %}">
+            <button type="button" class="btn btn-danger">Volver</button>
+          </a>
+        </div>
+        <div class="col-lg-6 text-center">
+          <a href="{% url 'decidirSubida' 'Up' %}">
+            <button type="button" class="btn btn-success">Subir Proyectos</button>
+          </a>
+            
+        </div>
+    </div>
+</div>
+  {% endif %}
   </div>
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
@@ -863,5 +935,62 @@
   <!-- Kaiadmin JS -->
   <script src="{% static 'core/js/kaiadmin.min.js' %}"></script>
 
+  <script>
+    $(document).ready(function () {
+      $("#basic-datatables").DataTable({});
+
+      $("#multi-filter-select").DataTable({
+        pageLength: 5,
+        initComplete: function () {
+          this.api()
+            .columns()
+            .every(function () {
+              var column = this;
+              var select = $(
+                '<select class="form-select"><option value=""></option></select>'
+              )
+                .appendTo($(column.footer()).empty())
+                .on("change", function () {
+                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                  column
+                    .search(val ? "^" + val + "$" : "", true, false)
+                    .draw();
+                });
+
+              column
+                .data()
+                .unique()
+                .sort()
+                .each(function (d, j) {
+                  select.append(
+                    '<option value="' + d + '">' + d + "</option>"
+                  );
+                });
+            });
+        },
+      });
+
+      // Add Row
+      $("#add-row").DataTable({
+        pageLength: 5,
+      });
+
+      var action =
+        '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+      $("#addRowButton").click(function () {
+        $("#add-row")
+          .dataTable()
+          .fnAddData([
+            $("#addName").val(),
+            $("#addPosition").val(),
+            $("#addOffice").val(),
+            action,
+          ]);
+        $("#addRowModal").modal("hide");
+      });
+    });
+  </script>
 </body>
 </html>
