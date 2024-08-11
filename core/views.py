@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render #tonto el que lea
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from datetime import datetime, timedelta, time, date
