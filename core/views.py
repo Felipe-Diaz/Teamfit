@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios
-from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
+from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios,Distribuidor_HH
+from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, AsignadorHHForm
 from datetime import datetime, timedelta, time
 import random
 import requests
@@ -400,4 +400,55 @@ def almacenarHistorial(desc, tipoInfo, usuario):
     histCambios.save()
     #return True
     return histCambios
-    
+
+from django.shortcuts import render
+from .forms import AsignadorHHForm
+from .models import Distribuidor_HH  # Asegúrate de que este sea el nombre correcto de tu modelo
+import pandas as pd
+
+def AsignadorHH_subir_archivo_Exel(request):
+    if request.method == "POST":
+        form = AsignadorHHForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = request.FILES['file']
+            df = pd.read_excel(excel_file)
+
+            if 'Guardar Datos' in request.POST:
+                # Guardar los datos editados en la base de datos
+                for i, row in df.iterrows():
+                    id_empleado = request.POST.get(f'id_empleado_{i + 1}')
+                    nombre = request.POST.get(f'nombre_empleado_{i + 1}')
+                    cargo = request.POST.get(f'cargo_{i + 1}')
+                    telefono = request.POST.get(f'telefono_{i + 1}')
+                    id_categoria = request.POST.get(f'id_categoria_{i + 1}')
+                    id_proyecto = request.POST.get(f'id_proyecto_{i + 1}')
+                    horas_empleado = request.POST.get(f'horas_empleado_{i + 1}')
+                    horas_dis_empleado = request.POST.get(f'horas_dis_empleado_{i + 1}')
+
+                    # Crear o actualizar el registro en la base de datos
+                    distribuidor, created = Distribuidor_HH.objects.update_or_create(
+                        id_empleado=id_empleado,
+                        defaults={
+                            'nombre': nombre,
+                            'cargo': cargo,
+                            'telefono': telefono,
+                            'idcategoria': id_categoria,
+                            'idproyecto': id_proyecto,
+                            'horasempleado': horas_empleado,
+                            'disponibilidad': horas_dis_empleado,
+                        }
+                    )
+                # Redirigir a una página de éxito o volver a la misma página con un mensaje de éxito
+                return render(request, 'core/asignador_hh.html', {'form': form, 'success': True})
+
+            elif 'Previsualizar Datos' in request.POST:
+                # Convertir los datos del DataFrame en una lista de diccionarios para la previsualización
+                data_list = df.to_dict(orient='records')
+
+                # Renderizar la página para revisar y editar los datos
+                return render(request, 'core/asignador_hh.html', {'form': form, 'data_list': data_list})
+
+    else:
+        form = AsignadorHHForm()
+
+    return render(request, 'core/asignador_hh.html', {'form': form})

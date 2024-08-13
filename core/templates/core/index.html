@@ -796,8 +796,8 @@
             </div>
         </div>
         <div class="text-center mt-4 mb-4">
-          <button class="btn btn-primary">Predecir</button>
-        </div>
+          <button type="button" class="btn btn-primary" id="submitBtn">Predecir</button>
+      </div>
         <div class="text-center mt-4 mb-4">
           <button class="btn btn-primary" href="{% url 'graficar_Datos' %}"> 
             Ver gráficos Desarrollados
@@ -829,6 +829,47 @@
         }
     });
   </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("ventasForm");
+        const fechaInput = document.getElementById("id_fecha");
+        const tipoProyectoSelect = document.getElementById("id_idTipoProyecto");
+        const submitButton = document.getElementById("submitBtn");
+        const errorMessages = document.getElementById("errorMessages");
+
+        submitButton.addEventListener("click", function (event) {
+            let valid = true;
+            let errors = [];
+
+            // Limpiar mensajes de error anteriores
+            errorMessages.innerHTML = "";
+
+            // Validar la fecha
+            const fecha = new Date(fechaInput.value);
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+
+            if (fecha < manana) {
+                errors.push("La fecha debe ser desde mañana en adelante.");
+                valid = false;
+            }
+
+            // Validar el tipo de proyecto
+            if (tipoProyectoSelect.value === "na") {
+                errors.push("Por favor, seleccione un tipo de proyecto válido.");
+                valid = false;
+            }
+
+            // Mostrar mensajes de error
+            if (!valid) {
+                errorMessages.innerHTML = errors.join("<br>");
+                event.preventDefault(); // Evitar el envío del formulario si hay errores
+            } else {
+                form.submit(); // Enviar el formulario si todo está correcto
+            }
+        });
+    });
+</script>
 
   <!--   Core JS Files   -->
   <script src="{% static 'core/js/core/jquery-3.7.1.min.js' %}"></script>

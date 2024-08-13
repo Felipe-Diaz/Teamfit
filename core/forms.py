@@ -15,6 +15,9 @@ def validar_longitud_maxima(value):
     if len(str(value)) > 12:
         raise ValidationError('El número no puede tener más de 12 dígitos.')
 
+def validar_longitud_maxima_nombres(value):
+    if len(str(value)) > 100:
+        raise ValidationError('El nombre del empelado no puede tener más de 100 caracteres.')
 
 #Formulario de Ventas
 class VentasForm(forms.Form):
@@ -116,5 +119,48 @@ class CrearUsuarioAdmin(UserCreationForm):
         model = User
         fields = ['username', 'first_name','last_name', 'email', 'is_staff', 'NUMRUT', 'DVRUN','fechaNacimiento','cargo','telefono']
 
+class AsignadorHHForm(forms.Form):
+    id_empleado= forms.IntegerField(
+        label="id del empleado",
+        required=True)
+    
+    nombre_empleado= forms.CharField(
+        label="Nombre del empleado",
+        required=True,
+        max_length = 100,
+        validators=[validar_longitud_maxima_nombres],
+        widget=forms.TextInput(attrs={'class':'form-control'})
+    )
+
+    cargo=forms.CharField(
+        label="Cargo o Rol del empleado",
+        required=True,
+        max_length = 100,
+        widget=forms.TextInput(attrs={'class':'form-control'})
+    )
+
+    telefono=forms.CharField(
+        label="Numero del empleado",
+        required=True,
+        max_length = 100,
+        validators=[validar_longitud_maxima],
+        widget=forms.TextInput(attrs={'class':'form-control'}))
+    
+    id_categoria = forms.IntegerField(
+        label="Categoria del empleado",
+        required=True)
+    
+    id_proyecto = forms.IntegerField(
+        label="id del proyecto",
+        required=True)
+    
+    horas_empleado = forms.IntegerField(
+        label="Horario de trabajo del empleado",
+        required=True
+    )
+    horas_dis_empleado = forms.IntegerField(
+        label="Horario del trabajo del empleado Disponible",
+        required=True
+    )
 
 #Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.
