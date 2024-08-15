@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios, proyectosAAgrupar
+from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm
 from datetime import datetime, timedelta, time
 import random
@@ -27,6 +27,7 @@ def subirProyectos(request, upload='Sh'):
         return redirect (subirProyectos)
     if(upload=="Up"):
         df = cambiarFormatoAlmacenarDb(request.session['df_proyectos'])
+        cont = 0
         for _, row in df.iterrows():
             proyecto = proyectosAAgrupar(
                 id=row['id'],
@@ -45,7 +46,13 @@ def subirProyectos(request, upload='Sh'):
                 desfaseDias=row['desfaseDias'],
                 ocupacionInicio=row['ocupacionInicio']
             )
+            cont += 1
             proyecto.save()
+        user = request.user
+        nombre = user.first_name
+        apellido = user.last_name
+        desc = f"El usuario {nombre} {apellido} ha ha subido {cont} proyectos."
+        almacenado = almacenarHistorial(desc, "1", user)
         request.session.pop('df_proyectos')
         return redirect(ver_proyectos)
     
@@ -212,23 +219,23 @@ def llenar_DB(request):
     User.objects.all().delete()
 
     
-    proyecto1 = proyectosAAgrupar.objects.update_or_create(
-            id = 446,
-            proyecto = 'PRY2023-106',
-            lineaNegocio = 'SGE',
-            tipo = 'Reportabilidad y Plataforma',
-            cliente = 6057,
-            pm = 'katherina@rodaenergia.cl', 
-            createDate = datetime.strptime('2023-05-10 21:20:14', "%Y-%m-%d %H:%M:%S"),
-            cierre = datetime.strptime('2023-05-10', "%Y-%m-%d").date(),
-            primeraTarea = datetime.strptime('2023-05-04', "%Y-%m-%d").date(),
-            ultimaTarea = datetime.strptime('2023-05-10', "%Y-%m-%d").date(),
-            egresosNoHHCLP = 0,
-            montoOfertaCLP = 1530218,
-            usoAgencia = False,
-            desfaseDias = 0,
-            ocupacionInicio = 69.0
-    )
+    # proyecto1 = proyectosAAgrupar.objects.update_or_create(
+    #         id = 446,
+    #         proyecto = 'PRY2023-106',
+    #         lineaNegocio = 'SGE',
+    #         tipo = 'Reportabilidad y Plataforma',
+    #         cliente = 6057,
+    #         pm = 'katherina@rodaenergia.cl', 
+    #         createDate = datetime.strptime('2023-05-10 21:20:14', "%Y-%m-%d %H:%M:%S"),
+    #         cierre = datetime.strptime('2023-05-10', "%Y-%m-%d").date(),
+    #         primeraTarea = datetime.strptime('2023-05-04', "%Y-%m-%d").date(),
+    #         ultimaTarea = datetime.strptime('2023-05-10', "%Y-%m-%d").date(),
+    #         egresosNoHHCLP = 0,
+    #         montoOfertaCLP = 1530218,
+    #         usoAgencia = False,
+    #         desfaseDias = 0,
+    #         ocupacionInicio = 69.0
+    # )
     
     #Usuario de testing
     usuario = User.objects.create_user(username="admin", password='Admin@123')
@@ -238,6 +245,8 @@ def llenar_DB(request):
     usuario.is_superuser = True
     usuario.is_staff = True
     usuario.save()
+    
+    perfil = PerfilUsuario.objects.update_or_create(user=usuario, NUMRUT='20158654', DVRUN='K',fechaNacimiento='1995-02-10', cargo='Administrador', telefono='+56986401578')
     
     #Crear un usuario inactivo y modificar el login para no dejarlo loguearse
     usuarioAnon = User.objects.create_user(username="Anon", password='anon') #ZKfg!)nkLSp163SD
@@ -360,7 +369,6 @@ def iniciar_sesion(request):
                 apellido = user.last_name
                 desc = f"El usuario {nombre} {apellido} ha iniciado sesión"
                 almacenado = almacenarHistorial(desc, "2", user)
-                print(almacenado)
                 return redirect(pagina_principal)
             else:
                 data = {'mesg':'Usuario o contraseña incorrectos', 'form':LoginForm}
@@ -379,15 +387,25 @@ def cerrar_sesion(request):
     logout(request)
     return redirect(iniciar_sesion) 
 
-def crear_usuarios(request):
-    data = {'form':CrearUsuarioAdmin}
-    return render(request, 'core/crearUsuarios.html', data)
-
+#Carga la página principal con todos los datos necesarios
 def pagina_principal(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
     
-    data = {}
+    graficos = Graficos.objects.all()
+    data_list = list(graficos.values())
+    additional_data = pd.DataFrame(data_list)
+    
+    bar_chart = go.Figure(data=[
+        go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
+        go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
+    ])
+    bar_chart = bar_chart.to_html(full_html=False)
+    
+    line_chart = px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
+    line_chart = line_chart.to_html(full_html=False)
+    
+    data = {'bar':bar_chart, 'line':line_chart}
     return render(request, 'core/index1.html', data)
 
 #Almacena el historial solicitando desc, tipoInfo y usuario
@@ -419,8 +437,97 @@ def almacenarHistorial(desc, tipoInfo, usuario):
     histCambios.save()
     return histCambios
     
+#Carga todos los distintos proyectos
 def ver_proyectos(request):
-    #data = {}
-    #return render(request, 'core/verProyectos.html', data)
     proyectos = proyectosAAgrupar.objects.all()
-    return render(request, 'core/verProyectos.html', {'proyectos': proyectos})
+    data = {'proyectos':proyectos}
+    return render(request, 'core/verProyectos.html', data)
+
+#Unicamente carga el historial o log de usuarios
+def verHistorial(request):
+    historial = historialCambios.objects.all().values('idHist','fecha','desc','tipoInfo','usuario__first_name','usuario__last_name')
+    data = {'hist':historial}
+    return render(request, 'core/historialAcciones.html', data)
+
+#Unicamente carga los usuarios
+def ver_usuarios(request):
+    usuarios = PerfilUsuario.objects.all().values('NUMRUT','DVRUN','fechaNacimiento','cargo','telefono',
+                                                  'user__username','user__first_name','user__last_name',
+                                                  'user__email','user__is_staff', 'user__is_active', 'user')
+    PerfilUsuario.objects.filter()
+    data = {'usuarios':usuarios}
+    return render (request, 'core/verUsuarios.html', data)
+
+def crear_usuarios(request):
+    data = {"form":CrearUsuarioAdmin}
+    if request.method == 'POST':
+        form = CrearUsuarioAdmin(request.POST)
+        if form.is_valid():
+            try:
+                user = form.save()
+                NUMRUT = form.cleaned_data.get('NUMRUT')
+                DVRUN = form.cleaned_data.get('DVRUN')
+                fechaNacimiento = form.cleaned_data.get('fechaNacimiento')
+                cargo = form.cleaned_data.get('cargo')
+                telefono = form.cleaned_data.get('telefono')
+                user.save()
+                PerfUsr = PerfilUsuario.objects.update_or_create(user=user, NUMRUT=NUMRUT, DVRUN=DVRUN, fechaNacimiento=fechaNacimiento, cargo=cargo, telefono=telefono)
+                ##Se obtienen los datos del usuario creado
+                nombreCread = f'{user.first_name} {user.last_name}'
+                nombreAcc = f'{request.user.first_name} {request.user.last_name}'
+                desc = f'El usuario {nombreAcc} ha creado al usuario {nombreCread}'
+                almacenado = almacenarHistorial(desc, "1", request.user)
+                messages=["Usuario creado con éxito"]
+                data["messages"]=messages
+                data['form'] = CrearUsuarioAdmin()
+            except Exception as e:
+                merror=[f'Error guardando usuario. Intente de nuevo más tarde.']
+                print(e)
+        else:
+            # Storing form errors
+            error_messages = form.errors.as_data()  # Returns a dict with field names as keys and errors as values
+            merror=[]
+            for field, errors in error_messages.items():
+                for error in errors:
+                    #messages.error(request, f'Error in {field}: {error}')
+                    merror.append(f'Error en {field}: {error}')
+            data["merror"]=merror
+    else:
+        data['form'] = CrearUsuarioAdmin()
+
+    return render(request, 'core/crearUsuarios.html', data)
+
+#Desactiva el usuario, validando si existe y si es superuser o no.
+def eliminarUsuarios(request, id):
+    if(not request.user.is_staff):
+        return redirect(ver_usuarios)
+
+    #Se desactiva el usuario
+    try:
+        usuario = User.objects.get(id=id)
+        nombre = usuario.first_name
+        apellido = usuario.last_name
+        if(usuario.is_staff):
+            mesg = f'El usuario {nombre} {apellido} es administrador, no puede ser desactivado'
+        else:
+            mesg = f'Se ha desactivado al usuario {nombre} {apellido}. Verifique el usuario en la siguiente lista'
+            print('mesg')
+            usuario.is_active = False
+            usuario.save()
+            nombreDesac = f'{nombre} {apellido}'
+            
+            nombre = request.user.first_name
+            apellido = request.user.last_name
+            desc = f'El usuario {nombre} {apellido} ha desactivado al usuario {nombreDesac}'
+            almacenado = almacenarHistorial(desc, "1", request.user)
+    except Exception as e:
+        print(e)
+        mesg = 'El usuario no existe. Por favor verifique el usuario que desea desactivar'
+    
+    #Se cargan los datos ya cambiados
+    usuarios = PerfilUsuario.objects.all().values('NUMRUT','DVRUN','fechaNacimiento','cargo','telefono',
+                                                  'user__username','user__first_name','user__last_name',
+                                                  'user__email','user__is_staff', 'user__is_active', 'user')
+    
+    data = {'mesg':mesg, 'usuarios':usuarios}
+    return render (request, 'core/verUsuarios.html', data)

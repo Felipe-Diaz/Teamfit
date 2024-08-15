@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Predictor de Carga de Horas</title>
+  <title>Teamfit - Ver Usuarios</title>
   <meta
   content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
   name="viewport"
@@ -43,34 +43,44 @@
 <!-- CSS Just for demo purpose, don't include it in your project -->
 <link rel="stylesheet" href="{% static 'core/css/demo.css' %}" />
 <style>
-  .container_a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+  .modal {
+      position: fixed;
+      z-index: 100%;
+      left: 0;
+      top: 0;
       width: 100%;
       height: 100%;
+      overflow: auto;
+      background-color: rgb(0,0,0);
+      background-color: rgba(0,0,0,0.4);
+      display: none;
   }
-
-  .form-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 600px;
-      margin-bottom: 20px; /* Espacio entre el formulario y el cuadro */
+  
+  .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      position: absolute;
+      left: 6%;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 90%;
+      bottom: -20%;
   }
-
-  .box {
-      width: 80%;
-      height: 20%;
-      border: 2px dotted black; /* Línea punteada */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      background-color: #f5f5dc; /* Color de fondo similar al de la imagen */
+  
+  .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
   }
-</style>
+  
+  .close:hover,
+  .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+  }
+  </style>
 </head>
 <body>
 <div class="wrapper">
@@ -107,12 +117,12 @@
         <ul class="nav nav-secondary">
           <li class="nav-item">
             <a
+              href="{% url 'index'%}" 
               class="collapsed"
               aria-expanded="false"
-              href="{% url 'index' %}"
             >
               <i class="fas fa-home"></i>
-              <p>Inicio</p>
+              <span >Inicio</span>
             </a>
           </li>
           <li class="nav-section">
@@ -129,6 +139,7 @@
             </a>
             <div class="collapse" id="base">
               <ul class="nav nav-collapse">
+                <li>
                 <li>
                   <a href="{% url 'subirProyectos' %}">
                     <span class="sub-item">Subir Proyectos</span>
@@ -701,285 +712,162 @@
       </nav>
       <!-- End Navbar -->
     </div>
-  <br>
-  {% if not showTable %}
-  <div class="container">
-    <h1 class="predictor-title text-center" 
-        style="
-        font-family: Arial, sans-serif;
-        padding: 10px;">
-      Predictor de Carga de Horas
-    </h1>
-    <p class="text-center">
-      Prediga la carga de horas de su equipo profesional en base a la estimación de ventas
-    </p>
-    <div class="container_a">
-      <div class="box">
-        <div class="text-center mb-4">
-          <br>
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form }}
-            <br>
-            <button type="submit" class="btn btn-primary">Subir archivo</button>
-          </form>
-          {% if mesg %}
-            <p>{{ mesg }}</p>
-          {% endif %}
-      </div>
-    </div>
-    <br>
-    <div class="text-center hb">
-      <p class="text-center">O ingréselos a continuación</p>      
-    </div>
-    <div class="text-center hb">
-      <!-- <a href="{% url 'crearUsuarios' %}"> Agregar Usuarios</a> -->
-    </div>
-    <br>
-    <!-- Formulario de un proyecto -->
-    {% if proyectoForms %}
-    <form method="POST">
-      <div class="row">
-          <div class="col-md-12">
-              <h4 class="text-center">Estimación Ventas</h4>
-              <div class="justify-content-center">
-                  {% csrf_token %}
-                  <table class="table">
-                      <tbody>
-                          <tr>
-                              <td>{{ proyectoForms.idProy.label_tag }}</td>
-                              <td>{{ proyectoForms.idProy }}</td>
-                          </tr>
-                          <tr>
-                              <td>{{ proyectoForms.proyecto.label_tag }}</td>
-                              <td>{{ proyectoForms.proyecto }}</td>
-                          </tr>
-                          <tr>
-                              <td>{{ proyectoForms.lineaNegocio.label_tag }}</td>
-                              <td>{{ proyectoForms.lineaNegocio }}</td>
-                          </tr>
-                          <tr>
-                              <td>{{ proyectoForms.tipo.label_tag }}</td>
-                              <td>{{ proyectoForms.tipo }}</td>
-                          </tr>
-                          <tr>
-                              <td>{{ proyectoForms.usoAgencia.label_tag }}</td>
-                              <td>{{ proyectoForms.usoAgencia }}</td>
-                          </tr>
-                          <tr>
-                              <td>{{ proyectoForms.ocupacionInicio.label_tag }}</td>
-                              <td>{{ proyectoForms.ocupacionInicio }}</td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
-          </div>
-      </div>
-      <div class="text-center mt-4 mb-4">
-          <button class="btn btn-primary">Predecir</button>
-      </div>
-      <div class="text-center mt-4 mb-4">
-          <a class="btn btn-primary" href="{% url 'graficar_Datos' %}"> 
-              Ver gráficos Desarrollados
-          </a>
-      </div>
-    </form>
-    {% endif %}
-  {% endif %}
-  {% if showTable %}
-  <div class="row"> 
+<div class="row">
     <div class="col-md-12">
         <br>
         <br> 
         <br>
         <br> 
         <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Proyectos a Subir</h3>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-            <table id="multi-filter-select" class="display table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Proyecto</th>
-                        <th>Tipo</th>
-                        <th>Linea de trabajo</th>
-                        <th>P.A.E</th>
-                        <th>Carga Trabajo</th>
-                    </tr>
-                </thead>
-                    <tbody>
-                        {% for proyectos in proyectos %}
-                        <tr class="project-row">
-                            <td>{{ proyectos.id }}</td>
-                            <td>{{ proyectos.proyecto }}</td>
-                            <td>{{ proyectos.tipo }}</td>
-                            <td>{{ proyectos.lineaNegocio }}</td>
-                            {% if proyectos.usoAgencia %}
-                            <td> Si </td>
-                            {% else %}
-                            <td>No</td>
-                            {% endif %}
-                            <!-- <td>{{ proyectos.usoAgencia }}</td> -->
-                            <td>{{ proyectos.ocupacionInicio }}</td>
-                        </tr>
-                        {% empty %}
-                    <tr>
-                        <td colspan="6">No hay productos disponibles</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot>
-                <tr>
-                    <th>ID</th>
-                    <th>Proyecto</th>
-                    <th>Tipo</th>
-                    <th>Linea de trabajo</th>
-                    <th>P.A.E</th>
-                    <th>Carga Trabajo</th>
-                </tr>
-                </tfoot>
-                <tbody>
-                </tbody>
-            </table>
+            <div class="card-header">
+                <h4 class="card-title">Usuarios Registrados</h4>
             </div>
-        </div>
-        </div>
-    </div>
-  </div>
-  <div class="container mt-5">
-    <div class="row">
-        <div class="col-lg-6 text-center">
-          <a href="{% url 'decidirSubida' 'Can' %}">
-            <button type="button" class="btn btn-danger">Volver</button>
-          </a>
-        </div>
-        <div class="col-lg-6 text-center">
-          <a href="{% url 'decidirSubida' 'Up' %}">
-            <button type="button" class="btn btn-success">Subir Proyectos</button>
-          </a>
-            
+            {% if mesg %}
+            <div>
+              {{mesg}}
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="basic-datatables" class="display table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>R.U.T</th>
+                                        <th>Cargo</th>
+                                        <th>Usuario Activo</th>
+                                        <th style="width: 10%">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <!-- Aqui deben ir los usuarios -->
+                                <tbody>
+                                  {% for user in usuarios %}
+                                    <tr>
+                                        <td>{{user.user__first_name}} {{user.user__last_name}}</td>
+                                        <td>{{user.user__email}}</td>
+                                        <td>{{user.NUMRUT}}-{{user.DVRUN}}</td>
+                                        <td>{{user.cargo}}</td>
+                                        {% if user.user__is_active == True %}
+                                          <td>Activo </td>
+                                        {% else %}
+                                          <td>Desactivado</td>
+                                        {% endif %}
+                                        <td>
+                                            <div class="form-button-action">
+                                                <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task">
+                                                    <i class="fa fa-edit"></i>
+                                                </button>
+                                                <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove">
+                                                  <a href="{% url 'eliminarUsuario' user.user %}" style="color: inherit; text-decoration: none;">
+                                                    <i class="fa fa-times"></i>
+                                                  </a>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                  {% endfor %}
+                                </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-  {% endif %}
-  </div>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+ <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-  <script>
-    //Busca distintos Divs, para luego agregar una ID específica a cada input
-    document.addEventListener('DOMContentLoaded', function() {
-        //Buscar y cambia la ID específica del input dentro del HTML
-        for (var i = 0; i < 5; i++) {
-            var idTextBoxHh = 'id_' + i + '-HorasHombre';
-            var idTextBoxSem = 'id_' + i + '-semana';
+    <!--   Core JS Files   -->
+    <script src="{% static 'core/js/core/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'core/js/core/popper.min.js' %}"></script>
+    <script src="{% static 'core/js/core/bootstrap.min.js' %}"></script>
 
-            var TextBoxSem = document.getElementById(idTextBoxSem);
-            TextBoxSem.value = '3' + (i+1);
+    <!-- jQuery Scrollbar -->
+    <script src="{% static 'core/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js' %}"></script>
 
-            var TextBoxHh = document.getElementById(idTextBoxHh);
-            if(i <= 1){
-              TextBoxHh.value = 5
-            }else{
-              TextBoxHh.value = 6
-            }
-        }
-    });
-  </script>
+    <!-- Chart JS -->
+    <script src="{% static 'core/js/plugin/chart.js/chart.min.js' %}"></script>
 
-  <!--   Core JS Files   -->
-  <script src="{% static 'core/js/core/jquery-3.7.1.min.js' %}"></script>
-  <script src="{% static 'core/js/core/popper.min.js' %}"></script>
-  <script src="{% static 'core/js/core/bootstrap.min.js' %}"></script>
+    <!-- jQuery Sparkline -->
+    <script src="{% static 'core/js/plugin/jquery.sparkline/jquery.sparkline.min.js' %}"></script>
 
-  <!-- jQuery Scrollbar -->
-  <script src="{% static 'core/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js' %}"></script>
+    <!-- Chart Circle -->
+    <script src="{% static 'core/js/plugin/chart-circle/circles.min.js' %}"></script>
 
-  <!-- Chart JS -->
-  <script src="{% static 'core/js/plugin/chart.js/chart.min.js' %}"></script>
+    <!-- Datatables -->
+    <script src="{% static 'core/js/plugin/datatables/datatables.min.js' %}"></script>
 
-  <!-- jQuery Sparkline -->
-  <script src="{% static 'core/js/plugin/jquery.sparkline/jquery.sparkline.min.js' %}"></script>
+    <!-- Bootstrap Notify -->
+    <script src="{% static 'core/js/plugin/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
 
-  <!-- Chart Circle -->
-  <script src="{% static 'core/js/plugin/chart-circle/circles.min.js' %}"></script>
+    <!-- jQuery Vector Maps -->
+    <script src="{% static 'core/js/plugin/jsvectormap/jsvectormap.min.js' %}"></script>
+    <script src="{% static 'core/js/plugin/jsvectormap/world.js' %}"></script>
 
-  <!-- Datatables -->
-  <script src="{% static 'core/js/plugin/datatables/datatables.min.js' %}"></script>
+    <!-- Sweet Alert -->
+    <script src="{% static 'core/js/plugin/sweetalert/sweetalert.min.js' %}"></script>
 
-  <!-- Bootstrap Notify -->
-  <script src="{% static 'core/js/plugin/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
-
-  <!-- jQuery Vector Maps -->
-  <script src="{% static 'core/js/plugin/jsvectormap/jsvectormap.min.js' %}"></script>
-  <script src="{% static 'core/js/plugin/jsvectormap/world.js' %}"></script>
-
-  <!-- Sweet Alert -->
-  <script src="{% static 'core/js/plugin/sweetalert/sweetalert.min.js' %}"></script>
-
-  <!-- Kaiadmin JS -->
-  <script src="{% static 'core/js/kaiadmin.min.js' %}"></script>
-
-  <script>
-    $(document).ready(function () {
-      $("#basic-datatables").DataTable({});
-
-      $("#multi-filter-select").DataTable({
-        pageLength: 5,
-        initComplete: function () {
-          this.api()
-            .columns()
-            .every(function () {
-              var column = this;
-              var select = $(
-                '<select class="form-select"><option value=""></option></select>'
-              )
-                .appendTo($(column.footer()).empty())
-                .on("change", function () {
-                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
+    <!-- Kaiadmin JS -->
+    <script src="{% static 'core/js/kaiadmin.min.js' %}"></script>
+    
+    <script>
+        $(document).ready(function () {
+          $("#basic-datatables").DataTable({});
+  
+          $("#multi-filter-select").DataTable({
+            pageLength: 5,
+            initComplete: function () {
+              this.api()
+                .columns()
+                .every(function () {
+                  var column = this;
+                  var select = $(
+                    '<select class="form-select"><option value=""></option></select>'
+                  )
+                    .appendTo($(column.footer()).empty())
+                    .on("change", function () {
+                      var val = $.fn.dataTable.util.escapeRegex($(this).val());
+  
+                      column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                    });
+  
                   column
-                    .search(val ? "^" + val + "$" : "", true, false)
-                    .draw();
+                    .data()
+                    .unique()
+                    .sort()
+                    .each(function (d, j) {
+                      select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                      );
+                    });
                 });
+            },
+          });
+  
+          // Add Row
+          $("#add-row").DataTable({
+            pageLength: 5,
+          });
+  
+          var action =
+            '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+  
+          $("#addRowButton").click(function () {
+            $("#add-row")
+              .dataTable()
+              .fnAddData([
+                $("#addName").val(),
+                $("#addPosition").val(),
+                $("#addOffice").val(),
+                action,
+              ]);
+            $("#addRowModal").modal("hide");
+          });
+        });
+      </script>
 
-              column
-                .data()
-                .unique()
-                .sort()
-                .each(function (d, j) {
-                  select.append(
-                    '<option value="' + d + '">' + d + "</option>"
-                  );
-                });
-            });
-        },
-      });
-
-      // Add Row
-      $("#add-row").DataTable({
-        pageLength: 5,
-      });
-
-      var action =
-        '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
-
-      $("#addRowButton").click(function () {
-        $("#add-row")
-          .dataTable()
-          .fnAddData([
-            $("#addName").val(),
-            $("#addPosition").val(),
-            $("#addOffice").val(),
-            action,
-          ]);
-        $("#addRowModal").modal("hide");
-      });
-    });
-  </script>
 </body>
 </html>

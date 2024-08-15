@@ -66,27 +66,16 @@
             <div class="sidebar-wrapper scrollbar scrollbar-inner">
             <div class="sidebar-content">
                 <ul class="nav nav-secondary">
-                <li class="nav-item active">
+                <li class="nav-item">
                     <a
-                    data-bs-toggle="collapse"
-                    href="#dashboard"
-                    class="collapsed"
-                    aria-expanded="false"
+                        class="collapsed"
+                        aria-expanded="false"
+                        href="{% url 'index' %}"
                     >
-                    <i class="fas fa-home"></i>
-                    <p>Dashboard</p>
-                    <span class="caret"></span>
+                        <i class="fas fa-home"></i>
+                        <p>Inicio</p>
                     </a>
-                    <div class="collapse" id="dashboard">
-                    <ul class="nav nav-collapse">
-                        <li>
-                        <a href="../demo1/index.html">
-                            <span class="sub-item">Dashboard 1</span>
-                        </a>
-                        </li>
-                    </ul>
-                    </div>
-                </li>
+                    </li>
                 <li class="nav-section">
                     <span class="sidebar-mini-icon">
                     <i class="fa fa-ellipsis-h"></i>
@@ -122,13 +111,13 @@
                     <div class="collapse" id="sidebarLayouts">
                     <ul class="nav nav-collapse">
                         <li>
-                        <a href="sidebar-style-2.html">
-                            <span class="sub-item">Crear Usuario</span>
-                        </a>
-                        </li>
-                        <li>
-                        <a href="icon-menu.html">
-                            <span class="sub-item">Ver Usuarios</span>
+                            <a href="{% url 'crearUsuarios' %}">
+                                <span class="sub-item">Crear Usuario</span>
+                              </a>
+                            </li>
+                            <li>
+                              <a href="{% url 'verUsuarios' %}">
+                                <span class="sub-item">Ver Usuarios</span>
                         </a>
                         </li>
                     </ul>
@@ -226,12 +215,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../../documentation/index.html">
-                    <i class="fas fa-file"></i>
-                    <p>Documentation</p>
-                    <span class="badge badge-secondary">1</span>
+                    <a href="{% url 'historial' %}">
+                      <i class="fas fa-file"></i>
+                      <p>Historial</p>
+                      <!-- <span class="badge badge-secondary">1</span> -->
                     </a>
-                </li>
+                  </li>
                 <li class="nav-item">
                     <a data-bs-toggle="collapse" href="#submenu">
                     <i class="fas fa-bars"></i>
@@ -627,7 +616,7 @@
                         />
                         </div>
                         <span class="profile-username">
-                        <span class="op-7">Hi,</span>
+                        <span class="op-7">Hola,</span>
                         <span class="fw-bold">{{ user.first_name}} </span>
                         </span>
                     </a>
@@ -648,18 +637,18 @@
                                 <a
                                 href="profile.html"
                                 class="btn btn-xs btn-secondary btn-sm"
-                                >View Profile</a
+                                >Ver Perfil</a
                                 >
                             </div>
                             </div>
                         </li>
                         <li>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#">My Profile</a>
-                            <a class="dropdown-item" href="#">My Balance</a>
+                            <a class="dropdown-item" href="#">Mi Perfil</a>
+                            <a class="dropdown-item" href="#">Mi Balance</a>
                             <a class="dropdown-item" href="#">Inbox</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#">Account Setting</a>
+                            <a class="dropdown-item" href="#">Ajustes</a>
                             <div class="dropdown-divider"></div>
                             {% if user.is_authenticated %}
                             <a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a>

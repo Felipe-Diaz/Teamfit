@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ver Proyectos</title>
+  <title>Teamfit - Ver Proyectos</title>
   <meta
   content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
   name="viewport"
@@ -115,26 +115,15 @@
     <div class="sidebar-wrapper scrollbar scrollbar-inner">
       <div class="sidebar-content">
         <ul class="nav nav-secondary">
-          <li class="nav-item active">
+          <li class="nav-item">
             <a
-              data-bs-toggle="collapse"
-              href="#dashboard"
               class="collapsed"
               aria-expanded="false"
+              href="{% url 'index' %}"
             >
               <i class="fas fa-home"></i>
-              <p>Dashboard</p>
-              <span class="caret"></span>
+              <p>Inicio</p>
             </a>
-            <div class="collapse" id="dashboard">
-              <ul class="nav nav-collapse">
-                <li>
-                  <a href="../demo1/index.html">
-                    <span class="sub-item">Dashboard 1</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
           </li>
           <li class="nav-section">
             <span class="sidebar-mini-icon">
@@ -172,12 +161,12 @@
             <div class="collapse" id="sidebarLayouts">
               <ul class="nav nav-collapse">
                 <li>
-                  <a href="sidebar-style-2.html">
+                  <a href="{% url 'crearUsuarios' %}">
                     <span class="sub-item">Crear Usuario</span>
                   </a>
                 </li>
                 <li>
-                  <a href="icon-menu.html">
+                  <a href="{% url 'verUsuarios' %}">
                     <span class="sub-item">Ver Usuarios</span>
                   </a>
                 </li>
@@ -276,10 +265,10 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="../../documentation/index.html">
+            <a href="{% url 'historial' %}">
               <i class="fas fa-file"></i>
-              <p>Documentation</p>
-              <span class="badge badge-secondary">1</span>
+              <p>Historial</p>
+              <!-- <span class="badge badge-secondary">1</span> -->
             </a>
           </li>
           <li class="nav-item">
@@ -677,7 +666,7 @@
                   />
                 </div>
                 <span class="profile-username">
-                  <span class="op-7">Hi,</span>
+                  <span class="op-7">Hola,</span>
                   <span class="fw-bold">{{ user.first_name}} </span>
                 </span>
               </a>
@@ -698,18 +687,18 @@
                         <a
                           href="profile.html"
                           class="btn btn-xs btn-secondary btn-sm"
-                          >View Profile</a
+                          >Ver Perfil</a
                         >
                       </div>
                     </div>
                   </li>
                   <li>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">My Profile</a>
-                    <a class="dropdown-item" href="#">My Balance</a>
+                    <a class="dropdown-item" href="#">Mi Perfil</a>
+                    <a class="dropdown-item" href="#">Mi Balance</a>
                     <a class="dropdown-item" href="#">Inbox</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Account Setting</a>
+                  <a class="dropdown-item" href="#">Ajustes</a>
                     <div class="dropdown-divider"></div>
                     {% if user.is_authenticated %}
                     <a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a>
@@ -723,6 +712,7 @@
       </nav>
       <!-- End Navbar -->
     </div>
+    <!-- Tabla con filtro de datos incluido -->
     <div class="row"> 
         <div class="col-md-12">
             <br>
@@ -730,76 +720,76 @@
             <br>
             <br> 
             <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Proyectos Almacenados</h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                <table id="multi-filter-select" class="display table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Proyecto</th>
-                            <th>Tipo</th>
-                            <th>Linea de trabajo</th>
-                            <th>P.A.E</th>
-                            <th>Carga Trabajo</th>
-                        </tr>
-                    </thead>
-                        <tbody>
-                            {% for proyectos in proyectos %}
-                            <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
-                            <tr class="project-row"
-                                data-id="{{ proyectos.id }}"
-                                data-proyecto="{{ proyectos.proyecto }}"
-                                data-tipo="{{ proyectos.tipo }}"
-                                data-linea="{{ proyectos.lineaNegocio }}"
-                                data-pae="{% if proyectos.usoAgencia %}Si{% else %}No{% endif %}"
-                                data-carga="{{ proyectos.ocupacionInicio }}%"
+              <div class="card-header">
+                  <h4 class="card-title">Proyectos Almacenados</h4>
+              </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                  <table id="multi-filter-select" class="display table table-striped table-hover">
+                      <thead>
+                          <tr>
+                              <th>ID</th>
+                              <th>Proyecto</th>
+                              <th>Tipo</th>
+                              <th>Linea de trabajo</th>
+                              <th>P.A.E</th>
+                              <th>Carga Trabajo</th>
+                          </tr>
+                      </thead>
+                          <tbody>
+                              {% for proyectos in proyectos %}
+                              <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+                              <tr class="project-row"
+                                  data-id="{{ proyectos.id }}"
+                                  data-proyecto="{{ proyectos.proyecto }}"
+                                  data-tipo="{{ proyectos.tipo }}"
+                                  data-linea="{{ proyectos.lineaNegocio }}"
+                                  data-pae="{% if proyectos.usoAgencia %}Si{% else %}No{% endif %}"
+                                  data-carga="{{ proyectos.ocupacionInicio }}%"
 
-                                data-cliente="{{ proyectos.cliente }}"
-                                data-pm="{{ proyectos.pm }}"
-                                data-createDate="{{ proyectos.createDate }}"
-                                data-cierre="{{ proyectos.cierre }}"
-                                data-primeraTarea="{{ proyectos.primeraTarea }}"
-                                data-ultimaTarea="{{ proyectos.ultimaTarea }}"
-                                data-egresosNoHHCLP="{{ proyectos.egresosNoHHCLP }}"
-                                data-montoOfertaCLP="{{ proyectos.montoOfertaCLP }}"
-                                data-desfaseDias="{{ proyectos.desfaseDias }}">
+                                  data-cliente="{{ proyectos.cliente }}"
+                                  data-pm="{{ proyectos.pm }}"
+                                  data-createDate="{{ proyectos.createDate }}"
+                                  data-cierre="{{ proyectos.cierre }}"
+                                  data-primeraTarea="{{ proyectos.primeraTarea }}"
+                                  data-ultimaTarea="{{ proyectos.ultimaTarea }}"
+                                  data-egresosNoHHCLP="{{ proyectos.egresosNoHHCLP }}"
+                                  data-montoOfertaCLP="{{ proyectos.montoOfertaCLP }}"
+                                  data-desfaseDias="{{ proyectos.desfaseDias }}">
 
-                                <td>{{ proyectos.id }}</td>
-                                <td>{{ proyectos.proyecto }}</td>
-                                <td>{{ proyectos.tipo }}</td>
-                                <td>{{ proyectos.lineaNegocio }}</td>
-                                {% if proyectos.usoAgencia %}
-                                <td> Si </td>
-                                {% else %}
-                                <td>No</td>
-                                {% endif %}
-                                <!-- <td>{{ proyectos.usoAgencia }}</td> -->
-                                <td>{{ proyectos.ocupacionInicio }}%</td>
-                            </tr>
-                            {% empty %}
-                        <tr>
-                            <td colspan="15">No hay productos disponibles</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th>ID</th>
-                        <th>Proyecto</th>
-                        <th>Tipo</th>
-                        <th>Linea de trabajo</th>
-                        <th>P.A.E</th>
-                        <th>Carga Trabajo</th>
-                    </tr>
-                    </tfoot>
-                    <tbody>
-                    </tbody>
-                </table>
+                                  <td>{{ proyectos.id }}</td>
+                                  <td>{{ proyectos.proyecto }}</td>
+                                  <td>{{ proyectos.tipo }}</td>
+                                  <td>{{ proyectos.lineaNegocio }}</td>
+                                  {% if proyectos.usoAgencia %}
+                                  <td> Si </td>
+                                  {% else %}
+                                  <td>No</td>
+                                  {% endif %}
+                                  <!-- <td>{{ proyectos.usoAgencia }}</td> -->
+                                  <td>{{ proyectos.ocupacionInicio }}%</td>
+                              </tr>
+                              {% empty %}
+                          <tr>
+                              <td colspan="15">No hay productos disponibles</td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                      <tfoot>
+                      <tr>
+                          <th>ID</th>
+                          <th>Proyecto</th>
+                          <th>Tipo</th>
+                          <th>Linea de trabajo</th>
+                          <th>P.A.E</th>
+                          <th>Carga Trabajo</th>
+                      </tr>
+                      </tfoot>
+                      <tbody>
+                      </tbody>
+                  </table>
+                  </div>
                 </div>
-            </div>
             </div>
         </div>
     </div>
