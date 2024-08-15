@@ -84,20 +84,21 @@ DATABASES = {
     }
 }
 
+# ------------------------------------------------------------------------CONECTOR A POSTGRESQL----------------------------------------------------------------------------------
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'teamfit',
-#         'USER': 'teamfitadmindb', #TeamfitAdminDB
-#         'PASSWORD': 'zmLhdqM1otFuqG4', #zmLhdqM1otFuqG4
-#         'HOST': 'localhost',
-#         'PORT': '5432',
+#         'NAME': 'nombre_de_tu_base_de_datos',
+#         'USER': 'tu_usuario',
+#         'PASSWORD': 'tu_contraseña',
+#         'HOST': 'localhost',  # o la dirección IP de tu servidor PostgreSQL
+#         'PORT': '5432',  # el puerto por defecto para PostgreSQL
 #     }
 # }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
     {
