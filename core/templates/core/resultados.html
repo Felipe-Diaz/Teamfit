@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Asignación</title>
+</head>
+<body>
+    <h1>Resultados de Asignación de Recursos</h1>
+
+    {% if asignaciones %}
+        {% for asignacion in asignaciones %}
+            <h2>Proyecto {{ asignacion.proyecto }} (Horas requeridas: {{ asignacion.horas_requeridas }})</h2>
+            <ul>
+                {% for detalle in asignacion.asignaciones %}
+                    <li>{{ detalle.empleado }}: {{ detalle.horas_asignadas }} horas asignadas</li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    {% else %}
+        <p>No se han realizado asignaciones.</p>
+    {% endif %}
+
+</body>
+</html>

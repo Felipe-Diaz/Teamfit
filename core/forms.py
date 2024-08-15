@@ -150,14 +150,6 @@ class AsignadorHHForm(forms.Form):
         label="Categoria del empleado",
         required=True)
     
-    id_proyecto = forms.IntegerField(
-        label="id del proyecto",
-        required=True)
-    
-    horas_empleado = forms.IntegerField(
-        label="Horario de trabajo del empleado",
-        required=True
-    )
     horas_dis_empleado = forms.IntegerField(
         label="Horario del trabajo del empleado Disponible",
         required=True
