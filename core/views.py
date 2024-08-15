@@ -462,8 +462,7 @@ def asignar_horas(request):
         for proyecto, horas_requeridas in proyectos_horas.items():
             horas_asignadas = 0
             proyecto_asignaciones = []
-            
-            print(f"\nAsignando recursos para {proyecto} (Horas requeridas: {horas_requeridas})")
+            empleados_asignados = []  # Para guardar los nombres de los empleados asignados
             
             for empleado in empleados:
                 if horas_asignadas >= horas_requeridas:
@@ -480,17 +479,20 @@ def asignar_horas(request):
                         'horas_asignadas': horas_a_asignar
                     })
                     
-                    print(f"Empleado asignado: {empleado.nombre_empleado} ({empleado.cargo}) - Horas asignadas: {horas_a_asignar}")
+                    empleados_asignados.append(empleado.nombre_empleado)  # Añadir nombre del empleado asignado
 
+            # Aquí concatenamos los nombres de los empleados en una sola cadena de texto
             asignaciones.append({
                 'proyecto': proyecto,
                 'horas_requeridas': horas_requeridas,
-                'asignaciones': proyecto_asignaciones
+                'asignaciones': proyecto_asignaciones,
+                'empleados_asignados': ', '.join(empleados_asignados)  # Concatenar nombres de empleados
             })
         
         return render(request, 'core/resultados.html', {'asignaciones': asignaciones})
 
     return render(request, 'core/asignarR.html')
+
 
 def resultados(request):
     # Puedes incluir lógica aquí si es necesario
