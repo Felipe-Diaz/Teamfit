@@ -421,8 +421,6 @@ def AsignadorHH_subir_archivo_Exel(request):
                     cargo = request.POST.get(f'cargo_{i + 1}')
                     telefono = request.POST.get(f'telefono_{i + 1}')
                     id_categoria = request.POST.get(f'id_categoria_{i + 1}')
-                    id_proyecto = request.POST.get(f'id_proyecto_{i + 1}')
-                    horas_empleado = request.POST.get(f'horas_empleado_{i + 1}')
                     horas_dis_empleado = request.POST.get(f'horas_dis_empleado_{i + 1}')
 
                     # Crear o actualizar el registro en la base de datos
@@ -433,8 +431,6 @@ def AsignadorHH_subir_archivo_Exel(request):
                             'cargo': cargo,
                             'telefono': telefono,
                             'idcategoria': id_categoria,
-                            'idproyecto': id_proyecto,
-                            'horasempleado': horas_empleado,
                             'disponibilidad': horas_dis_empleado,
                         }
                     )
@@ -452,3 +448,51 @@ def AsignadorHH_subir_archivo_Exel(request):
         form = AsignadorHHForm()
 
     return render(request, 'core/asignador_hh.html', {'form': form})
+#.......
+
+def asignar_horas(request):
+    if request.method == "POST":
+        cantidad_proyectos = int(request.POST.get('cantidadProyectos', 0))
+        proyectos_horas = {f"proyecto{i}": int(request.POST.get(f"proyecto{i}")) for i in range(1, cantidad_proyectos + 1)}
+
+        empleados = Distribuidor_HH.objects.filter(horas_dis_empleado__gt=0).order_by('id_categoria')
+
+        asignaciones = []
+        
+        for proyecto, horas_requeridas in proyectos_horas.items():
+            horas_asignadas = 0
+            proyecto_asignaciones = []
+            
+            print(f"\nAsignando recursos para {proyecto} (Horas requeridas: {horas_requeridas})")
+            
+            for empleado in empleados:
+                if horas_asignadas >= horas_requeridas:
+                    break
+                
+                horas_disponibles = empleado.horas_dis_empleado
+                horas_a_asignar = min(horas_disponibles, horas_requeridas - horas_asignadas)
+                
+                if horas_a_asignar > 0:
+                    horas_asignadas += horas_a_asignar
+                    proyecto_asignaciones.append({
+                        'proyecto': proyecto,
+                        'empleado': empleado.nombre_empleado,
+                        'horas_asignadas': horas_a_asignar
+                    })
+                    
+                    print(f"Empleado asignado: {empleado.nombre_empleado} ({empleado.cargo}) - Horas asignadas: {horas_a_asignar}")
+
+            asignaciones.append({
+                'proyecto': proyecto,
+                'horas_requeridas': horas_requeridas,
+                'asignaciones': proyecto_asignaciones
+            })
+        
+        return render(request, 'core/resultados.html', {'asignaciones': asignaciones})
+
+    return render(request, 'core/asignarR.html')
+
+def resultados(request):
+    # Puedes incluir lógica aquí si es necesario
+    # Por ahora, esta vista simplemente renderiza la plantilla con el contexto recibido
+    return render(request, 'core/resultados.html')

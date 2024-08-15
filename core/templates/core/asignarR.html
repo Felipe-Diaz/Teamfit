@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignación de Recursos</title>
+    <script>
+        function mostrarCampos() {
+            const cantidadProyectos = document.getElementById("cantidadProyectos").value;
+            const contenedor = document.getElementById("campos");
+
+            // Limpiar contenedor de campos de texto
+            contenedor.innerHTML = "";
+
+            // Crear campos de texto según la cantidad de proyectos seleccionada
+            for (let i = 1; i <= cantidadProyectos; i++) {
+                const label = document.createElement("label");
+                label.textContent = `Horas requeridas para el proyecto ${i}: `;
+                
+                const input = document.createElement("input");
+                input.type = "number";
+                input.name = `proyecto${i}`;
+                input.required = true;
+                
+                contenedor.appendChild(label);
+                contenedor.appendChild(input);
+                contenedor.appendChild(document.createElement("br"));
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Asignación de Recursos</h1>
+    <form action="{% url 'asignar_horas' %}" method="POST">
+        {% csrf_token %}
+        <label for="cantidadProyectos">Selecciona la cantidad de proyectos:</label>
+        <select id="cantidadProyectos" name="cantidadProyectos" onchange="mostrarCampos()" required>
+            <option value="">--Seleccione una cantidad--</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <!-- Puedes agregar más opciones según lo necesario -->
+        </select>
+        <div id="campos"></div>
+        <button type="submit">Asignar Recursos</button>
+    </form>
+</body>
+</html>
