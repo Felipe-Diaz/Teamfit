@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados de Asignación</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>Resultados de Asignación de Recursos</h1>
@@ -18,65 +17,6 @@
                 {% endfor %}
             </ul>
         {% endfor %}
-
-        <canvas id="asignacionesChart" width="400" height="200"></canvas>
-
-        <script>
-            const proyectos = [];
-            const horasTotales = [];
-            const empleadosAsignados = [];
-
-            {% for asignacion in asignaciones %}
-                proyectos.push("{{ asignacion.proyecto }}");
-                horasTotales.push({{ asignacion.horas_requeridas }});
-                empleadosAsignados.push("{{ asignacion.empleados_asignados }}"); // Ahora simplemente tomamos la cadena preformateada
-            {% endfor %}
-
-            const ctx = document.getElementById('asignacionesChart').getContext('2d');
-            const asignacionesChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: proyectos,
-                    datasets: [{
-                        label: 'Horas Totales del Proyecto',
-                        data: horasTotales,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2,
-                        fill: false
-                    }]
-                },
-                options: {
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Proyecto'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Horas Totales'
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    let index = tooltipItem.dataIndex;
-                                    let horas = tooltipItem.dataset.data[index];
-                                    let empleados = empleadosAsignados[index];
-                                    return `Horas: ${horas}, Empleados: ${empleados}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        </script>
-        
     {% else %}
         <p>No se han realizado asignaciones.</p>
     {% endif %}

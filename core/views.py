@@ -463,7 +463,7 @@ def asignar_horas(request):
             horas_requeridas = semana_horas.horas_requeridas
             horas_asignadas = 0
             proyecto_asignaciones = []
-            
+
             print(f"\nAsignando recursos para {proyecto} (Horas requeridas: {horas_requeridas})")
             
             for empleado in empleados:
@@ -480,15 +480,13 @@ def asignar_horas(request):
                         'empleado': empleado.nombre_empleado,
                         'horas_asignadas': horas_a_asignar
                     })
-                    
+
                     print(f"Empleado asignado: {empleado.nombre_empleado} ({empleado.cargo}) - Horas asignadas: {horas_a_asignar}")
 
-            # Aquí concatenamos los nombres de los empleados en una sola cadena de texto
             asignaciones.append({
                 'proyecto': proyecto,
                 'horas_requeridas': horas_requeridas,
-                'asignaciones': proyecto_asignaciones,
-                'empleados_asignados': ', '.join(empleados_asignados)  # Concatenar nombres de empleados
+                'asignaciones': proyecto_asignaciones
             })
 
         return render(request, 'core/resultados.html', {'asignaciones': asignaciones})
@@ -497,7 +495,6 @@ def asignar_horas(request):
     semanas_horas = HorasRequeridas.objects.all().order_by('id_semana')
 
     return render(request, 'core/asignarR.html', {'semanas_horas': semanas_horas})
-
 
 def resultados(request):
     # Puedes incluir lógica aquí si es necesario
