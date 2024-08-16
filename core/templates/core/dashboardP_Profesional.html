@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Profesional</title>
+    <!-- Incluir Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Distribución de Horas Semanales por Perfil Profesional</h1>
+
+    <!-- Checkboxes generados dinámicamente -->
+    <div>
+        <label>
+            <input type="checkbox" id="select-all" checked>
+            Seleccionar todos
+        </label>
+        <br>
+        {% for cargo in cargos %}
+            <label>
+                <input type="checkbox" class="role-checkbox" data-role="{{ cargo }}" checked>
+                {{ cargo }}
+            </label>
+            <br>
+        {% endfor %}
+    </div>
+
+    <!-- Contenedor del gráfico -->
+    <div id="chart-container">
+        {{ graph_html|safe }}
+    </div>
+
+    <script>
+        document.getElementById('select-all').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.role-checkbox');
+            const isChecked = this.checked;
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                toggleRoleVisibility(checkbox);
+            });
+        });
+
+        document.querySelectorAll('.role-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                toggleRoleVisibility(this);
+            });
+        });
+
+        function toggleRoleVisibility(checkbox) {
+            const role = checkbox.dataset.role;
+            const isChecked = checkbox.checked;
+            const traces = document.querySelectorAll(`[data-unformatted="${role}"]`);
+
+            traces.forEach(trace => {
+                trace.style.display = isChecked ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

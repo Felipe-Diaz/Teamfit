@@ -1,50 +1,32 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asignación de Recursos</title>
-    <script>
-        function mostrarCampos() {
-            const cantidadProyectos = document.getElementById("cantidadProyectos").value;
-            const contenedor = document.getElementById("campos");
-
-            // Limpiar contenedor de campos de texto
-            contenedor.innerHTML = "";
-
-            // Crear campos de texto según la cantidad de proyectos seleccionada
-            for (let i = 1; i <= cantidadProyectos; i++) {
-                const label = document.createElement("label");
-                label.textContent = `Horas requeridas para el proyecto ${i}: `;
-                
-                const input = document.createElement("input");
-                input.type = "number";
-                input.name = `proyecto${i}`;
-                input.required = true;
-                
-                contenedor.appendChild(label);
-                contenedor.appendChild(input);
-                contenedor.appendChild(document.createElement("br"));
-            }
-        }
-    </script>
+    <title>Asignar Horas</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <h1>Asignación de Recursos</h1>
-    <form action="{% url 'asignar_horas' %}" method="POST">
-        {% csrf_token %}
-        <label for="cantidadProyectos">Selecciona la cantidad de proyectos:</label>
-        <select id="cantidadProyectos" name="cantidadProyectos" onchange="mostrarCampos()" required>
-            <option value="">--Seleccione una cantidad--</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <!-- Puedes agregar más opciones según lo necesario -->
-        </select>
-        <div id="campos"></div>
-        <button type="submit">Asignar Recursos</button>
-    </form>
+    <div class="container mt-5">
+        <h2>Asignar Horas</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div id="semanas-container">
+                <!-- Mostrar semanas y horas requeridas desde la base de datos -->
+                {% for semana_horas in semanas_horas %}
+                <div class="form-group">
+                    <label for="semana{{ semana_horas.id_semana }}">Semana {{ semana_horas.id_semana }}:</label>
+                    <input type="text" class="form-control" name="proyecto{{ semana_horas.id_semana }}" value="{{ semana_horas.horas_requeridas }}" readonly>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">Asignar Recursos</button>
+        </form>
+        <!-- Bootstrap JS and dependencies -->
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </div>
 </body>
 </html>

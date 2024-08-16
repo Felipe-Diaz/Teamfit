@@ -111,7 +111,11 @@ class Distribuidor_HH(models.Model):
     cargo = models.CharField(max_length=100, blank=False, null=False, verbose_name="Nombre del Cargo o Rol del empleado")
     telefono = models.CharField(max_length=20, blank=False, null=False, verbose_name="Número del empleado")
     id_categoria = models.IntegerField(blank=False, null=False, verbose_name="ID De la categoria del empleado")
-    horas_dis_empleado = models.IntegerField(blank=False, null=False, verbose_name="Horas del empleado disponible")  # Corregido
+    horas_dis_empleado = models.FloatField(blank=False, null=False, verbose_name="Horas del empleado disponible")  # Corregido
 
     def __str__(self):
         return f"{self.nombre_empleado} - {self.cargo}"
+
+class HorasRequeridas(models.Model):
+    id_semana = models.IntegerField(blank=False, null=False, verbose_name="ID Semana")
+    horas_requeridas = models.FloatField(blank=False, null=False, verbose_name="Horas Necesarias por semana")

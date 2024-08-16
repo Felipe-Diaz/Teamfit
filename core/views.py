@@ -1,10 +1,12 @@
 from django.shortcuts import redirect, render
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios,Distribuidor_HH
+from django.db.models import Sum
+from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios,Distribuidor_HH,HorasRequeridas
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, AsignadorHHForm
 from datetime import datetime, timedelta, time
 import random
 import requests
 import json
+import plotly.io as pio
 from openpyxl import load_workbook
 import csv
 from django.contrib import messages
@@ -314,10 +316,10 @@ def create_additional_table():
     dfDisp.rename(columns={'hh': 'hh_disp'}, inplace=True)
     
     #validaciones con el dataframe listo
-    weekly_data = df.groupby('semana')['hh'].sum().reset_index()
+    weekly_data = df.groupby('semana')['hh'].sum().reset_index()#linea de codigo donde se obtine las horas requeridas
     weekly_data.rename(columns={'hh': 'hh_req'}, inplace=True)
     weekly_data = pd.merge(dfDisp, weekly_data, on='semana', how='outer')
-    weekly_data['utilizacion'] = round((weekly_data['hh_req'] / weekly_data['hh_disp']) * 100, 1)
+    weekly_data['utilizacion'] = round((weekly_data['hh_req'] / weekly_data['hh_disp']) * 100, 1)# saca la utilización del proyecto
     weekly_data = weekly_data.dropna()
     
     for idx, row in weekly_data.iterrows():
@@ -448,27 +450,26 @@ def AsignadorHH_subir_archivo_Exel(request):
         form = AsignadorHHForm()
 
     return render(request, 'core/asignador_hh.html', {'form': form})
-#.......
 
 def asignar_horas(request):
     if request.method == "POST":
-        cantidad_proyectos = int(request.POST.get('cantidadProyectos', 0))
-        proyectos_horas = {f"proyecto{i}": int(request.POST.get(f"proyecto{i}")) for i in range(1, cantidad_proyectos + 1)}
-
+        semanas_horas = HorasRequeridas.objects.all().order_by('id_semana')
         empleados = Distribuidor_HH.objects.filter(horas_dis_empleado__gt=0).order_by('id_categoria')
-
-        asignaciones = []
         
-        for proyecto, horas_requeridas in proyectos_horas.items():
+        asignaciones = []
+
+        for semana_horas in semanas_horas:
+            proyecto = f"Semana {semana_horas.id_semana}"
+            horas_requeridas = semana_horas.horas_requeridas
             horas_asignadas = 0
             proyecto_asignaciones = []
-            
+
             print(f"\nAsignando recursos para {proyecto} (Horas requeridas: {horas_requeridas})")
             
             for empleado in empleados:
                 if horas_asignadas >= horas_requeridas:
                     break
-                
+
                 horas_disponibles = empleado.horas_dis_empleado
                 horas_a_asignar = min(horas_disponibles, horas_requeridas - horas_asignadas)
                 
@@ -479,7 +480,7 @@ def asignar_horas(request):
                         'empleado': empleado.nombre_empleado,
                         'horas_asignadas': horas_a_asignar
                     })
-                    
+
                     print(f"Empleado asignado: {empleado.nombre_empleado} ({empleado.cargo}) - Horas asignadas: {horas_a_asignar}")
 
             asignaciones.append({
@@ -487,12 +488,38 @@ def asignar_horas(request):
                 'horas_requeridas': horas_requeridas,
                 'asignaciones': proyecto_asignaciones
             })
-        
+
         return render(request, 'core/resultados.html', {'asignaciones': asignaciones})
 
-    return render(request, 'core/asignarR.html')
+    # Si es GET, mostrar las semanas y horas requeridas desde la base de datos
+    semanas_horas = HorasRequeridas.objects.all().order_by('id_semana')
+
+    return render(request, 'core/asignarR.html', {'semanas_horas': semanas_horas})
 
 def resultados(request):
     # Puedes incluir lógica aquí si es necesario
     # Por ahora, esta vista simplemente renderiza la plantilla con el contexto recibido
     return render(request, 'core/resultados.html')
+
+def dashboardP_Profesional(request):
+    # Obtener los datos agrupados por cargo
+    empleados_por_cargo = Distribuidor_HH.objects.values('cargo').annotate(total_horas=Sum('horas_dis_empleado'))
+
+    # Crear listas para nombres de cargos y horas
+    cargos = [empleado['cargo'] for empleado in empleados_por_cargo]
+    horas = [empleado['total_horas'] for empleado in empleados_por_cargo]
+
+    # Crear gráfico interactivo con plotly
+    fig = go.Figure([go.Bar(x=cargos, y=horas)])
+    fig.update_layout(title='Distribución de Horas Semanales por Perfil Profesional',
+                      xaxis_title='Perfil Profesional',
+                      yaxis_title='Horas a Consumir',
+                      barmode='stack')
+
+    # Convertir el gráfico en HTML
+    graph_html = pio.to_html(fig, full_html=False)
+
+    return render(request, 'core/dashboardP_Profesional.html', {
+        'graph_html': graph_html,
+        'cargos': cargos,  # Pasar los cargos al HTML
+    })
