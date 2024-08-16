@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 
-from .views import index, development_Buttons, llenar_DB, iniciar_sesion, crear_usuarios, graficar_Datos, pagina_principal, cerrar_sesion, create_additional_table,AsignadorHH_subir_archivo_Exel,asignar_horas,resultados,dashboardP_Profesional #asd
+from .views import index, development_Buttons, llenar_DB, prueba, resultados_p, asignar_horas,   iniciar_sesion, crear_usuarios, graficar_Datos, pagina_principal, cerrar_sesion, create_additional_table,AsignadorHH_subir_archivo_Exel,asignar_horas,resultados,dashboardP_Profesional #asd
 urlpatterns = [ 
     path('',index, name="index"),
     path('b',development_Buttons, name="b"),
@@ -16,4 +16,6 @@ urlpatterns = [
     path('asignar-horas/', asignar_horas, name='asignar_horas'),
     path('resultados/', resultados, name='resultados'),
     path('dashboardP_Profesional/', dashboardP_Profesional, name='dashboardP_Profesional'),
+    path('prueba/', prueba, name='prueba'),
+    path('resultados_p/', resultados_p, name='resultados_p'),
 ]

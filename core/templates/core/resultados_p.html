@@ -695,166 +695,101 @@
           </ul>
         </div>
       </nav>
-      <!-- End Navbar -->
-    </div>
-  <br>
-  <div class="container">
-    <h1 class="predictor-title text-center" 
-        style="
-        font-family: Arial, sans-serif;
-        padding: 10px;">
-      Predictor de Carga de Horas
-    </h1>
-    <p class="text-center">
-      Prediga la carga de horas de su equipo profesional en base a la estimación de ventas
-    </p>
-    <div class="container_a">
-      <div class="box">
-        <div class="text-center mb-4">
-          <br>
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form }}
-            <br>
-            <button type="submit" class="btn btn-primary">Subir archivo</button>
-          </form>
-          {% if mesg %}
-            <p>{{ mesg }}</p>
-          {% endif %}
-      </div>
-    </div>
-    <br>
-    <div class="text-center hb">
-      <p class="text-center">O ingréselos a continuación</p>      
-    </div>
-    <div class="text-center hb">
-      <!-- <a href="{% url 'crearUsuarios' %}"> Agregar Usuarios</a> -->
-    </div>
-    <br>
-    <form method="POST">
-        <div class="row">
-            <div class="col-md-6">
-                <h4 class="text-center">Estimación Ventas</h4>
-              <div class="form-group row align-items-center">
-                <h6 class="col-md-5 text-center mx-auto">Proyecto</h6>
-                <h6 class="col-md-5 text-center mx-auto">Fecha</h6>
-              </div>
-                <div class="justify-content-center">
-                    {% csrf_token %}
-                    {% for VentasForm in VentasForms %}
-                    <div class="container">
-                        <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                            {{ VentasForm.idTipoProyecto }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                            {{ VentasForm.fecha }}
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    <!-- <button type="submit" class="btn btn-primary">Enviar</button> -->
-                </div>
-            </div>
-            <div class="col-md-6">
-                <h4 class="text-center">Disponibilidad de HH</h4>
-                <div class="justify-content-center">
-                    {% csrf_token %}
-                    <div class="">
-                        <div class="form-group row align-items-center">
-                            <h6 class="col-md-5 text-center mx-auto">Semana</h6>
-                            <h6 class="col-md-5 text-center mx-auto">Horas Hombre</h6>
-                        </div>
-                        {% for DispForm in DispForms %}
-                        <div class="form-group row align-items-center"  id=HorasHombre{{forloop.counter}}>
-                          <h6 class="col-md-5 text-center mx-auto">{{ DispForm.semana }}</h6>
-                          <h6 class="col-md-5 text-center mx-auto">{{ DispForm.HorasHombre }}</h6>                        
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <br>
-                </div>
-            </div>
-        </div>
-        <div class="text-center mt-4 mb-4">
-          <button type="button" class="btn btn-primary" id="submitBtn">Predecir</button>
-      </div>
-        <div class="text-center mt-4 mb-4">
-          <button class="btn btn-primary" href="{% url 'graficar_Datos' %}"> 
-            Ver gráficos Desarrollados
-          </button>
-        </div>
-    </form>
-  </div>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-  <script>
-    //Busca distintos Divs, para luego agregar una ID específica a cada input
-    document.addEventListener('DOMContentLoaded', function() {
-        //Buscar y cambia la ID específica del input dentro del HTML
-        for (var i = 0; i < 5; i++) {
-            var idTextBoxHh = 'id_' + i + '-HorasHombre';
-            var idTextBoxSem = 'id_' + i + '-semana';
-
-            var TextBoxSem = document.getElementById(idTextBoxSem);
-            TextBoxSem.value = '3' + (i+1);
-
-            var TextBoxHh = document.getElementById(idTextBoxHh);
-            if(i <= 1){
-              TextBoxHh.value = 5
-            }else{
-              TextBoxHh.value = 6
-            }
+    
+      <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color:  #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            margin-left: 250px;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Oculta el desbordamiento de la pantalla */
         }
-    });
-  </script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const form = document.getElementById("ventasForm");
-        const fechaInput = document.getElementById("id_fecha");
-        const tipoProyectoSelect = document.getElementById("id_idTipoProyecto");
-        const submitButton = document.getElementById("submitBtn");
-        const errorMessages = document.getElementById("errorMessages");
 
-        submitButton.addEventListener("click", function (event) {
-            let valid = true;
-            let errors = [];
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 900px;
+            max-height: 80vh;
+            
+            padding: 100px;
+            overflow-y: auto; /* Barra de desplazamiento vertical */
+        }
 
-            // Limpiar mensajes de error anteriores
-            errorMessages.innerHTML = "";
+        h1 {
+            color: #333;
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+        }
 
-            // Validar la fecha
-            const fecha = new Date(fechaInput.value);
-            const manana = new Date();
-            manana.setDate(manana.getDate() + 1);
+        h2 {
+            color: #4a90e2;
+            margin-top: 20px;
+            font-size: 20px;
+        }
 
-            if (fecha < manana) {
-                errors.push("La fecha debe ser desde mañana en adelante.");
-                valid = false;
-            }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 10px 0;
+        }
 
-            // Validar el tipo de proyecto
-            if (tipoProyectoSelect.value === "na") {
-                errors.push("Por favor, seleccione un tipo de proyecto válido.");
-                valid = false;
-            }
+        li {
+            padding: 8px 0;
+            border-bottom: 1px ;
+        }
 
-            // Mostrar mensajes de error
-            if (!valid) {
-                errorMessages.innerHTML = errors.join("<br>");
-                event.preventDefault(); // Evitar el envío del formulario si hay errores
-            } else {
-                form.submit(); // Enviar el formulario si todo está correcto
-            }
-        });
-    });
-</script>
+        li:last-child {
+            border-bottom: none;
+        }
+
+        p {
+            color: #777;
+            text-align: center;
+        }
+
+        /* Estilo para la barra de desplazamiento */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #999;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Resultados de Asignación de Recursos</h1>
+    
+            {% if asignaciones %}
+                {% for asignacion in asignaciones %}
+                    <h2>Proyecto {{ asignacion.proyecto }} (Horas requeridas: {{ asignacion.horas_requeridas }})</h2>
+                    <ul>
+                        {% for detalle in asignacion.asignaciones %}
+                            <li>{{ detalle.empleado }}: {{ detalle.horas_asignadas }} horas asignadas</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            {% else %}
+                <p>No se han realizado asignaciones.</p>
+            {% endif %}
+        </div>
+    </body>
+    
+      
+       
 
   <!--   Core JS Files   -->
   <script src="{% static 'core/js/core/jquery-3.7.1.min.js' %}"></script>

@@ -200,6 +200,7 @@
               <i class="fas fa-table"></i>
               <p>Asignador De Recursos</p>         
           </li>
+          
           <li class="nav-item">
             <a data-bs-toggle="collapse" href="#maps">
               <i class="fas fa-map-marker-alt"></i>
@@ -695,166 +696,99 @@
           </ul>
         </div>
       </nav>
-      <!-- End Navbar -->
-    </div>
-  <br>
-  <div class="container">
-    <h1 class="predictor-title text-center" 
-        style="
-        font-family: Arial, sans-serif;
-        padding: 10px;">
-      Predictor de Carga de Horas
-    </h1>
-    <p class="text-center">
-      Prediga la carga de horas de su equipo profesional en base a la estimación de ventas
-    </p>
-    <div class="container_a">
-      <div class="box">
-        <div class="text-center mb-4">
-          <br>
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form }}
-            <br>
-            <button type="submit" class="btn btn-primary">Subir archivo</button>
-          </form>
-          {% if mesg %}
-            <p>{{ mesg }}</p>
-          {% endif %}
-      </div>
-    </div>
-    <br>
-    <div class="text-center hb">
-      <p class="text-center">O ingréselos a continuación</p>      
-    </div>
-    <div class="text-center hb">
-      <!-- <a href="{% url 'crearUsuarios' %}"> Agregar Usuarios</a> -->
-    </div>
-    <br>
-    <form method="POST">
-        <div class="row">
-            <div class="col-md-6">
-                <h4 class="text-center">Estimación Ventas</h4>
-              <div class="form-group row align-items-center">
-                <h6 class="col-md-5 text-center mx-auto">Proyecto</h6>
-                <h6 class="col-md-5 text-center mx-auto">Fecha</h6>
-              </div>
-                <div class="justify-content-center">
-                    {% csrf_token %}
-                    {% for VentasForm in VentasForms %}
-                    <div class="container">
-                        <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                            {{ VentasForm.idTipoProyecto }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                            {{ VentasForm.fecha }}
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    <!-- <button type="submit" class="btn btn-primary">Enviar</button> -->
-                </div>
-            </div>
-            <div class="col-md-6">
-                <h4 class="text-center">Disponibilidad de HH</h4>
-                <div class="justify-content-center">
-                    {% csrf_token %}
-                    <div class="">
-                        <div class="form-group row align-items-center">
-                            <h6 class="col-md-5 text-center mx-auto">Semana</h6>
-                            <h6 class="col-md-5 text-center mx-auto">Horas Hombre</h6>
-                        </div>
-                        {% for DispForm in DispForms %}
-                        <div class="form-group row align-items-center"  id=HorasHombre{{forloop.counter}}>
-                          <h6 class="col-md-5 text-center mx-auto">{{ DispForm.semana }}</h6>
-                          <h6 class="col-md-5 text-center mx-auto">{{ DispForm.HorasHombre }}</h6>                        
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <br>
-                </div>
-            </div>
-        </div>
-        <div class="text-center mt-4 mb-4">
-          <button type="button" class="btn btn-primary" id="submitBtn">Predecir</button>
-      </div>
-        <div class="text-center mt-4 mb-4">
-          <button class="btn btn-primary" href="{% url 'graficar_Datos' %}"> 
-            Ver gráficos Desarrollados
-          </button>
-        </div>
-    </form>
-  </div>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+      <title>Asignación de Recursos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #fff;
+             /* Ajusta este valor según lo cerca que quieras que esté de la barra lateral */
+        }
 
-  <script>
-    //Busca distintos Divs, para luego agregar una ID específica a cada input
-    document.addEventListener('DOMContentLoaded', function() {
-        //Buscar y cambia la ID específica del input dentro del HTML
-        for (var i = 0; i < 5; i++) {
-            var idTextBoxHh = 'id_' + i + '-HorasHombre';
-            var idTextBoxSem = 'id_' + i + '-semana';
+        .container {
+            max-width: 400px;
+            margin-top: 200px; /* Ajusta este valor si necesitas más o menos espacio arriba */
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            
+        }
 
-            var TextBoxSem = document.getElementById(idTextBoxSem);
-            TextBoxSem.value = '3' + (i+1);
+        h1 {
+            margin-bottom: 80px;
+        }
 
-            var TextBoxHh = document.getElementById(idTextBoxHh);
-            if(i <= 1){
-              TextBoxHh.value = 5
-            }else{
-              TextBoxHh.value = 6
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label, select, input, button {
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function mostrarCampos() {
+            const cantidadProyectos = document.getElementById("cantidadProyectos").value;
+            const contenedor = document.getElementById("campos");
+
+            // Limpiar contenedor de campos de texto
+            contenedor.innerHTML = "";
+
+            // Crear campos de texto según la cantidad de proyectos seleccionada
+            for (let i = 1; i <= cantidadProyectos; i++) {
+                const label = document.createElement("label");
+                label.textContent = `Horas requeridas para el proyecto ${i}: `;
+                
+                const input = document.createElement("input");
+                input.type = "number";
+                input.name = `proyecto${i}`;
+                input.required = true;
+                
+                contenedor.appendChild(label);
+                contenedor.appendChild(input);
+                contenedor.appendChild(document.createElement("br"));
             }
         }
-    });
-  </script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const form = document.getElementById("ventasForm");
-        const fechaInput = document.getElementById("id_fecha");
-        const tipoProyectoSelect = document.getElementById("id_idTipoProyecto");
-        const submitButton = document.getElementById("submitBtn");
-        const errorMessages = document.getElementById("errorMessages");
-
-        submitButton.addEventListener("click", function (event) {
-            let valid = true;
-            let errors = [];
-
-            // Limpiar mensajes de error anteriores
-            errorMessages.innerHTML = "";
-
-            // Validar la fecha
-            const fecha = new Date(fechaInput.value);
-            const manana = new Date();
-            manana.setDate(manana.getDate() + 1);
-
-            if (fecha < manana) {
-                errors.push("La fecha debe ser desde mañana en adelante.");
-                valid = false;
-            }
-
-            // Validar el tipo de proyecto
-            if (tipoProyectoSelect.value === "na") {
-                errors.push("Por favor, seleccione un tipo de proyecto válido.");
-                valid = false;
-            }
-
-            // Mostrar mensajes de error
-            if (!valid) {
-                errorMessages.innerHTML = errors.join("<br>");
-                event.preventDefault(); // Evitar el envío del formulario si hay errores
-            } else {
-                form.submit(); // Enviar el formulario si todo está correcto
-            }
-        });
-    });
-</script>
+    </script>
+</head>
+<body>
+  <div class="container mt-5">
+      <h2>Asignar Horas</h2>
+      <form method="post">
+          {% csrf_token %}
+          <div id="semanas-container">
+              <!-- Mostrar semanas y horas requeridas desde la base de datos -->
+              {% for semana_horas in semanas_horas %}
+              <div class="form-group">
+                  <label for="semana{{ semana_horas.id_semana }}">Semana {{ semana_horas.id_semana }}:</label>
+                  <input type="text" class="form-control" name="proyecto{{ semana_horas.id_semana }}" value="{{ semana_horas.horas_requeridas }}" readonly>
+              </div>
+              {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary">Asignar Recursos</button>
+      </form>
+  </div>
+</body>
 
   <!--   Core JS Files   -->
   <script src="{% static 'core/js/core/jquery-3.7.1.min.js' %}"></script>
@@ -891,3 +825,4 @@
 
 </body>
 </html>
+
