@@ -121,7 +121,7 @@ def graficar_Datos(request):
     additional_data = pd.DataFrame(data_list)
     
     bar_chart = go.Figure(data=[
-        go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
+        go.Bar(name='HH requeridas de Ingeniero de Proyectos', x=additional_data['semana'], y=additional_data['hhRequerido']),
         go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
     ])
     bar_chart = bar_chart.to_html(full_html=False)
