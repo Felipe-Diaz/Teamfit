@@ -451,7 +451,7 @@ def AsignadorHH_subir_archivo_Exel(request):
 
     return render(request, 'core/asignador_hh.html', {'form': form})
 
-def asignar_horas(request):
+def prueba(request):
     if request.method == "POST":
         semanas_horas = HorasRequeridas.objects.all().order_by('id_semana')
         empleados = Distribuidor_HH.objects.filter(horas_dis_empleado__gt=0).order_by('id_categoria')
@@ -489,18 +489,28 @@ def asignar_horas(request):
                 'asignaciones': proyecto_asignaciones
             })
 
-        return render(request, 'core/resultados.html', {'asignaciones': asignaciones})
+        return render(request, 'core/resultados_p.html', {'asignaciones': asignaciones})
 
     # Si es GET, mostrar las semanas y horas requeridas desde la base de datos
     semanas_horas = HorasRequeridas.objects.all().order_by('id_semana')
 
-    return render(request, 'core/asignarR.html', {'semanas_horas': semanas_horas})
+    return render(request, 'core/prueba.html', {'semanas_horas': semanas_horas})
+
+def asignar_horas(request):
+    # Puedes incluir lógica aquí si es necesario
+    # Por ahora, esta vista simplemente renderiza la plantilla con el contexto recibido
+    return render(request, 'core/asignar_horas.html')
+
+def resultados_p(request):
+    # Puedes incluir lógica aquí si es necesario
+    # Por ahora, esta vista simplemente renderiza la plantilla con el contexto recibido
+    return render(request, 'core/resultados_p.html')
 
 def resultados(request):
     # Puedes incluir lógica aquí si es necesario
     # Por ahora, esta vista simplemente renderiza la plantilla con el contexto recibido
     return render(request, 'core/resultados.html')
-
+   
 def dashboardP_Profesional(request):
     # Obtener los datos agrupados por cargo
     empleados_por_cargo = Distribuidor_HH.objects.values('cargo').annotate(total_horas=Sum('horas_dis_empleado'))
@@ -523,3 +533,5 @@ def dashboardP_Profesional(request):
         'graph_html': graph_html,
         'cargos': cargos,  # Pasar los cargos al HTML
     })
+
+
