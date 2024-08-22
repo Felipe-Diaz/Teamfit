@@ -3,6 +3,11 @@ from django.db.models import Sum
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios,Distribuidor_HH,HorasRequeridas
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, AsignadorHHForm
 from datetime import datetime, timedelta, time
+from collections import defaultdict
+from django.db import transaction
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from collections import defaultdict
 import random
 import requests
 import json
@@ -451,50 +456,57 @@ def AsignadorHH_subir_archivo_Exel(request):
 
     return render(request, 'core/asignador_hh.html', {'form': form})
 
+
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from .models import Distribuidor_HH, HorasRequeridas
+
 def prueba(request):
-    if request.method == "POST":
-        semanas_horas = HorasRequeridas.objects.all().order_by('id_semana')
-        empleados = Distribuidor_HH.objects.filter(horas_dis_empleado__gt=0).order_by('id_categoria')
-        
-        asignaciones = []
-
-        for semana_horas in semanas_horas:
-            proyecto = f"Semana {semana_horas.id_semana}"
-            horas_requeridas = semana_horas.horas_requeridas
-            horas_asignadas = 0
-            proyecto_asignaciones = []
-
-            print(f"\nAsignando recursos para {proyecto} (Horas requeridas: {horas_requeridas})")
-            
-            for empleado in empleados:
-                if horas_asignadas >= horas_requeridas:
-                    break
-
-                horas_disponibles = empleado.horas_dis_empleado
-                horas_a_asignar = min(horas_disponibles, horas_requeridas - horas_asignadas)
-                
-                if horas_a_asignar > 0:
-                    horas_asignadas += horas_a_asignar
-                    proyecto_asignaciones.append({
-                        'proyecto': proyecto,
-                        'empleado': empleado.nombre_empleado,
-                        'horas_asignadas': horas_a_asignar
-                    })
-
-                    print(f"Empleado asignado: {empleado.nombre_empleado} ({empleado.cargo}) - Horas asignadas: {horas_a_asignar}")
-
-            asignaciones.append({
-                'proyecto': proyecto,
-                'horas_requeridas': horas_requeridas,
-                'asignaciones': proyecto_asignaciones
-            })
-
-        return render(request, 'core/resultados_p.html', {'asignaciones': asignaciones})
-
-    # Si es GET, mostrar las semanas y horas requeridas desde la base de datos
+    # Obtener todas las semanas y empleados
     semanas_horas = HorasRequeridas.objects.all().order_by('id_semana')
+    empleados = Distribuidor_HH.objects.filter(horas_dis_empleado__gt=0).order_by('id_categoria')
 
-    return render(request, 'core/prueba.html', {'semanas_horas': semanas_horas})
+    asignaciones = []
+
+    for semana_horas in semanas_horas:
+        proyecto = f"Semana {semana_horas.id_semana}"
+        horas_requeridas = semana_horas.horas_requeridas  # Horas requeridas ya están en base semanal
+        horas_asignadas = 0
+        proyecto_asignaciones = {}
+
+        for empleado in empleados:
+            if horas_asignadas >= horas_requeridas:
+                break
+
+            horas_disponibles = empleado.horas_dis_empleado * 7  # Horas disponibles totales en la semana
+            horas_a_asignar = min(horas_disponibles, horas_requeridas - horas_asignadas)
+
+            if horas_a_asignar > 0:
+                horas_asignadas += horas_a_asignar
+
+                # Agrupar asignaciones por empleado y categoría
+                clave = (empleado.id_empleado, empleado.id_categoria)
+                if clave in proyecto_asignaciones:
+                    proyecto_asignaciones[clave]['horas_asignadas'] += horas_a_asignar
+                else:
+                    proyecto_asignaciones[clave] = {
+                        'id_empleado': empleado.id_empleado,
+                        'nombre_empleado': empleado.nombre_empleado,
+                        'cargo': empleado.cargo,
+                        'id_categoria': empleado.id_categoria,
+                        'horas_disponibles': empleado.horas_dis_empleado,
+                        'horas_totales': horas_disponibles,
+                        'horas_asignadas': horas_a_asignar
+                    }
+
+        # Convertir el diccionario en una lista y ordenarla
+        asignaciones.append({
+            'proyecto': proyecto,
+            'horas_requeridas': horas_requeridas,
+            'asignaciones': sorted(proyecto_asignaciones.values(), key=lambda x: x['horas_asignadas'], reverse=True)
+        })
+
+    return render(request, 'core/resultados_p.html', {'asignaciones': asignaciones})
 
 def asignar_horas(request):
     # Puedes incluir lógica aquí si es necesario
