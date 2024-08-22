@@ -77,25 +77,24 @@ WSGI_APPLICATION = 'Teamfit.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
 
 # ------------------------------------------------------------------------CONECTOR A POSTGRESQL----------------------------------------------------------------------------------
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'nombre_de_tu_base_de_datos',
-#         'USER': 'tu_usuario',
-#         'PASSWORD': 'tu_contraseña',
-#         'HOST': 'localhost',  # o la dirección IP de tu servidor PostgreSQL
-#         'PORT': '5432',  # el puerto por defecto para PostgreSQL
-#     }
-# }
-
+DATABASES = {
+     'default': {
+         'ENGINE': 'django.db.backends.postgresql',
+         'NAME': 'teamfit',
+         'USER': 'postgres',
+         'PASSWORD': '12345',
+         'HOST': 'localhost',  # o la dirección IP de tu servidor PostgreSQL
+         'PORT': '5432',  # el puerto por defecto para PostgreSQL
+     }
+ }
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
