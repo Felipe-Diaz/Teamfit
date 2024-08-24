@@ -63,25 +63,25 @@ class Graficos(models.Model):
         return str(self.id) + " - " + str(self.idTipoProyecto)
 
 class PerfilUsuario(models.Model):
+    id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    NUMRUT = models.IntegerField(blank=False, null=False, verbose_name="Numero RUT")
-    DVRUN = models.CharField(max_length=1, null=False, blank=False, verbose_name="Digito Verificador")
-    fechaNacimiento = models.DateField(null=False, blank=False, verbose_name="Fecha de Nacimiento")
     cargo = models.CharField(max_length=150, null=False, blank=False, verbose_name="Cargo Empleado")
-    telefono = models.CharField(max_length=12, null=False, blank=False, verbose_name="Número de contacto")
         
     class Meta:
         db_table = 'PERFIL_USUARIO'
     
     def __str__(self):
-        return str(self.NUMRUT) + " - " + str(self.DVRUN)
+        return str(self.cargo)
     
     
 class historialCambios(models.Model):
     idHist = models.AutoField(primary_key=True, verbose_name="ID Historial")
     fecha = models.DateTimeField(blank=False, null=False, verbose_name="Fecha Accion")
-    desc = models.CharField(max_length=300, blank=False, null=False, verbose_name="Descripción")
-    tipoInfo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de información")
+    categoria = models.CharField(max_length=250, blank=False, null=False, default="No Registrado", verbose_name="Categoría")
+    subcategoria = models.CharField(max_length=250, blank=False, null=False, default="No Registrado", verbose_name="Sub Categoría")
+    prioridad = models.IntegerField(blank=False, null=False, default=0, verbose_name="Priodidad")
+    #desc = models.CharField(max_length=300, blank=False, null=False, verbose_name="Descripción")
+    #tipoInfo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de información")
     usuario = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     
     class Meta:
@@ -96,19 +96,17 @@ class proyectosAAgrupar(models.Model):
     lineaNegocio = models.CharField(max_length=6, blank=False, null=False, verbose_name="Línea de Negocio")
     tipo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de Proyecto")
     cliente = models.IntegerField(blank=True, null=True, verbose_name="ID Cliente")
-    pm = models.CharField(max_length=60, blank=False, null=False, verbose_name="Correo JP") ##Verificar
     createDate = models.DateTimeField(null=False, blank=False, verbose_name="Fecha de creación")
     cierre = models.DateField(null=False, blank=False, verbose_name="Cierre del proyecto")
-    primeraTarea = models.DateField(null=False, blank=False, verbose_name="Primera Tarea Realizada")
-    ultimaTarea = models.DateField(null=False, blank=False, verbose_name="Última tarea realizada")
     egresosNoHHCLP = models.IntegerField(null=False, blank=False, verbose_name="Egresos no HH CLP")
     montoOfertaCLP = models.IntegerField(null=False, blank=False, verbose_name="Monto Oferta CLP")
     usoAgencia = models.BooleanField(null=False, blank=False, default=0, verbose_name="Apoyo de Agencia")
-    desfaseDias = models.IntegerField(null=False, blank=False, default=0, verbose_name="Desfase de días para el inicio del proyecto")
     ocupacionInicio = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, verbose_name="Porcentaje de uso inicial")
+    disponibilidad = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de disponibilidad")
+    utilizacion = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de utilización")
 
     class Meta:
-        db_table = 'PROYECTOS_A_AGRUPAR'
+        db_table = 'PROYECTOS'
 
     def __str__(self):
         return str(self.proyecto) + " - " + str(self.lineaNegocio) + " - " + str(self.tipo)

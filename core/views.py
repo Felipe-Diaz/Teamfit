@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, time
 import random
 import requests
 import json
-from openpyxl import load_workbook
+#from openpyxl import load_workbook
 import csv
 from django.contrib import messages
 import pandas as pd
@@ -19,12 +19,19 @@ import pytz
 # Create your views here.
 
 def subirProyectos(request, upload='Sh'):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     data = {'form':UploadFileForm()}
     showTable = False
     
     if(upload=="Can"):
-        request.session.pop('df_proyectos')
+        try:
+            request.session.pop('df_proyectos')
+        except:
+            pass
         return redirect (subirProyectos)
+        
     if(upload=="Up"):
         df = cambiarFormatoAlmacenarDb(request.session['df_proyectos'])
         cont = 0
@@ -35,24 +42,19 @@ def subirProyectos(request, upload='Sh'):
                 lineaNegocio=row['lineaNegocio'],
                 tipo=row['tipo'],
                 cliente=row['cliente'],
-                pm=row['pm'],
                 createDate=row['createDate'],
                 cierre=row['cierre'],
-                primeraTarea=row['primeraTarea'],
-                ultimaTarea=row['ultimaTarea'],
                 egresosNoHHCLP=row['egresosNoHHCLP'],
                 montoOfertaCLP=row['montoOfertaCLP'],
                 usoAgencia=row['usoAgencia'],
-                desfaseDias=row['desfaseDias'],
-                ocupacionInicio=row['ocupacionInicio']
+                ocupacionInicio=row['ocupacionInicio'],
+                disponibilidad = 0,
+                utilizacion = 0
             )
             cont += 1
             proyecto.save()
-        user = request.user
-        nombre = user.first_name
-        apellido = user.last_name
-        desc = f"El usuario {nombre} {apellido} ha ha subido {cont} proyectos."
-        almacenado = almacenarHistorial(desc, "1", user)
+        cat = {'Cat':'E','Sub':'1'}
+        almacenado = almacenarHistorial(cat, request.user)
         request.session.pop('df_proyectos')
         return redirect(ver_proyectos)
     
@@ -64,17 +66,30 @@ def subirProyectos(request, upload='Sh'):
                 data['mesg'] = 'Archivo no compatible. Por favor, selecciona un archivo CSV o XLSX.'
             else:
                 df = pd.read_excel(file) if file.name.endswith('.xlsx') else pd.read_csv(file)
-                required_columns = ['id', 'Proyecto', 'Línea de Negocio', 'tipo', 'cliente', 'pm', 'create_date', 
-                                    'Cierre', 'Primer Timesheet', 'Último Timesheet', 'Egresos No HH CLP', 'Monto Oferta CLP',
-                                    'C/Agencia', 'Desfase Inicio (días)', 'Ocupación Al Iniciar (%)']
+                required_columns = ['id', 'Proyecto', 'Línea de Negocio', 'tipo', 'cliente', 'create_date', 
+                                    'Cierre', 'Egresos No HH CLP', 'Monto Oferta CLP',
+                                    'C/Agencia', 'Ocupación Al Iniciar (%)']
                 if not all(col in df.columns for col in required_columns):
-                    data['mesg'] = 'El archivo no contiene las columnas requeridas (idTipoProyecto, fecha). Por favor, sube un archivo con estas columnas.'
+                    data['mesg'] = ('El archivo no contiene las columnas requeridas [id, Proyecto, '
+                    'Línea de Negocio, tipo, cliente, create_date, Cierre, Egresos No HH CLP, '
+                    'Monto Oferta CLP, C/Agencia, Ocupación Al Iniciar (%)]. Por favor, sube un archivo con estas columnas.')
+                    
                 else:
                     df = cambiarFormatoAlmacenarDf(df)
+                    validado = verificarDf(df)
+                    df_validado = validado['valido']
+                    
                     datosDfDict = df.to_dict(orient='records')
                     data["proyectos"] = datosDfDict
-                    request.session['df_proyectos'] = datosDfDict
+                    data['validado'] = df_validado
                     showTable = True
+                    
+                    if(not df_validado):
+                       data['mesg'] = validado['mesg']
+                       showTable = True
+                    else:
+                        data['mesg'] = validado['mesg']
+                        request.session['df_proyectos'] = datosDfDict
         else:
             data["mesg"] = "El valor es inválido"
     data["showTable"] = showTable
@@ -85,42 +100,61 @@ def cambiarFormatoAlmacenarDf(df):
     df = df
     df['create_date'] = df['create_date'].astype(str)
     df['Cierre'] = df['Cierre'].astype(str)
-    df['Primer Timesheet'] = df['Primer Timesheet'].astype(str)
-    df['Último Timesheet'] = df['Último Timesheet'].astype(str)
     df.rename(columns={'Proyecto': 'proyecto'}, inplace=True)
     df.rename(columns={'Línea de Negocio': 'lineaNegocio'}, inplace=True)
     df.rename(columns={'create_date': 'createDate'}, inplace=True)
     df.rename(columns={'Cierre': 'cierre'}, inplace=True)
-    df.rename(columns={'Primer Timesheet': 'primeraTarea'}, inplace=True)
-    df.rename(columns={'Último Timesheet': 'ultimaTarea'}, inplace=True)
     df.rename(columns={'Egresos No HH CLP': 'egresosNoHHCLP'}, inplace=True)
     df.rename(columns={'Monto Oferta CLP': 'montoOfertaCLP'}, inplace=True)    
     df.rename(columns={'C/Agencia': 'usoAgencia'}, inplace=True)
-    df.rename(columns={'Desfase Inicio (días)': 'desfaseDias'}, inplace=True)
     df.rename(columns={'Ocupación Al Iniciar (%)': 'ocupacionInicio'}, inplace=True)
     df['ocupacionInicio'] = df['ocupacionInicio'].round(2)
     df['ocupacionInicio'] = df['ocupacionInicio'] * 100
-    
     return df
 
 def cambiarFormatoAlmacenarDb(df):
     df = pd.DataFrame(df)
     df['createDate'] = pd.to_datetime(df['createDate'])
     df['cierre'] = pd.to_datetime(df['cierre'])
-    df['primeraTarea'] = pd.to_datetime(df['primeraTarea'])
-    df['ultimaTarea'] = pd.to_datetime(df['ultimaTarea'])
-    df['cliente'] = df['cliente'].fillna(0)
+    df['cierre'] = df['cierre'].fillna(df['createDate'])
     df['cliente'] = df['cliente'].astype(int)
     df['usoAgencia'] = df['usoAgencia'].fillna(0)
     df['usoAgencia'] = df['usoAgencia'].replace({'Sí': 1, 'no': 0}).astype(bool)
-    df['montoOfertaCLP'] = df['montoOfertaCLP'].fillna(0)
+    df['egresosNoHHCLP'] = df['egresosNoHHCLP'].fillna(0)
     df['montoOfertaCLP'] = df['montoOfertaCLP'].astype(int)
-    df['desfaseDias'] = df['desfaseDias'].fillna(0)
-    df['desfaseDias'] = df['desfaseDias'].astype(int) 
     df['ocupacionInicio'] = df['ocupacionInicio'].astype(float) 
     return df
 
+def verificarDf(df):
+    """Verifica que los valores relevantes no sean nulos.
+    
+    Parametros de Entrada: 
+    df (El dataframe a utilizar)
+    
+    Return: 
+    Diccionario con mesg y valido.
+
+        mesg(string) = Mensaje a mostrar en HTML.
+    
+        valido(boolean) = Si no contiene datos nulos es verdadero 
+    """
+    columns_to_check = ['id', 'proyecto', 'lineaNegocio', 'tipo', 'cliente', 'createDate', 'montoOfertaCLP', 'ocupacionInicio']
+    if df[columns_to_check].isnull().values.any():
+        ids_nulos = df.loc[df[columns_to_check].isnull().any(axis=1), 'id'].tolist()
+        ids_nulos = sorted(ids_nulos)
+        if(len(ids_nulos) > 5):
+            mesg = ("IDs con valores nulos en los siguientes registros: <br> <strong>" + str(ids_nulos[:5]) + "</strong> entre otros. <br>"
+                    "Por favor, verifique los registros indicados.")
+            respuesta = {'mesg':mesg,'valido':False}
+    else:
+        mesg = 'No se han encontrado datos que puedan provocar conflictos'
+        respuesta = {'mesg':mesg, 'valido':True}
+    return respuesta
+
 def graficar_Datos(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     graficos = Graficos.objects.all()
     data_list = list(graficos.values())
     additional_data = pd.DataFrame(data_list)
@@ -156,6 +190,9 @@ def graficar_Datos(request):
     
 
 def development_Buttons(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     forms = [VentasForm() for _ in range(5)]
     data = {"VentasForms":forms, "DispForm":DispForm}
     
@@ -246,7 +283,7 @@ def llenar_DB(request):
     usuario.is_staff = True
     usuario.save()
     
-    perfil = PerfilUsuario.objects.update_or_create(user=usuario, NUMRUT='20158654', DVRUN='K',fechaNacimiento='1995-02-10', cargo='Administrador', telefono='+56986401578')
+    perfil = PerfilUsuario.objects.update_or_create(user=usuario, cargo='Administrador')
     
     #Crear un usuario inactivo y modificar el login para no dejarlo loguearse
     usuarioAnon = User.objects.create_user(username="Anon", password='anon') #ZKfg!)nkLSp163SD
@@ -365,10 +402,8 @@ def iniciar_sesion(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                nombre = user.first_name
-                apellido = user.last_name
-                desc = f"El usuario {nombre} {apellido} ha iniciado sesión"
-                almacenado = almacenarHistorial(desc, "2", user)
+                cat = {'Cat':'A', 'Sub':'1'}
+                almacenado = almacenarHistorial(cat, user)
                 return redirect(pagina_principal)
             else:
                 data = {'mesg':'Usuario o contraseña incorrectos', 'form':LoginForm}
@@ -379,11 +414,9 @@ def iniciar_sesion(request):
 
 #Crear un cerrar sesión
 def cerrar_sesion(request):
-    nombre = request.user.first_name
-    apellido = request.user.last_name
     user = request.user
-    desc = f"El usuario {nombre} {apellido} ha cerrado sesión"
-    almacenado = almacenarHistorial(desc, "2", user)
+    cat = {'Cat':'A','Sub':'2'}
+    almacenado = almacenarHistorial(cat, user)
     logout(request)
     return redirect(iniciar_sesion) 
 
@@ -409,49 +442,115 @@ def pagina_principal(request):
     return render(request, 'core/index1.html', data)
 
 #Almacena el historial solicitando desc, tipoInfo y usuario
-def almacenarHistorial(desc, tipoInfo, usuario):
-    histCambios = historialCambios()   
+def almacenarHistorial(categoria={'Cat':"A",'Sub':'1'}, usuario=None):
+    """Almacena el historial.
 
+        Parametros: 
+        categoria: Diccionario con la categoria y la subcategoría. Debe venir con clave Cat para categoria, y Sub para la subcategoria.
+        usuario: Usuario para almacenar e indicar quien realizar la acción. En caso de venir nulo es un usuario anónimo
+        
+        Return:
+        histCambios: Objeto de tipo Historial Cambios.
+    """
     fecha = timezone.now()
-    print(fecha)
-    histCambios.fecha = fecha
     
-    print(histCambios.fecha)
-        
-    if(len(desc) > 300):
-        desc = desc[:300]
-        print("Demasiados caracteres en la descripción")
-    histCambios.desc = desc
-        
-    tiposInformaciones = {"1":"Modificación en la DB", "2": "Informativo", "3":"Error", "4":"Otro"}
-    if(tipoInfo not in tiposInformaciones):
-        tipoInfo = "4"
-    histCambios.tipoInfo = tiposInformaciones[tipoInfo]
+    categorias = obtener_categorias()
+    subcategorias = obtener_subcategorias()
+    prioridades = obtener_prioridades()
     
-    if(usuario is None):
-        print("El usuario es inexistente")
-        usuario = User.objects.get(username="Anon")
-        histCambios.usuario = usuario
-        
-    histCambios.usuario = usuario
-    histCambios.save()
+    subcategoria_clave = categoria['Cat'] + categoria['Sub']
+    
+    categoria_texto = categorias.get(categoria['Cat'], "Categoría desconocida")
+    subcategoria_texto = subcategorias.get(subcategoria_clave, "Subcategoría desconocida")
+    prioridad = prioridades.get(subcategoria_clave, "Prioridad desconocida")
+    usuario = verificar_usuario_hist(usuario)
+    
+    histCambios = historialCambios.objects.create(fecha=fecha, categoria=categoria_texto, subcategoria=subcategoria_texto, 
+                                    prioridad=prioridad, usuario=usuario)
     return histCambios
+
+def verificar_usuario_hist(user):
+    if(user is None):
+        usuario = User.objects.get(username="Anon")
+    else:
+        usuario = user
+    return usuario
+
+def obtener_subcategorias():
+    categorias = {
+    "A1": "Login",
+    "A2": "Logout",
+    "B1": "Cambio de parametros",
+    "B2": "Cambio de configuraciones en la base de datos",
+    "C1": "Limpieza de datos",
+    "D1": "Errores",
+    "E1": "Agrego Proyectos",
+    "E2": "Agrego usuario",
+    "E3": "Wlimino usuario",
+    "F1": "Cambio un cargo",
+    "F2": "Actualizó permisos",
+    "G1": "Realizó la clusterizacion"
+    }
+    return categorias
+
+def obtener_categorias():
+    categorias = {
+    'A': "Autentificacion",
+    'B': "Configuracion",
+    'C': "Mantenimiento",
+    'D': "Error",
+    'E': "Auditoria",
+    'F': "Seguridad",
+    'G': "Modelo"
+    }
+    return categorias
+
+def obtener_prioridades():
+    prioridades = {
+        "A1": "1",
+        "A2": "1",
+        "A3": "1",
+        "A4": "1",
+        "B1": "3",
+        "B2": "3",
+        "C1": "3",
+        "C2": "3",
+        "C3": "3",
+        "D1": "2",
+        "E1": "2",
+        "E2": "2",
+        "E3": "2",
+        "F1": "3",
+        "F2": "3",
+        "F3": "2",
+        "G1": "3"
+    }
+    return prioridades
     
 #Carga todos los distintos proyectos
 def ver_proyectos(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     proyectos = proyectosAAgrupar.objects.all()
     data = {'proyectos':proyectos}
     return render(request, 'core/verProyectos.html', data)
 
 #Unicamente carga el historial o log de usuarios
 def verHistorial(request):
-    historial = historialCambios.objects.all().values('idHist','fecha','desc','tipoInfo','usuario__first_name','usuario__last_name')
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
+    historial = historialCambios.objects.all().values('idHist','fecha', 'categoria', 'subcategoria', 'prioridad', 'usuario__first_name','usuario__last_name')
     data = {'hist':historial}
     return render(request, 'core/historialAcciones.html', data)
 
 #Unicamente carga los usuarios
 def ver_usuarios(request):
-    usuarios = PerfilUsuario.objects.all().values('NUMRUT','DVRUN','fechaNacimiento','cargo','telefono',
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
+    usuarios = PerfilUsuario.objects.all().values('cargo',
                                                   'user__username','user__first_name','user__last_name',
                                                   'user__email','user__is_staff', 'user__is_active', 'user')
     PerfilUsuario.objects.filter()
@@ -459,24 +558,21 @@ def ver_usuarios(request):
     return render (request, 'core/verUsuarios.html', data)
 
 def crear_usuarios(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     data = {"form":CrearUsuarioAdmin}
     if request.method == 'POST':
         form = CrearUsuarioAdmin(request.POST)
         if form.is_valid():
             try:
                 user = form.save()
-                NUMRUT = form.cleaned_data.get('NUMRUT')
-                DVRUN = form.cleaned_data.get('DVRUN')
-                fechaNacimiento = form.cleaned_data.get('fechaNacimiento')
                 cargo = form.cleaned_data.get('cargo')
-                telefono = form.cleaned_data.get('telefono')
                 user.save()
-                PerfUsr = PerfilUsuario.objects.update_or_create(user=user, NUMRUT=NUMRUT, DVRUN=DVRUN, fechaNacimiento=fechaNacimiento, cargo=cargo, telefono=telefono)
+                PerfUsr = PerfilUsuario.objects.update_or_create(user=user, cargo=cargo)
                 ##Se obtienen los datos del usuario creado
-                nombreCread = f'{user.first_name} {user.last_name}'
-                nombreAcc = f'{request.user.first_name} {request.user.last_name}'
-                desc = f'El usuario {nombreAcc} ha creado al usuario {nombreCread}'
-                almacenado = almacenarHistorial(desc, "1", request.user)
+                cat = {'Cat':'E', 'Sub':'2'}
+                almacenado = almacenarHistorial(cat, request.user)
                 messages=["Usuario creado con éxito"]
                 data["messages"]=messages
                 data['form'] = CrearUsuarioAdmin()
@@ -488,9 +584,10 @@ def crear_usuarios(request):
             error_messages = form.errors.as_data()  # Returns a dict with field names as keys and errors as values
             merror=[]
             for field, errors in error_messages.items():
+                field_label=form.FIELD_LABELS.get(field, field)
                 for error in errors:
                     #messages.error(request, f'Error in {field}: {error}')
-                    merror.append(f'Error en {field}: {error}')
+                    merror.append(f'Error en {field_label}: {error}')
             data["merror"]=merror
     else:
         data['form'] = CrearUsuarioAdmin()
@@ -514,20 +611,24 @@ def eliminarUsuarios(request, id):
             print('mesg')
             usuario.is_active = False
             usuario.save()
-            nombreDesac = f'{nombre} {apellido}'
-            
-            nombre = request.user.first_name
-            apellido = request.user.last_name
-            desc = f'El usuario {nombre} {apellido} ha desactivado al usuario {nombreDesac}'
-            almacenado = almacenarHistorial(desc, "1", request.user)
+
+            cat = {'Cat':'E','Sub':'3'}
+            almacenado = almacenarHistorial(cat, request.user)
     except Exception as e:
         print(e)
         mesg = 'El usuario no existe. Por favor verifique el usuario que desea desactivar'
     
     #Se cargan los datos ya cambiados
-    usuarios = PerfilUsuario.objects.all().values('NUMRUT','DVRUN','fechaNacimiento','cargo','telefono',
+    usuarios = PerfilUsuario.objects.all().values('cargo',
                                                   'user__username','user__first_name','user__last_name',
                                                   'user__email','user__is_staff', 'user__is_active', 'user')
     
     data = {'mesg':mesg, 'usuarios':usuarios}
     return render (request, 'core/verUsuarios.html', data)
+
+def ajuste_parametros(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
+    return render(request, 'core/parameters.html')
+

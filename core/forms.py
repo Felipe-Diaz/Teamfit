@@ -83,38 +83,59 @@ class LoginForm(forms.Form):
     
         
 class CrearUsuarioAdmin(UserCreationForm):
-    NUMRUT = forms.IntegerField(
-                                label="Rut", 
-                                required=True, 
-                                validators=[validar_longitud_maxima],
-                                widget=forms.NumberInput(attrs={'class':'form-control'})
-                                )
-    DVRUN = forms.CharField(
-                            label="Dígito verificador",
-                            required=True,
-                            max_length=1,
-                            widget=forms.TextInput(attrs={'class':'form-control'})
-                            )
-    fechaNacimiento = forms.DateField(
-                                        label="Fecha de Nacimiento",
-                                        required=True,
-                                        widget=forms.DateInput(attrs={'class':'form-control'})
-                                      )
-    cargo = forms.CharField(
-                            label="Cargo",
+    CARGOS = [
+        ("na", 'Seleccione Cargo'),
+        ('1', 'Administrador'),
+        ('2', 'Jefe de Proyecto'),
+        ('3', 'Ingenierio de Proyecto'),
+    ]
+    cargo = forms.ChoiceField(
+        required=True,
+        choices=CARGOS,
+        widget=forms.Select(attrs={'class':'form-control'}),
+        label="Cargo"
+    )
+    def clean_cargo(self):
+        cargo = self.cleaned_data.get('cargo')
+        if cargo == "na":
+            raise ValidationError("Debe seleccionar un cargo válido.")
+        return cargo
+    username = forms.CharField(
+                            label="Nombre de Usuario",
                             required=True,
                             max_length=150,
                             widget=forms.TextInput(attrs={'class':'form-control'})
                             )
-    telefono = forms.IntegerField(
-                                    label="Número de contacto",
-                                    required=True,
-                                    validators=[validar_longitud_maxima],
-                                    widget=forms.NumberInput(attrs={'class':'form-control'})
-                                  )
+    first_name = forms.CharField(
+                            label="Nombre",
+                            required=True,
+                            max_length=150,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    last_name = forms.CharField(
+                            label="Apellidos",
+                            required=True,
+                            max_length=150,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    email = forms.CharField(
+                            label="Dirección de correo electrónico",
+                            required=True,
+                            max_length=150,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    FIELD_LABELS={
+        'username':'Nombre de Usuario',
+        'cargo':'Cargo',
+        'first_name':'Nombre',
+        'last_name':'Apellido',
+        'email':'Dirección de correo electrónico',
+        'password1':'Contraseña',
+        'password2':'Contraseña (Confirmación)'
+    }
     class Meta:
         model = User
-        fields = ['username', 'first_name','last_name', 'email', 'is_staff', 'NUMRUT', 'DVRUN','fechaNacimiento','cargo','telefono']
+        fields = ['username', 'first_name','last_name', 'email', 'is_staff', 'cargo']
 
 
 #Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.

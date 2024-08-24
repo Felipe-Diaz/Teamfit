@@ -1,0 +1,460 @@
+{% load static %}
+{% block head %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>
+      {% block titlePage %}
+      Teamfit - Home
+      {% endblock titlePage %}
+    </title>
+    <meta
+      content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+      name="viewport"
+    />
+    <link
+      rel="icon"
+      href="{% static 'core/img/kaiadmin/favicon.ico' %}"
+      type="image/x-icon"
+    />
+
+    <!-- Fonts and icons -->
+    <script src="{% static 'core/js/plugin/webfont/webfont.min.js' %}"></script>
+    <script>
+      WebFont.load({
+        google: { families: ["Public Sans:300,400,500,600,700"] },
+        custom: {
+          families: [
+            "Font Awesome 5 Solid",
+            "Font Awesome 5 Regular",
+            "Font Awesome 5 Brands",
+            "simple-line-icons",
+          ],
+          urls: ["{% static 'core/css/fonts.min.css' %}"],
+        },
+        active: function () {
+          sessionStorage.fonts = true;
+        },
+      });
+    </script>
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'core/css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'core/css/plugins.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'core/css/kaiadmin.min.css' %}" />
+    {% block estiloHead %}
+    {% endblock estiloHead %}
+  </head>
+  {% endblock head %}
+<body>
+    {% block SideBar %}
+    <!-- Modal HTML/ Mensaje emergente antes de cerrar sesion automaticamente -->
+    <div id="inactivityModal" class="modal" tabindex="-1" role="dialog" style="z-index:10000; background-color:rgba(0,0,0,0.5);">>
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">¿Sigues ahi?</h5>
+          </div>
+          <div class="modal-body">
+            <p>Su sesion expirara en <span id="countdown">60</span> segundos, seleccione "Sigo aqui" para evitar esta accion.</p>
+          </div>
+          <div class="modal-footer d-flex justify-content-center">
+            <button id="stayBtn" type="button" class="btn btn-primary">Sigo aqui</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar" data-background-color="dark">
+          <div class="sidebar-logo">
+            <!-- Logo Header -->
+            <div class="logo-header" data-background-color="dark">
+              <a href="{% url 'index' %}" class="logo">
+                <img
+                  src="{% static 'core/img/roda-logo.png' %}"
+                  alt="navbar brand"
+                  class="navbar-brand"
+                  height="60"
+          
+                />
+              </a>
+              <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                  <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                  <i class="gg-menu-left"></i>
+                </button>
+              </div>
+              <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+              </button>
+            </div>
+            <!-- End Logo Header -->
+          </div>
+          <div class="sidebar-wrapper scrollbar scrollbar-inner">
+            <div class="sidebar-content">
+              <ul class="nav nav-secondary">
+                <li class="nav-item">
+                  <a
+                    class="collapsed"
+                    aria-expanded="false"
+                    href="{% url 'index' %}"
+                  >
+                    <i class="fas fa-home"></i>
+                    <p>Inicio</p>
+                  </a>
+                </li>
+                <li class="nav-section">
+                  <span class="sidebar-mini-icon">
+                    <i class="fa fa-ellipsis-h"></i>
+                  </span>
+                  <h4 class="text-section">Components</h4>
+                </li>
+                <li class="nav-item">
+                  <a data-bs-toggle="collapse" href="#base">
+                    <i class="fas fa-layer-group"></i>
+                    <p>Proyectos</p>
+                    <span class="caret"></span>
+                  </a>
+                  <div class="collapse" id="base">
+                    <ul class="nav nav-collapse">
+                      <li>
+                        <a href="{% url 'subirProyectos' %}">
+                          <span class="sub-item">Subir Proyectos</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url 'verProyectos' %}">
+                          <span class="sub-item">Ver Proyectos</span>
+                        </a>
+                      </li>
+                  </div>
+                </li>
+                <li class="nav-item">
+                  <a data-bs-toggle="collapse" href="#sidebarLayouts">
+                    <i class="fa fa-users" aria-hidden="true"></i>
+                    <p>Administrar Usuarios</p>
+                    <span class="caret"></span>
+                  </a>
+                  <div class="collapse" id="sidebarLayouts">
+                    <ul class="nav nav-collapse">
+                      <li>
+                        <a href="{% url 'crearUsuarios' %}">
+                          <span class="sub-item">Crear Usuario</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url 'verUsuarios' %}">
+                          <span class="sub-item">Ver Usuarios</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="nav-item">
+                  <a data-bs-toggle="collapse" href="#forms">
+                    <i class="fa fa-folder-open" aria-hidden="true"></i>
+                    <p>Carga de horas</p>
+                    <span class="caret"></span>
+                  </a>
+                  <div class="collapse" id="forms">
+                    <ul class="nav nav-collapse">
+                      <li>
+                        <a href="">
+                          <span class="sub-item">Carga Horas</span>
+                        </a>
+                      </li>
+                      <li>
+                          <a href="{% url 'graficar_Datos' %}">
+                            <span class="sub-item">Ver Diagramas</span>
+                          </a>
+                        </li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'historial' %}">
+                    <i class="fa fa-history" aria-hidden="true"></i>
+                    <p>Historial</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'parametros'%}">
+                        <i class="fa fa-cog" aria-hidden="true"></i>
+                        <p>Parametros</p>
+                    </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- End Sidebar -->  
+    {% endblock SideBar %}
+    {% block NavBar %}
+    <div class="main-panel">
+        <div class="main-header">
+          <div class="main-header-logo">
+            <!-- Logo Header -->
+            <div class="logo-header" data-background-color="dark">
+              <a href="index.html" class="logo">
+                <img
+                  src="{% static 'core/img/kaiadmin/logo_light.svg' %}"
+                  alt="navbar brand"
+                  class="navbar-brand"
+                  height="20"
+                />
+              </a>
+              <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                  <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                  <i class="gg-menu-left"></i>
+                </button>
+              </div>
+              <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+              </button>
+            </div>
+            <!-- End Logo Header -->
+          </div>
+          <!-- Navbar Header -->
+          <nav
+            class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
+            <div class="container-fluid">
+              <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                <li class="nav-item topbar-user dropdown hidden-caret">
+                  <a
+                    class="dropdown-toggle profile-pic"
+                    data-bs-toggle="dropdown"
+                    href="#"
+                    aria-expanded="false"
+                  >
+                    <div class="avatar-sm">
+                      <img
+                        src="{% static 'core/img/Template/profile.jpg' %}"
+                        alt="..."
+                        class="avatar-img rounded-circle"
+                      />
+                    </div>
+                    <span class="profile-username">
+                      <span class="op-7">Hola,</span>
+                      <span class="fw-bold">{{ user.first_name}}</span>
+                    </span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-user animated fadeIn">
+                    <div class="dropdown-user-scroll scrollbar-outer">
+                      <li>
+                        <div class="user-box">
+                          <div class="avatar-lg">
+                            <img
+                              src="{% static 'core/img/Template/profile.jpg'%}"
+                              alt="image profile"
+                              class="avatar-img rounded"
+                            />
+                          </div>
+                          <div class="u-text">
+                            <h4>{{ user.first_name}} {{user.last_name}}</h4>
+                            <p class="text-muted">{{user.email}}</p>
+                            {% if user.is_authenticated %}
+                            <a
+                              class="btn btn-xs btn-secondary" btn-sm href="{% url 'logout' %}"
+                              >Cerrar sesión</a>
+                              {% endif %}
+                          </div>
+                        </div>
+                      </li>
+                    </div>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+    {% endblock NavBar%}
+
+{% block content %}
+{% endblock content %}
+
+{% block EJS%}
+<script src="{% static 'core/js/core/jquery-3.7.1.min.js' %}"></script>
+<script src="{% static 'core/js/core/popper.min.js' %}"></script>
+<script src="{% static 'core/js/core/bootstrap.min.js' %}"></script>
+
+<!-- jQuery Scrollbar -->
+<script src="{% static 'core/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js' %}"></script>
+
+<!-- Chart JS -->
+<script src="{% static 'core/js/plugin/chart.js/chart.min.js' %}"></script>
+
+<!-- jQuery Sparkline -->
+<script src="{% static 'core/js/plugin/jquery.sparkline/jquery.sparkline.min.js' %}"></script>
+
+<!-- Chart Circle -->
+<script src="{% static 'core/js/plugin/chart-circle/circles.min.js' %}"></script>
+
+<!-- Datatables -->
+<script src="{% static 'core/js/plugin/datatables/datatables.min.js' %}"></script>
+
+<!-- Bootstrap Notify -->
+<script src="{% static 'core/js/plugin/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+
+<!-- jQuery Vector Maps -->
+<script src="{% static 'core/js/plugin/jsvectormap/jsvectormap.min.js' %}"></script>
+<script src="{% static 'core/js/plugin/jsvectormap/world.js' %}"></script>
+
+<!-- Sweet Alert -->
+<script src="{% static 'core/js/plugin/sweetalert/sweetalert.min.js' %}"></script>
+
+<!-- Kaiadmin JS -->
+<script src="{% static 'core/js/kaiadmin.min.js' %}"></script>
+
+<script>
+// Datos para los gráficos
+const dataHH = {
+    labels: ['A', 'B', 'C'],
+    datasets: [{
+        label: 'Horas',
+        data: [10, 20, 30],
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+    }]
+};
+
+const dataUtilizacion = {
+    labels: ['X', 'Y', 'Z'],
+    datasets: [{
+        label: 'Utilizacion',
+        data: [40, 50, 60],
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+    }]
+};
+
+let ctx = document.getElementById('myChart').getContext('2d');
+let myChart = new Chart(ctx, {
+    type: 'bar',
+    data: dataHH, // Inicialmente muestra el gráfico de HH
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return tooltipItem.dataset.label + ': ' + tooltipItem.raw;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Función para cambiar el gráfico
+function changeChartData(newData) {
+    myChart.data = newData;
+    myChart.update();
+}
+
+// Eventos para los botones
+document.getElementById('btn-hh').addEventListener('click', function(e) {
+    e.preventDefault();
+    changeChartData(dataHH);
+});
+
+document.getElementById('btn-utilizacion').addEventListener('click', function(e) {
+    e.preventDefault();
+    changeChartData(dataUtilizacion);
+});
+</script>
+
+<!-- Scrip utilizado para la expiracion del token de login, el conteo del tiempo y el mensaje emergente -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      let inactivityTime = function () {
+          let time;
+          let warningTime;
+          let modalTimeout;
+          let countdownInterval;
+          let countdownTime = 60;  // Tiempo para el contador (en segundos)
+
+          // Restablece el contador cuando el usuario interactúa
+          resetTimer();
+          document.onmousemove = resetTimer;
+          document.onkeypress = resetTimer;
+
+          function logout() {
+              // Redirige a la URL de logout si el usuario no responde
+              window.location.href = "{% url 'logout' %}";
+          }
+
+          function showModal() {
+              // Muestra el modal
+              document.getElementById("inactivityModal").style.display = "block";
+              
+              // Inicializa el contador
+              countdownTime = 60;
+              document.getElementById("countdown").textContent = countdownTime;
+              
+              // Actualiza el contador cada segundo
+              countdownInterval = setInterval(function() {
+                  countdownTime--;
+                  document.getElementById("countdown").textContent = countdownTime;
+                  
+                  // Si el contador llega a 0, cierra la sesión
+                  if (countdownTime <= 0) {
+                      clearInterval(countdownInterval);  // Detiene el intervalo
+                      logout();  // Cierra sesión
+                  }
+              }, 1000);
+
+              // Si el usuario no responde al modal en 60 segundos, cierra sesión
+              modalTimeout = setTimeout(logout, 60000);  // 60 segundos
+          }
+
+          function hideModal() {
+              // Oculta el modal y limpia el temporizador del modal
+              document.getElementById("inactivityModal").style.display = "none";
+              clearTimeout(modalTimeout);
+              clearInterval(countdownInterval);  // Detiene el contador
+              resetTimer();  // Reinicia el contador de inactividad
+          }
+
+          function resetTimer() {
+              clearTimeout(time);  // Elimina el temporizador de inactividad
+              clearTimeout(warningTime);  // Elimina el temporizador de advertencia
+              clearTimeout(modalTimeout);  // Elimina el temporizador del modal si existía
+              clearInterval(countdownInterval);  // Elimina el intervalo del contador
+
+              // Cada minuto equivale a 60000
+              // Tiempo en milisegundos antes de mostrar el modal (ej. 4 minutos)
+              warningTime = setTimeout(showModal, 8400000);  // 14 minutos
+
+              // Tiempo total de inactividad (modal más tiempo de espera para logout)
+              time = setTimeout(logout, 900000);  // 15 minutos
+          }
+
+          // Evento cuando el usuario hace clic en "Sí, sigo aquí"
+          document.getElementById("stayBtn").onclick = function() {
+              hideModal();
+          };
+      };
+
+      inactivityTime();  // Inicia el script de inactividad
+  });
+</script>
+
+{% endblock EJS%}
+
+{% block UJS %}
+{% endblock UJS %}
+</body>

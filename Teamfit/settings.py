@@ -145,7 +145,7 @@ MEDIA_URL = '/media/'
 
 LOGIN_REDIRECT_URL = 'home'
 
-LOGIN_URL = 'login'
+LOGIN_URL = 'index'
 
 LOGOUT_REDIRECT_URL = 'login'
 
@@ -157,3 +157,11 @@ STATICFILES_FINDERS = [
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Establece el tiempo de expiración de la sesión en segundos
+SESSION_COOKIE_AGE = 1020  # 1020 segundos = 18 minutos
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Cierra la sesión cuando se cierra el navegador
+SESSION_SAVE_EVERY_REQUEST = True  # Renueva la sesión con cada request
+
+CSRF_COOKIE_SECURE = True  # Si estás usando HTTPS
+CSRF_COOKIE_HTTPONLY = False

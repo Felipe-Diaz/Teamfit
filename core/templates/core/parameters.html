@@ -1,0 +1,157 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Parametros
+{% endblock titlePage %}
+
+{% block estiloHead %}
+<style>
+    .custom-grey-bg {
+        background-color: lightgrey;
+        padding: 10px; /* Optional: adds padding around the text */
+    }
+
+    .checkbox-container {
+        display: flex;
+        gap: 15px; /* Space between checkboxes */
+    }
+</style>
+{% endblock estiloHead %}
+
+{% block content %}
+<body>
+    <div class="container-fluid" style="margin-top: 70px;">
+        <div class = "row">
+            <div class = "col-md-12">
+                <div class = "card">
+                    <div>
+                        <h2 class="custom-grey-bg">
+                            Parámetros de Log
+                        </h2>
+                        <div class="card-body">
+                            <form>
+                                <div class="main-checkbox">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="typeAutent" value="autentificacion">
+                                        <label class="form-main-check-label" for="typeAutentificacion">
+                                            Autentificación
+                                        </label>
+                                    </div>
+                                    <div class="checkbox-container" id="logCatAut">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
+                                            <label class="form-check-label" for="procLogin">
+                                                Login
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="procLogout" value="logout">
+                                            <label class="form-check-label" for="procLogout">
+                                                Logout
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="procExpLogout" value="explogout">
+                                            <label class="form-check-label" for="procExpLogout">
+                                                Logout por expiracion de token
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="pswdErr" value="errorcontra">
+                                            <label class="form-check-label" for="procPswdErr">
+                                                Error al ingresar contraseña
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="main-checkbox">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
+                                        <label class="form-main-check-label" for="typeConfiguracion">
+                                            Configuracion
+                                        </label>
+                                    </div>
+                                    <div class="checkbox-container" id="logCatConf">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="procCamConfBD" value="proccamconfBD">
+                                            <label class="form-check-label" for="procCamConfBD">
+                                                Cambio de Configuraciones en la base de datos
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="main-checkbox">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
+                                        <label class="form-main-check-label" for="typeConfiguracion">
+                                            Mantenimiento
+                                        </label>
+                                    </div>
+                                    <div class="checkbox-container" id="logCatMant">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
+                                            <label class="form-check-label" for="procLogin">
+                                                Limpieza de datos
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
+                                            <label class="form-check-label" for="procLogin">
+                                                Actualizaciones del sistema
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
+                                            <label class="form-check-label" for="procLogin">
+                                                Copias de seguridad
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="main-checkbox">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
+                                        <label class="form-main-check-label" for="typeConfiguracion">
+                                            Error
+                                        </label>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="main-checkbox">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
+                                        <label class="form-main-check-label" for="typeConfiguracion">
+                                            Auditoria
+                                        </label>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="main-checkbox">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
+                                        <label class="form-main-check-label" for="typeConfiguracion">
+                                            Seguridad
+                                        </label>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="main-checkbox">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
+                                        <label class="form-main-check-label" for="typeConfiguracion">
+                                            Modelo
+                                        </label>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock content %}
