@@ -2,7 +2,12 @@
 {% load static %}
 {% block content %}
   <body>
-    <br><br><br>
+    <br><br><br><br><hr>
+    <div class="text-center">
+      Bienvenido {{user.first_name}} {{user.last_name}}
+    </div>
+    <hr>
+    <!-- <br><br><br>
     <div>
     <div class="wrapper">
         <div class="container">
@@ -123,7 +128,7 @@
                   </div>
                   <div class="card-body">
                     <div class="chart-container" style="min-height: 375px">
-                      <canvas id="myChart"></canvas><!-- trabajo en progreso -->
+                      <canvas id="myChart"></canvas> ----------------------------- trabajo en progreso 
                     </div>
                 <canvas id="myChart"></canvas>
                   </div>
@@ -492,7 +497,7 @@
                   </div>
                   <div class="card-body p-0">
                     <div class="table-responsive">
-                      <!-- Projects table -->
+                      TABLA DE PROYECTOS _--------------------
                       <table class="table align-items-center mb-0">
                         <thead class="thead-light">
                           <tr>
@@ -646,6 +651,6 @@
           </div>
         </footer>
       </div>
-    </div>
+    </div> -->
   </body>
   {% endblock content %}

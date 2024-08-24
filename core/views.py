@@ -70,26 +70,38 @@ def subirProyectos(request, upload='Sh'):
                                     'Cierre', 'Egresos No HH CLP', 'Monto Oferta CLP',
                                     'C/Agencia', 'Ocupación Al Iniciar (%)']
                 if not all(col in df.columns for col in required_columns):
-                    data['mesg'] = ('El archivo no contiene las columnas requeridas [id, Proyecto, '
-                    'Línea de Negocio, tipo, cliente, create_date, Cierre, Egresos No HH CLP, '
-                    'Monto Oferta CLP, C/Agencia, Ocupación Al Iniciar (%)]. Por favor, sube un archivo con estas columnas.')
+                    data['mesg'] = ('<div style="container col-md-6"> El archivo <strong>no contiene</strong> las columnas requeridas:'
+                                    '<ul> <li>id</li> <li>Proyecto</li> <li>Línea de Negocio</li> <li>tipo</li>'
+                                    '<li>cliente</li> <li>create_date</li> <li>Cierre</li> <li>Egresos No HH CLP</li>'
+                                    '<li>Monto Oferta CLP</li> <li>C/Agencia</li> <li>Ocupación Al Iniciar (%)</li> </ul>'
+                                    '<br> Por favor, suba un archivo con estas columnas.</div>')
                     
                 else:
-                    df = cambiarFormatoAlmacenarDf(df)
-                    validado = verificarDf(df)
-                    df_validado = validado['valido']
-                    
-                    datosDfDict = df.to_dict(orient='records')
-                    data["proyectos"] = datosDfDict
-                    data['validado'] = df_validado
-                    showTable = True
-                    
-                    if(not df_validado):
-                       data['mesg'] = validado['mesg']
-                       showTable = True
+                    extra_columns = [col for col in df.columns if col not in required_columns and col]
+                    if extra_columns:
+                        extra_columns_html = ''.join(f'<li>{col}</li>' for col in extra_columns if col)
+                        data['mesg'] = ('<div style="container col-md-6"> El archivo <strong>contiene</strong> columnas innecesarias:'
+                                    f'<ul><li>{extra_columns_html}</li> </ul> <br> Se necesitan unicamente las siguientes columnas'
+                                    '<ul> <li>id</li> <li>Proyecto</li> <li>Línea de Negocio</li> <li>tipo</li>'
+                                    '<li>cliente</li> <li>create_date</li> <li>Cierre</li> <li>Egresos No HH CLP</li>'
+                                    '<li>Monto Oferta CLP</li> <li>C/Agencia</li> <li>Ocupación Al Iniciar (%)</li> </ul>'
+                                    '<br> Por favor, suba un archivo solo con estas columnas.</div>')
                     else:
-                        data['mesg'] = validado['mesg']
-                        request.session['df_proyectos'] = datosDfDict
+                        df = cambiarFormatoAlmacenarDf(df)
+                        validado = verificarDf(df)
+                        df_validado = validado['valido']
+                        
+                        datosDfDict = df.to_dict(orient='records')
+                        data["proyectos"] = datosDfDict
+                        data['validado'] = df_validado
+                        showTable = True
+                        
+                        if(not df_validado):
+                            data['mesg'] = validado['mesg']
+                            showTable = True
+                        else:
+                            data['mesg'] = validado['mesg']
+                            request.session['df_proyectos'] = datosDfDict
         else:
             data["mesg"] = "El valor es inválido"
     data["showTable"] = showTable
@@ -143,8 +155,18 @@ def verificarDf(df):
         ids_nulos = df.loc[df[columns_to_check].isnull().any(axis=1), 'id'].tolist()
         ids_nulos = sorted(ids_nulos)
         if(len(ids_nulos) > 5):
-            mesg = ("IDs con valores nulos en los siguientes registros: <br> <strong>" + str(ids_nulos[:5]) + "</strong> entre otros. <br>"
-                    "Por favor, verifique los registros indicados.")
+            mesg = ("Valores nulos en los siguientes registros: <br> <strong>" + str(ids_nulos[:5]) + "</strong> entre otros. <br>"
+                    "Por favor, verifique los registros indicados. <br>"
+                    '<i class="fa fa-info-circle" data-toggle="tooltip" data-html="true" title="<div>'
+                    '<p>Los datos presentan problemas. Por favor, verifique lo siguiente:</p>'
+                    '<ul>'
+                        "<li>Las Columnas 'id', 'proyecto', 'Línea de Negocio', 'tipo', 'cliente', 'create_date',<br>"
+                        "'Monto Oferta CLP' y 'Ocupación Al Iniciar' (%) <br>"
+                        '<strong>NO PUEDEN CONTENER DATOS NULOS O VACÍOS</strong></li>'
+                        '<li>Las columnas deben tener exactamente <strong> el mismo nombre que se solicita</strong></li>'
+                    '</ul>'
+                    '</div>"></i>'
+                    )
             respuesta = {'mesg':mesg,'valido':False}
     else:
         mesg = 'No se han encontrado datos que puedan provocar conflictos'
