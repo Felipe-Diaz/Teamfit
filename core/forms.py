@@ -182,3 +182,86 @@ class proyectosForm(forms.Form):
     
     class Meta:
         fields = ['idProy', 'proyecto', 'lineaNegocio', 'tipo', 'usoAgencia', 'ocupacionInicio']
+        
+        
+
+CATEGORIAS_MAPPING = {
+    'A': 'autenticacion',
+    'A1': 'login',
+    'A2': 'logout',
+    'B': 'configuracion',
+    'B1': 'cambio_parametros',
+    'B2': 'cambio_conf_bd',
+    'C': 'mantenimiento',
+    'C1': 'limpieza_datos',
+    'D1': 'error',
+    'E': 'auditoria',
+    'E1': 'quien_agrego_documentos',
+    'E2': 'quien_agrego_usuario',
+    'E3': 'quien_elimino_usuario',
+    'F': 'seguridad',
+    'F1': 'cambio_de_cargo',
+    'F2': 'actualizacion_permisos',
+    'G': 'modelo',
+    'G1': 'realizacion_clusterizacion',
+}
+
+class CategoriasForm(forms.Form):
+    # Autentificación
+    autenticacion = forms.BooleanField(
+        required=False, 
+        label="Autentificación", 
+        widget=forms.CheckboxInput(attrs={'class':'form-check-input'})
+        )
+    
+    login = forms.BooleanField(
+        label='Login',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    logout = forms.BooleanField(
+        required=False, 
+        label="Logout",
+        widget=forms.CheckboxInput(attrs={'class':'form-check-input'})
+        )
+    #logout_exp_token = forms.BooleanField(required=False, label="Logout por expiración de token")
+    #error_ingreso = forms.BooleanField(required=False, label="Error al ingresar contraseña")
+
+    # Configuración
+    configuracion = forms.BooleanField(required=False, label="Configuración", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    cambio_parametros = forms.BooleanField(required=False, label="Cambio de Parametros", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    cambio_conf_bd = forms.BooleanField(required=False, label="Cambio de Configuraciones de la Base de Datos", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+
+    # Mantenimiento
+    mantenimiento = forms.BooleanField(required=False, label="Mantenimiento", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    limpieza_datos = forms.BooleanField(required=False, label="Limpieza de datos", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    #actualizacion_sistema = forms.BooleanField(required=False, label="Actualizaciones del sistema")
+    #copias_seguridad = forms.BooleanField(required=False, label="Copias de seguridad")
+
+    # Error
+    error = forms.BooleanField(required=False, label="Error", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    
+    # Auditoría
+    auditoria = forms.BooleanField(required=False, label="Auditoría", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    quien_agrego_documentos = forms.BooleanField(required=False, label="Quien agregó documentos", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    quien_agrego_usuario = forms.BooleanField(required=False, label="Quién agregó usuario", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    quien_elimino_usuario = forms.BooleanField(required=False, label="Quien eliminó usuario", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    
+    # Seguridad
+    seguridad = forms.BooleanField(required=False, label="Seguridad", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    #cambio_contraseña = forms.BooleanField(required=False, label="Cambio de contraseña")
+    cambio_de_cargo = forms.BooleanField(required=False, label="Cambio de Cargo", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    actualizacion_permisos = forms.BooleanField(required=False, label="Actualización de Permisos", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    
+    # Modelo
+    modelo = forms.BooleanField(required=False, label="Modelo", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    realizacion_clusterizacion = forms.BooleanField(required=False, label="Realización de la clusterización", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    
+    def get_field_by_code(self, code):
+        field_name = CATEGORIAS_MAPPING.get(code)
+        if field_name:
+            return self[field_name]
+        return None
+    
+
+

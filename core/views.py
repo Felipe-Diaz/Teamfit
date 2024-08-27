@@ -1,6 +1,7 @@
 from django.shortcuts import redirect, render
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal, Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario
-from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm
+from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
+from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro
+from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm, CategoriasForm
 from datetime import datetime, timedelta, time
 import random
 import requests
@@ -15,6 +16,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
 import pytz
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -506,22 +508,22 @@ def obtener_subcategorias():
     "B2": "Cambio de configuraciones en la base de datos",
     "C1": "Limpieza de datos",
     "D1": "Errores",
-    "E1": "Agrego Proyectos",
-    "E2": "Agrego usuario",
-    "E3": "Wlimino usuario",
+    "E1": "Agregó Proyectos",
+    "E2": "Agregó usuario",
+    "E3": "Elimino usuario",
     "F1": "Cambio un cargo",
     "F2": "Actualizó permisos",
-    "G1": "Realizó la clusterizacion"
+    "G1": "Realizó la clusterización"
     }
     return categorias
 
 def obtener_categorias():
     categorias = {
-    'A': "Autentificacion",
-    'B': "Configuracion",
+    'A': "Autentificación",
+    'B': "Configuración",
     'C': "Mantenimiento",
     'D': "Error",
-    'E': "Auditoria",
+    'E': "Auditoría",
     'F': "Seguridad",
     'G': "Modelo"
     }
@@ -540,8 +542,8 @@ def obtener_prioridades():
         "C3": "3",
         "D1": "2",
         "E1": "2",
-        "E2": "2",
-        "E3": "2",
+        "E2": "3",
+        "E3": "3",
         "F1": "3",
         "F2": "3",
         "F3": "2",
@@ -652,5 +654,100 @@ def ajuste_parametros(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
     
-    return render(request, 'core/parameters.html')
+    data = {'form':CategoriasForm()}
+    if request.method == 'POST':
+        form = CategoriasForm(request.POST)
+        if(form.is_valid()):
+            try:
+                to_keep = obtener_campos_secundarios(form=form)
+                valor_parametro = {
+                    'valores_a_mantener':to_keep
+                }
+                parametro, created = Parametro.objects.update_or_create(
+                   nombre_parametro='historial.mantener',
+                    defaults={'valor': valor_parametro},
+                )
+                if(created):
+                    data['mesg'] = 'Se ha guardado correctamente'
+                else:
+                    data['mesg'] = 'Ha ocurrido un error. Intentelo de nuevo más tarde'
+            except Exception as e:
+                print('Error al procesar el formulario: ' + str(e))
+        else:
+            print('Formulario no válido')
+        
+    return render(request, 'core/parameters.html',data)
 
+
+# def obtener_campos_principales_marcados(form):
+#     cats = obtener_categorias()
+#     to_keep = []
+#     try:
+#         for idx, val in enumerate(cats):
+#             mainfield = form.get_field_by_code(val)
+#             mainfield_name = mainfield.name
+#             if(form.cleaned_data.get(mainfield_name)):
+#                 to_keep.append(val)
+#     except:
+#         to_keep = []
+#     return to_keep
+
+def obtener_campos_secundarios(form):
+    sub_cats = obtener_subcategorias()
+    to_keep = []
+    try:
+        for val in sub_cats:
+            field = form.get_field_by_code(val)
+            field_name = field.name
+            if(form.cleaned_data.get(field_name)):
+                to_keep.append(val)
+        return to_keep
+    except Exception as e:
+        print('Error al obtener los campos secundarios: ' + str(e))
+        return []
+
+
+
+def create_or_update_parametro(request):
+    # Definir el valor que deseas almacenar. Puede ser un dict, lista, número, etc.
+    valor_parametro = {
+        'valores_a_mantener':['E2', 'E3']
+    }
+
+    # Usar update_or_create para crear o actualizar el objeto
+    parametro, created = Parametro.objects.update_or_create(
+        nombre_parametro='historial.mantener',
+        defaults={'valor': valor_parametro},
+    )
+
+    return redirect(pagina_principal)  # Renderiza una página o devuelve una respuesta adecuada
+
+
+#     #Datos: {"valores_a_mantener": ["E2", "E3"]} - Nombre: historial.mantener
+def eliminar_historial(request):
+    if request.method == 'POST':
+        # Obtener el parámetro con la clave "mantener.historial"
+        parametro = Parametro.objects.filter(nombre_parametro='historial.mantener').first()
+
+        if parametro:
+            valores_a_mantener = parametro.valor.get('valores_a_mantener', [])
+            subcategorias = obtener_subcategorias()
+            nombres_subs = []
+            
+            for idx, val in enumerate(valores_a_mantener):
+                nombres_subs.append(subcategorias.get(val, "Subcategoría desconocida"))
+                
+            if valores_a_mantener:
+                # Eliminar registros que no estén en la lista de valores a mantener
+                count, _ = historialCambios.objects.exclude(subcategoria__in=nombres_subs).delete()
+                messages.success(request, 'Datos eliminados exitosamente.')
+            else:
+                messages.info(request, 'La lista de valores a mantener está vacía. No se eliminaron datos.')
+            
+            return redirect(verHistorial)
+        else:
+            messages.error(request, 'Parámetro no encontrado.')
+            return redirect(verHistorial)
+    
+    messages.error(request, 'Método no permitido.')
+    return redirect(verHistorial)

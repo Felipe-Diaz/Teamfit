@@ -28,123 +28,83 @@ Teamfit - Parametros
                         <h2 class="custom-grey-bg">
                             Parámetros de Log
                         </h2>
+                        {% if mesg %}
+                        <p>{{mesg}}</p>
+                        {% endif %}
                         <div class="card-body">
-                            <form>
+                            <form method="POST">
+                                {% csrf_token %}
                                 <div class="main-checkbox">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="typeAutent" value="autentificacion">
-                                        <label class="form-main-check-label" for="typeAutentificacion">
-                                            Autentificación
-                                        </label>
-                                    </div>
-                                    <div class="checkbox-container" id="logCatAut">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
-                                            <label class="form-check-label" for="procLogin">
-                                                Login
-                                            </label>
+                                        <!-- Autenticación -->
+                                        {{ form.autenticacion }} {{form.autenticacion.label}}
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div>{{ form.login }}{{ form.login.label }}</div>
+                                            <div>{{ form.logout }}{{ form.logout.label }}</div>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="procLogout" value="logout">
-                                            <label class="form-check-label" for="procLogout">
-                                                Logout
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="procExpLogout" value="explogout">
-                                            <label class="form-check-label" for="procExpLogout">
-                                                Logout por expiracion de token
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="pswdErr" value="errorcontra">
-                                            <label class="form-check-label" for="procPswdErr">
-                                                Error al ingresar contraseña
-                                            </label>
-                                        </div>
+                                        <!--  -->
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="main-checkbox">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
-                                        <label class="form-main-check-label" for="typeConfiguracion">
-                                            Configuracion
-                                        </label>
+                                    <!-- Configuración -->
+                                    {{ form.configuracion }} {{form.configuracion.label}}
+                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                        <div>{{ form.cambio_parametros }}{{ form.cambio_parametros.label }}</div>
+                                        <div>{{ form.cambio_conf_bd }}{{ form.cambio_conf_bd.label }}</div>
                                     </div>
-                                    <div class="checkbox-container" id="logCatConf">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="procCamConfBD" value="proccamconfBD">
-                                            <label class="form-check-label" for="procCamConfBD">
-                                                Cambio de Configuraciones en la base de datos
-                                            </label>
-                                        </div>
-                                    </div>
+                                    <!--  -->
                                 </div>
                                 <hr>
                                 <div class="main-checkbox">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
-                                        <label class="form-main-check-label" for="typeConfiguracion">
-                                            Mantenimiento
-                                        </label>
+                                    <!--Mantenimiento -->
+                                    {{ form.mantenimiento }} {{form.mantenimiento.label}}
+                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                        <div>{{ form.limpieza_datos }}{{ form.limpieza_datos.label }}</div>
                                     </div>
-                                    <div class="checkbox-container" id="logCatMant">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
-                                            <label class="form-check-label" for="procLogin">
-                                                Limpieza de datos
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
-                                            <label class="form-check-label" for="procLogin">
-                                                Actualizaciones del sistema
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="procLogin" value="login">
-                                            <label class="form-check-label" for="procLogin">
-                                                Copias de seguridad
-                                            </label>
-                                        </div>
-                                    </div>
+                                    <!--  -->
                                 </div>
                                 <hr>
                                 <div class="main-checkbox">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
-                                        <label class="form-main-check-label" for="typeConfiguracion">
-                                            Error
-                                        </label>
+                                    <!--Error -->
+                                    {{ form.error }} {{form.error.label}}
+                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
                                     </div>
+                                    <!--  -->
                                 </div>
                                 <hr>
                                 <div class="main-checkbox">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
-                                        <label class="form-main-check-label" for="typeConfiguracion">
-                                            Auditoria
-                                        </label>
+                                    <!--Auditoría -->
+                                    {{ form.auditoria }} {{form.auditoria.label}}
+                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                        <div>{{ form.quien_agrego_documentos }}{{ form.quien_agrego_documentos.label }}</div>
+                                        <div>{{ form.quien_agrego_usuario }}{{ form.quien_agrego_usuario.label }}</div>
+                                        <div>{{ form.quien_elimino_usuario }}{{ form.quien_elimino_usuario.label }}</div>
                                     </div>
+                                    <!--  -->
                                 </div>
                                 <hr>
                                 <div class="main-checkbox">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
-                                        <label class="form-main-check-label" for="typeConfiguracion">
-                                            Seguridad
-                                        </label>
+                                    <!--Seguridad -->
+                                    {{ form.seguridad }} <strong>{{form.seguridad.label}}</strong>
+                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                        <div>{{ form.cambio_de_cargo }}{{ form.cambio_de_cargo.label }}</div>
+                                        <div>{{ form.actualizacion_permisos }}{{ form.actualizacion_permisos.label }}</div>
                                     </div>
+                                    <!--  -->
                                 </div>
                                 <hr>
                                 <div class="main-checkbox">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="typeConf" value="configuracion">
-                                        <label class="form-main-check-label" for="typeConfiguracion">
-                                            Modelos
-                                        </label>
+                                    <!--Modelo -->
+                                    {{ form.modelo }} {{form.modelo.label}}
+                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                        <div>{{ form.realizacion_clusterizacion }}{{ form.realizacion_clusterizacion.label }}</div>
                                     </div>
+                                    <!--  -->
+                                </div>
+                                <hr>
+                                <div class="text-center">
+                                    <button type="submit" class="button btn-primary">Submit</button>
                                 </div>
                             </form>
                         </div>
@@ -153,5 +113,97 @@ Teamfit - Parametros
             </div>
         </div>
     </div>
+    <hr>
+    
 </body>
 {% endblock content %}
+
+
+{% block UJS %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Función para manejar la selección de la main
+        function handleMainCategoryChange(mainCategory, subCategories) {
+            mainCategory.addEventListener("change", function () {
+                subCategories.forEach(function (subCategory) {
+                    subCategory.checked = mainCategory.checked;
+                });
+            });
+        }
+    
+        // Función para manejar cambios en subcategorías
+        function handleSubCategoryChange(mainCategory, subCategories) {
+            subCategories.forEach(function (subCategory) {
+                subCategory.addEventListener("change", function () {
+                    // Sí cualquier subcategoría no está seleccionada, se deselecciona la main
+                    if (!subCategory.checked) {
+                        mainCategory.checked = false;
+                    } else {
+                        // Sí todas las sub están seleccionadas se selecciona la main
+                        mainCategory.checked = subCategories.every(function (subCat) {
+                            return subCat.checked;
+                        });
+                    }
+                });
+            });
+        }
+    
+        // Autenticación
+        const autenticacion = document.querySelector("input[name='autenticacion']");
+        const login = document.querySelector("input[name='login']");
+        const logout = document.querySelector("input[name='logout']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(autenticacion, [login, logout]);
+        handleSubCategoryChange(autenticacion, [login, logout]);
+
+        // Configuracion
+        const configuracion = document.querySelector("input[name='configuracion']");
+        const cambio_parametros = document.querySelector("input[name='cambio_parametros']");
+        const cambio_conf_bd = document.querySelector("input[name='cambio_conf_bd']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(configuracion, [cambio_parametros, cambio_conf_bd]);
+        handleSubCategoryChange(configuracion, [cambio_parametros, cambio_conf_bd]);
+        
+        // Mantenimiento
+        const mantenimiento = document.querySelector("input[name='mantenimiento']");
+        const limpieza_datos = document.querySelector("input[name='limpieza_datos']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(mantenimiento, [limpieza_datos]);
+        handleSubCategoryChange(mantenimiento, [limpieza_datos]);
+        
+        // Error
+        // Main category y Sub Category
+
+        // Auditoría
+        const auditoria = document.querySelector("input[name='auditoria']");
+        const quien_agrego_documentos = document.querySelector("input[name='quien_agrego_documentos']");
+        const quien_agrego_usuario = document.querySelector("input[name='quien_agrego_usuario']");
+        const quien_elimino_usuario = document.querySelector("input[name='quien_elimino_usuario']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(auditoria, [quien_agrego_documentos, quien_agrego_usuario, quien_elimino_usuario]);
+        handleSubCategoryChange(auditoria, [quien_agrego_documentos, quien_agrego_usuario, quien_elimino_usuario]);
+
+        // Seguridad
+        const seguridad = document.querySelector("input[name='seguridad']");
+        const cambio_de_cargo = document.querySelector("input[name='cambio_de_cargo']");
+        const actualizacion_permisos = document.querySelector("input[name='actualizacion_permisos']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(seguridad, [cambio_de_cargo, actualizacion_permisos]);
+        handleSubCategoryChange(seguridad, [cambio_de_cargo, actualizacion_permisos]);
+
+        // Modelo
+        const modelo = document.querySelector("input[name='modelo']");
+        const realizacion_clusterizacion = document.querySelector("input[name='realizacion_clusterizacion']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(modelo, [realizacion_clusterizacion]);
+        handleSubCategoryChange(modelo, [realizacion_clusterizacion]);
+    });
+    
+</script>
+{% endblock UJS %}

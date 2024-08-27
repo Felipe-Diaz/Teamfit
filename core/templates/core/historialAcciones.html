@@ -12,8 +12,17 @@ Teamfit - Historial
             <br>
             <br> 
             <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Historial de acciones en el sistema</h4>
+            <div class="row card-header">
+              {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+              <h4 class="card-title col-md">Historial de acciones en el sistema</h4>
+              <form action="{% url 'eliminar_historial' %}" method="post" class="col-md-3 offset-md-3">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Eliminar Datos</button>
+              </form>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

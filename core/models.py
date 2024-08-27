@@ -110,3 +110,14 @@ class proyectosAAgrupar(models.Model):
 
     def __str__(self):
         return str(self.proyecto) + " - " + str(self.lineaNegocio) + " - " + str(self.tipo)
+    
+
+class Parametro(models.Model):
+    nombre_parametro = models.CharField(max_length=255, unique=True)
+    valor = models.JSONField()
+    
+    class Meta:
+        db_table = 'PARAMETROS'
+
+    def __str__(self):
+        return self.nombre_parametro
