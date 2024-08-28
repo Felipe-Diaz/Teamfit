@@ -28,9 +28,22 @@ Teamfit - Parametros
                         <h2 class="custom-grey-bg">
                             Parámetros de Log
                         </h2>
-                        {% if mesg %}
-                        <p>{{mesg}}</p>
-                        {% endif %}
+                        <div class="container">
+                            {% if messages %}
+                            {% for mesg in messages %}
+                                <div class="alert alert-success container" role="alert">
+                                    {{ mesg|safe }}
+                                </div>
+                            {% endfor %}
+                            {% endif %}
+                            {% if merror %}
+                                {% for mesg in merror %}
+                                    <div class="alert alert-danger container" role="alert">
+                                        {{ mesg }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
                         <div class="card-body">
                             <form method="POST">
                                 {% csrf_token %}

@@ -66,9 +66,12 @@ Teamfit - Subir Proyectos
                 <br>
                 <button type="submit" class="btn btn-primary">Subir archivo</button>
               </form>
-              {% if mesg %}
-                <hr style="opacity: 100%;">
-                <p>{{ mesg|safe }}</p>
+
+              {% if merror %}
+                {% for mesg in merror %}
+                  <hr style="opacity: 100%;">
+                  <p>{{ mesg|safe }}</p>
+                {% endfor %}
               {% endif %}
           </div>
         </div>
@@ -85,13 +88,23 @@ Teamfit - Subir Proyectos
                     <div class="modal-header">
                         <h5 class="modal-title" id="dataModalLabel">Proyectos a Subir</h5>
                     </div>
-                    {% if mesg %}
                     <br>
-                    <div class="text-center">
-                      <p>{{mesg|safe}}</p>
-                    </div>
-                    <hr style="opacity: 100%;">
-                    {% endif %}
+                    <div class="container">
+                      {% if messages %}
+                      {% for mesg in messages %}
+                          <div class="alert alert-success container" role="alert">
+                              {{ mesg|safe }}
+                          </div>
+                      {% endfor %}
+                      {% endif %}
+                      {% if merror %}
+                          {% for mesg in merror %}
+                              <div class="alert alert-danger container text-center" role="alert">
+                                  {{ mesg|safe }}
+                              </div>
+                          {% endfor %}
+                      {% endif %}
+                      </div>
                     <div class="modal-body">
                         {% if showTable %}
                         <div class="table-responsive">

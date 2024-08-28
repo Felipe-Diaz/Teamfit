@@ -15,11 +15,22 @@ Teamfit - Ver Usuarios
             <div class="card-header">
                 <h4 class="card-title">Usuarios Registrados</h4>
             </div>
-            {% if mesg %}
-            <div>
-              {{mesg}}
-            </div>
+            <div class="container">
+            {% if messages %}
+            {% for mesg in messages %}
+                <div class="alert alert-success container" role="alert">
+                    {{ mesg|safe }}
+                </div>
+            {% endfor %}
             {% endif %}
+            {% if merror %}
+                {% for mesg in merror %}
+                    <div class="alert alert-danger container" role="alert">
+                        {{ mesg }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="multi-filter-select" class="display table table-striped table-hover">

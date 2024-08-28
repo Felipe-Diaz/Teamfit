@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth_views
 
 from .views import development_Buttons, llenar_DB, iniciar_sesion, crear_usuarios, graficar_Datos 
 from .views import pagina_principal, cerrar_sesion, subirProyectos, ver_proyectos, verHistorial
-from .views import ver_usuarios, eliminarUsuarios, ajuste_parametros, create_or_update_parametro
+from .views import ver_usuarios, eliminarUsuarios, ajuste_parametros
 from .views import eliminar_historial
 
 #Se indican las distintas URL para el sistema.
@@ -26,6 +26,5 @@ urlpatterns = [
     path('verUsuarios', ver_usuarios, name='verUsuarios'),
     path('eliminarUsuarios/<id>', eliminarUsuarios, name='eliminarUsuario'),
     path('parametros', ajuste_parametros, name="parametros"),
-    path('create_or_update_parametro', create_or_update_parametro, name="create_or_update_parametro"),
     path('eliminar_historial', eliminar_historial, name='eliminar_historial'),
 ]

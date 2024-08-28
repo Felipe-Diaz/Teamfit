@@ -26,6 +26,8 @@ def subirProyectos(request, upload='Sh'):
     
     data = {'form':UploadFileForm()}
     showTable = False
+    messages = []
+    merror = []
     
     if(upload=="Can"):
         try:
@@ -72,22 +74,24 @@ def subirProyectos(request, upload='Sh'):
                                     'Cierre', 'Egresos No HH CLP', 'Monto Oferta CLP',
                                     'C/Agencia', 'Ocupación Al Iniciar (%)']
                 if not all(col in df.columns for col in required_columns):
-                    data['mesg'] = ('<div style="container col-md-6"> El archivo <strong>no contiene</strong> las columnas requeridas:'
+                    mesg = ('<div style="container col-md-6"> El archivo <strong>no contiene</strong> las columnas requeridas:'
                                     '<ul> <li>id</li> <li>Proyecto</li> <li>Línea de Negocio</li> <li>tipo</li>'
                                     '<li>cliente</li> <li>create_date</li> <li>Cierre</li> <li>Egresos No HH CLP</li>'
                                     '<li>Monto Oferta CLP</li> <li>C/Agencia</li> <li>Ocupación Al Iniciar (%)</li> </ul>'
                                     '<br> Por favor, suba un archivo con estas columnas.</div>')
+                    merror.append(mesg)
                     
                 else:
                     extra_columns = [col for col in df.columns if col not in required_columns and col]
                     if extra_columns:
                         extra_columns_html = ''.join(f'<li>{col}</li>' for col in extra_columns if col)
-                        data['mesg'] = ('<div style="container col-md-6"> El archivo <strong>contiene</strong> columnas innecesarias:'
+                        mesg = ('<div style="container col-md-6"> El archivo <strong>contiene</strong> columnas innecesarias:'
                                     f'<ul><li>{extra_columns_html}</li> </ul> <br> Se necesitan unicamente las siguientes columnas'
                                     '<ul> <li>id</li> <li>Proyecto</li> <li>Línea de Negocio</li> <li>tipo</li>'
                                     '<li>cliente</li> <li>create_date</li> <li>Cierre</li> <li>Egresos No HH CLP</li>'
                                     '<li>Monto Oferta CLP</li> <li>C/Agencia</li> <li>Ocupación Al Iniciar (%)</li> </ul>'
                                     '<br> Por favor, suba un archivo solo con estas columnas.</div>')
+                        merror.append(mesg)
                     else:
                         df = cambiarFormatoAlmacenarDf(df)
                         validado = verificarDf(df)
@@ -99,14 +103,16 @@ def subirProyectos(request, upload='Sh'):
                         showTable = True
                         
                         if(not df_validado):
-                            data['mesg'] = validado['mesg']
+                            merror.append(validado['mesg'])
                             showTable = True
                         else:
-                            data['mesg'] = validado['mesg']
+                            messages.append(validado['mesg'])
                             request.session['df_proyectos'] = datosDfDict
         else:
             data["mesg"] = "El valor es inválido"
     data["showTable"] = showTable
+    data['messages'] = messages
+    data['merror'] = merror
         
     return render(request, "core/subirProyectos.html", data)
 
@@ -610,8 +616,9 @@ def crear_usuarios(request):
             for field, errors in error_messages.items():
                 field_label=form.FIELD_LABELS.get(field, field)
                 for error in errors:
+                    errormsg = str(error.message)
                     #messages.error(request, f'Error in {field}: {error}')
-                    merror.append(f'Error en {field_label}: {error}')
+                    merror.append(f'Error en {field_label}: {errormsg}.')
             data["merror"]=merror
     else:
         data['form'] = CrearUsuarioAdmin()
@@ -622,17 +629,19 @@ def crear_usuarios(request):
 def eliminarUsuarios(request, id):
     if(not request.user.is_staff):
         return redirect(ver_usuarios)
-
+    messages = []
+    merror = []
     #Se desactiva el usuario
     try:
         usuario = User.objects.get(id=id)
         nombre = usuario.first_name
         apellido = usuario.last_name
         if(usuario.is_staff):
-            mesg = f'El usuario {nombre} {apellido} es administrador, no puede ser desactivado'
+            mesg = f'El usuario {nombre} {apellido} es administrador, no puede ser desactivado.'
+            merror.append(mesg)
         else:
-            mesg = f'Se ha desactivado al usuario {nombre} {apellido}. Verifique el usuario en la siguiente lista'
-            print('mesg')
+            mesg = f'Se ha desactivado al usuario <strong>{nombre} {apellido}</strong>. Verifique el usuario en la siguiente lista.'
+            messages.append(mesg)
             usuario.is_active = False
             usuario.save()
 
@@ -640,20 +649,22 @@ def eliminarUsuarios(request, id):
             almacenado = almacenarHistorial(cat, request.user)
     except Exception as e:
         print(e)
-        mesg = 'El usuario no existe. Por favor verifique el usuario que desea desactivar'
+        mesg = 'Ha ocurrido un error. Por favor verifique nuevamente más tarde.'
+        merror.append(mesg)
     
     #Se cargan los datos ya cambiados
     usuarios = PerfilUsuario.objects.all().values('cargo',
                                                   'user__username','user__first_name','user__last_name',
                                                   'user__email','user__is_staff', 'user__is_active', 'user')
     
-    data = {'mesg':mesg, 'usuarios':usuarios}
+    data = {'messages':messages, 'usuarios':usuarios, 'merror':merror}
     return render (request, 'core/verUsuarios.html', data)
 
 def ajuste_parametros(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
-    
+    messages = []
+    merror = []
     data = {'form':CategoriasForm()}
     if request.method == 'POST':
         form = CategoriasForm(request.POST)
@@ -664,33 +675,22 @@ def ajuste_parametros(request):
                     'valores_a_mantener':to_keep
                 }
                 parametro, created = Parametro.objects.update_or_create(
-                   nombre_parametro='historial.mantener',
+                    nombre_parametro='historial.mantener',
                     defaults={'valor': valor_parametro},
                 )
-                if(created):
-                    data['mesg'] = 'Se ha guardado correctamente'
-                else:
-                    data['mesg'] = 'Ha ocurrido un error. Intentelo de nuevo más tarde'
+                mesg = 'Se ha guardado correctamente'
+                messages.append(mesg)
             except Exception as e:
+                mesg = 'Ha ocurrido un error. Por favor, inténtelo de nuevo más tarde.'
+                merror.append(mesg)
                 print('Error al procesar el formulario: ' + str(e))
         else:
-            print('Formulario no válido')
+            mesg = 'Ha ocurrido un error. Por favor, verifique los campos correctamente o intentelo de nuevo más tarde.'
+            merror.append(mesg)
+    data['messages'] = messages
+    data['merror'] = merror
         
     return render(request, 'core/parameters.html',data)
-
-
-# def obtener_campos_principales_marcados(form):
-#     cats = obtener_categorias()
-#     to_keep = []
-#     try:
-#         for idx, val in enumerate(cats):
-#             mainfield = form.get_field_by_code(val)
-#             mainfield_name = mainfield.name
-#             if(form.cleaned_data.get(mainfield_name)):
-#                 to_keep.append(val)
-#     except:
-#         to_keep = []
-#     return to_keep
 
 def obtener_campos_secundarios(form):
     sub_cats = obtener_subcategorias()
@@ -708,23 +708,26 @@ def obtener_campos_secundarios(form):
 
 
 
-def create_or_update_parametro(request):
-    # Definir el valor que deseas almacenar. Puede ser un dict, lista, número, etc.
-    valor_parametro = {
-        'valores_a_mantener':['E2', 'E3']
-    }
+# def create_or_update_parametro(request):
+#     # Definir el valor que deseas almacenar. Puede ser un dict, lista, número, etc.
+#     valor_parametro = {
+#         'valores_a_mantener':['E2', 'E3']
+#     }
 
-    # Usar update_or_create para crear o actualizar el objeto
-    parametro, created = Parametro.objects.update_or_create(
-        nombre_parametro='historial.mantener',
-        defaults={'valor': valor_parametro},
-    )
+#     # Usar update_or_create para crear o actualizar el objeto
+#     parametro, created = Parametro.objects.update_or_create(
+#         nombre_parametro='historial.mantener',
+#         defaults={'valor': valor_parametro},
+#     )
 
-    return redirect(pagina_principal)  # Renderiza una página o devuelve una respuesta adecuada
+#     return redirect(pagina_principal)  # Renderiza una página o devuelve una respuesta adecuada
 
 
 #     #Datos: {"valores_a_mantener": ["E2", "E3"]} - Nombre: historial.mantener
 def eliminar_historial(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     if request.method == 'POST':
         # Obtener el parámetro con la clave "mantener.historial"
         parametro = Parametro.objects.filter(nombre_parametro='historial.mantener').first()
