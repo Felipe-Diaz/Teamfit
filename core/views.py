@@ -2,6 +2,7 @@ from django.shortcuts import redirect, render
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
 from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm, CategoriasForm
+from .forms import CATEGORIAS_MAPPING
 from datetime import datetime, timedelta, time
 import random
 import requests
@@ -424,6 +425,9 @@ def create_additional_table():
     return True
 
 def iniciar_sesion(request):
+    if request.user.is_authenticated:
+        return redirect(pagina_principal)
+    
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -444,7 +448,10 @@ def iniciar_sesion(request):
 
 #Crear un cerrar sesión
 def cerrar_sesion(request):
-    user = request.user
+    try:
+        user = request.user
+    except:
+        user = None
     cat = {'Cat':'A','Sub':'2'}
     almacenado = almacenarHistorial(cat, user)
     logout(request)
@@ -640,13 +647,18 @@ def eliminarUsuarios(request, id):
             mesg = f'El usuario {nombre} {apellido} es administrador, no puede ser desactivado.'
             merror.append(mesg)
         else:
-            mesg = f'Se ha desactivado al usuario <strong>{nombre} {apellido}</strong>. Verifique el usuario en la siguiente lista.'
-            messages.append(mesg)
-            usuario.is_active = False
-            usuario.save()
+            if(usuario.is_active):
+                usuario.is_active = False
+                usuario.save()
+                mesg = f'Se ha desactivado al usuario <strong>{nombre} {apellido}</strong>. Verifique el usuario en la siguiente lista.'
+                messages.append(mesg)
+                cat = {'Cat':'E','Sub':'3'}
+                almacenado = almacenarHistorial(cat, request.user)
+            else:
+                mesg = f'El usuario <strong>{nombre} {apellido}</strong> ya está desactivado. Verifique el usuario en la siguiente lista.'
+                messages.append(mesg)
 
-            cat = {'Cat':'E','Sub':'3'}
-            almacenado = almacenarHistorial(cat, request.user)
+
     except Exception as e:
         print(e)
         mesg = 'Ha ocurrido un error. Por favor verifique nuevamente más tarde.'
@@ -663,14 +675,17 @@ def eliminarUsuarios(request, id):
 def ajuste_parametros(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
+    
     messages = []
     merror = []
-    data = {'form':CategoriasForm()}
+    data = {}
+    
     if request.method == 'POST':
         form = CategoriasForm(request.POST)
         if(form.is_valid()):
             try:
                 to_keep = obtener_campos_secundarios(form=form)
+                print(to_keep)
                 valor_parametro = {
                     'valores_a_mantener':to_keep
                 }
@@ -678,8 +693,14 @@ def ajuste_parametros(request):
                     nombre_parametro='historial.mantener',
                     defaults={'valor': valor_parametro},
                 )
+                user = request.user
+                cat = {'Cat':'B','Sub':'1'}
+                almacenado = almacenarHistorial(cat, user)
+                
                 mesg = 'Se ha guardado correctamente'
                 messages.append(mesg)
+                
+
             except Exception as e:
                 mesg = 'Ha ocurrido un error. Por favor, inténtelo de nuevo más tarde.'
                 merror.append(mesg)
@@ -687,10 +708,14 @@ def ajuste_parametros(request):
         else:
             mesg = 'Ha ocurrido un error. Por favor, verifique los campos correctamente o intentelo de nuevo más tarde.'
             merror.append(mesg)
+            
+    form = obtener_valores_formulario_parametro(CategoriasForm())
+    data['form'] = form
     data['messages'] = messages
     data['merror'] = merror
         
     return render(request, 'core/parameters.html',data)
+
 
 def obtener_campos_secundarios(form):
     sub_cats = obtener_subcategorias()
@@ -707,23 +732,52 @@ def obtener_campos_secundarios(form):
         return []
 
 
+def obtener_valores_formulario_parametro(form):
+    """
+    Obtiene los valores de los parámetros almacenados, para luego cargaros en el formulario
+    
+    Parametros: Solicita el formulario de parámetros
+    
+    Return: Entrega el formulario con los datos cargados
+    """
+    try:
+        parametro = Parametro.objects.get(nombre_parametro='historial.mantener')
+        valor_parametro = parametro.valor
+        valores_a_mantener = valor_parametro.get('valores_a_mantener', [])
+    except:
+        valores_a_mantener = []
+    
+    initial_data = {field_name: False for field_name in CATEGORIAS_MAPPING.values()}
+    
+    for val in valores_a_mantener:
+        field = CATEGORIAS_MAPPING.get(val)
+        if field:
+            initial_data[field] = True
+    print(initial_data)            
+    initial_data = marcar_categorias_principales_parametros(initial_data=initial_data)
 
-# def create_or_update_parametro(request):
-#     # Definir el valor que deseas almacenar. Puede ser un dict, lista, número, etc.
-#     valor_parametro = {
-#         'valores_a_mantener':['E2', 'E3']
-#     }
-
-#     # Usar update_or_create para crear o actualizar el objeto
-#     parametro, created = Parametro.objects.update_or_create(
-#         nombre_parametro='historial.mantener',
-#         defaults={'valor': valor_parametro},
-#     )
-
-#     return redirect(pagina_principal)  # Renderiza una página o devuelve una respuesta adecuada
+    form = CategoriasForm(initial=initial_data)
+    return form
 
 
-#     #Datos: {"valores_a_mantener": ["E2", "E3"]} - Nombre: historial.mantener
+def marcar_categorias_principales_parametros(initial_data):
+    """
+    Devuelve el formulario con las categorías principales marcadas
+    
+    Parametros: initial_data es el valor del formulario con los campos marcados
+    
+    Return: Retorna el formulario con los campos principales marcados
+    """
+    categorias_principales = set(key for key in CATEGORIAS_MAPPING.keys() if len(key) == 1)
+    for categoria in categorias_principales:
+        sub_categorias = [sub_key for sub_key in CATEGORIAS_MAPPING.keys() if sub_key.startswith(categoria) and len(sub_key) > 1]
+        
+        if all(initial_data[CATEGORIAS_MAPPING[sub_key]] for sub_key in sub_categorias):
+            initial_data[CATEGORIAS_MAPPING[categoria]] = True
+    return initial_data
+
+
+
 def eliminar_historial(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
@@ -744,6 +798,9 @@ def eliminar_historial(request):
                 # Eliminar registros que no estén en la lista de valores a mantener
                 count, _ = historialCambios.objects.exclude(subcategoria__in=nombres_subs).delete()
                 messages.success(request, 'Datos eliminados exitosamente.')
+                user = request.user
+                cat = {'Cat':'C','Sub':'1'}
+                almacenado = almacenarHistorial(cat, user)
             else:
                 messages.info(request, 'La lista de valores a mantener está vacía. No se eliminaron datos.')
             

@@ -10,14 +10,50 @@ Teamfit - Parametros
         background-color: lightgrey;
         padding: 10px; /* Optional: adds padding around the text */
     }
+    .gray-bg {
+        background-color: rgb(245, 245, 245);
+    }
 
     .checkbox-container {
         display: flex;
         gap: 15px; /* Space between checkboxes */
     }
+    .rounded-button {
+        border-radius: 50px;
+        border: none;
+        box-shadow: none;
+        padding: 15px 30px;
+        font-size: 18px;
+    }
+    .toggle-btn {
+        background-color: lightgrey;
+        border: none;
+        font-size: 1.5rem;
+        padding: 0;
+        width: 100%;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: inherit;
+    }
+
+    .toggle-btn:focus {
+        outline: none;
+    }
+
+    .arrow-icon {
+        transition: transform 0.3s;
+    }
+
+    .collapsed .arrow-icon {
+        transform: rotate(180deg);
+    }
 </style>
 {% endblock estiloHead %}
-
+{% block titulo %}
+Parámetros del sistema
+{% endblock titulo %}
 {% block content %}
 <body>
     <div class="container-fluid" style="margin-top: 70px;">
@@ -25,101 +61,110 @@ Teamfit - Parametros
             <div class = "col-md-12">
                 <div class = "card">
                     <div>
-                        <h2 class="custom-grey-bg">
-                            Parámetros de Log
-                        </h2>
-                        <div class="container">
-                            {% if messages %}
-                            {% for mesg in messages %}
-                                <div class="alert alert-success container" role="alert">
-                                    {{ mesg|safe }}
-                                </div>
-                            {% endfor %}
-                            {% endif %}
-                            {% if merror %}
-                                {% for mesg in merror %}
-                                    <div class="alert alert-danger container" role="alert">
-                                        {{ mesg }}
+                        <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#parametros-content" aria-expanded="true" aria-controls="parametros-content">
+                            <h2 class="custom-grey-bg mb-0 col-md-6">
+                                Parámetros eliminación del Log
+                            </h2>
+                            <span class="arrow-icon">▼</span>
+                        </button>
+                        <div id="parametros-content" class="collapse show">
+                            <div class="container">
+                                <p>Las categorías seleccionadas no serán eliminadas al vaciar el Log</p>
+                            </div>
+                            <div class="container">
+                                {% if messages %}
+                                {% for mesg in messages %}
+                                    <div class="alert alert-success container" role="alert">
+                                        {{ mesg|safe }}
                                     </div>
                                 {% endfor %}
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <form method="POST">
-                                {% csrf_token %}
-                                <div class="main-checkbox">
-                                    <div class="form-check">
-                                        <!-- Autenticación -->
-                                        {{ form.autenticacion }} {{form.autenticacion.label}}
+                                {% endif %}
+                                {% if merror %}
+                                    {% for mesg in merror %}
+                                        <div class="alert alert-danger container" role="alert">
+                                            {{ mesg }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <div class="main-checkbox">
+                                        <div class="form-check">
+                                            <!-- Autenticación -->
+                                            <h6 class="gray-bg"> <strong>{{ form.autenticacion }} {{form.autenticacion.label}}</strong></h6>
+                                            <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                                <div class="offset-md-1">{{ form.login }}{{ form.login.label }}</div>
+                                                <div style="padding-left: 2%;">{{ form.logout }}{{ form.logout.label }}</div>
+                                            </div>
+                                            <!--  -->
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!-- Configuración -->
+                                        <h6 class="gray-bg"><strong>{{ form.configuracion }} {{form.configuracion.label}}</strong></h6>
                                         <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
-                                            <div>{{ form.login }}{{ form.login.label }}</div>
-                                            <div>{{ form.logout }}{{ form.logout.label }}</div>
+                                            <div class="offset-md-1">{{ form.cambio_parametros }}{{ form.cambio_parametros.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form.cambio_conf_bd }}{{ form.cambio_conf_bd.label }}</div>
                                         </div>
                                         <!--  -->
                                     </div>
-                                </div>
-                                <hr>
-                                <div class="main-checkbox">
-                                    <!-- Configuración -->
-                                    {{ form.configuracion }} {{form.configuracion.label}}
-                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
-                                        <div>{{ form.cambio_parametros }}{{ form.cambio_parametros.label }}</div>
-                                        <div>{{ form.cambio_conf_bd }}{{ form.cambio_conf_bd.label }}</div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Mantenimiento -->
+                                        <h6 class="gray-bg"><strong>{{ form.mantenimiento }} {{form.mantenimiento.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form.limpieza_datos }}{{ form.limpieza_datos.label }}</div>
+                                        </div>
+                                        <!--  -->
                                     </div>
-                                    <!--  -->
-                                </div>
-                                <hr>
-                                <div class="main-checkbox">
-                                    <!--Mantenimiento -->
-                                    {{ form.mantenimiento }} {{form.mantenimiento.label}}
-                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
-                                        <div>{{ form.limpieza_datos }}{{ form.limpieza_datos.label }}</div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Error -->
+                                        <h6 class="gray-bg"><strong>{{ form.error }} {{form.error.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form.errores_sistema }}{{ form.errores_sistema.label }}</div>
+                                        </div>
+                                        <!--  -->
                                     </div>
-                                    <!--  -->
-                                </div>
-                                <hr>
-                                <div class="main-checkbox">
-                                    <!--Error -->
-                                    {{ form.error }} {{form.error.label}}
-                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Auditoría -->
+                                        <h6 class="gray-bg"><strong>{{ form.auditoria }} {{form.auditoria.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form.quien_agrego_documentos }}{{ form.quien_agrego_documentos.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form.quien_agrego_usuario }}{{ form.quien_agrego_usuario.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form.quien_elimino_usuario }}{{ form.quien_elimino_usuario.label }}</div>
+                                        </div>
+                                        <!--  -->
                                     </div>
-                                    <!--  -->
-                                </div>
-                                <hr>
-                                <div class="main-checkbox">
-                                    <!--Auditoría -->
-                                    {{ form.auditoria }} {{form.auditoria.label}}
-                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
-                                        <div>{{ form.quien_agrego_documentos }}{{ form.quien_agrego_documentos.label }}</div>
-                                        <div>{{ form.quien_agrego_usuario }}{{ form.quien_agrego_usuario.label }}</div>
-                                        <div>{{ form.quien_elimino_usuario }}{{ form.quien_elimino_usuario.label }}</div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Seguridad -->
+                                        <h6 class="gray-bg"><strong>{{ form.seguridad }} {{form.seguridad.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form.cambio_de_cargo }}{{ form.cambio_de_cargo.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form.actualizacion_permisos }}{{ form.actualizacion_permisos.label }}</div>
+                                        </div>
+                                        <!--  -->
                                     </div>
-                                    <!--  -->
-                                </div>
-                                <hr>
-                                <div class="main-checkbox">
-                                    <!--Seguridad -->
-                                    {{ form.seguridad }} <strong>{{form.seguridad.label}}</strong>
-                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
-                                        <div>{{ form.cambio_de_cargo }}{{ form.cambio_de_cargo.label }}</div>
-                                        <div>{{ form.actualizacion_permisos }}{{ form.actualizacion_permisos.label }}</div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Modelo -->
+                                        <h6 class="gray-bg"><strong>{{ form.modelo }} {{form.modelo.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form.realizacion_clusterizacion }}{{ form.realizacion_clusterizacion.label }}</div>
+                                        </div>
+                                        <!--  -->
                                     </div>
-                                    <!--  -->
-                                </div>
-                                <hr>
-                                <div class="main-checkbox">
-                                    <!--Modelo -->
-                                    {{ form.modelo }} {{form.modelo.label}}
-                                    <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
-                                        <div>{{ form.realizacion_clusterizacion }}{{ form.realizacion_clusterizacion.label }}</div>
+                                    <hr>
+                                    <div class="text-align-center offset-sm-5">
+                                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
                                     </div>
-                                    <!--  -->
-                                </div>
-                                <hr>
-                                <div class="text-center">
-                                    <button type="submit" class="button btn-primary">Submit</button>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

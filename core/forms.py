@@ -194,7 +194,8 @@ CATEGORIAS_MAPPING = {
     'B2': 'cambio_conf_bd',
     'C': 'mantenimiento',
     'C1': 'limpieza_datos',
-    'D1': 'error',
+    'D':'error',
+    'D1': 'errores_sistema',
     'E': 'auditoria',
     'E1': 'quien_agrego_documentos',
     'E2': 'quien_agrego_usuario',
@@ -240,6 +241,7 @@ class CategoriasForm(forms.Form):
 
     # Error
     error = forms.BooleanField(required=False, label="Error", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    errores_sistema = forms.BooleanField(required=False, label="Errores del Sistema", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
     
     # Auditoría
     auditoria = forms.BooleanField(required=False, label="Auditoría", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))

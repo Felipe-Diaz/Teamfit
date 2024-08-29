@@ -3,6 +3,9 @@
 {% block titlePage %}
 Teamfit - Historial
 {% endblock titlePage %}
+{% block titulo %}
+Historial del Sistema
+{% endblock titulo %}
   {% block content %}
     <!-- Tabla con filtro de datos incluido -->
     <div class="row"> 
@@ -18,8 +21,7 @@ Teamfit - Historial
                     <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                 {% endfor %}
               {% endif %}
-              <h4 class="card-title col-md">Historial de acciones en el sistema</h4>
-              <form action="{% url 'eliminar_historial' %}" method="post" class="col-md-3 offset-md-3">
+              <form action="{% url 'eliminar_historial' %}" method="post" class="col-md-3 offset-md-10">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Eliminar Datos</button>
               </form>
@@ -42,12 +44,13 @@ Teamfit - Historial
                             <tr class="project-row">
                                 <td>{{ val.idHist }}</td>
                                 <td>{{ val.fecha }}</td>
-                                {% if val.prioridad == 3 %}
-                                <td style="color: red;">{{ val.categoria }}</td>
-                                {% else %}
                                 <td>{{ val.categoria }}</td>
-                                {% endif %}
+                                {% if val.prioridad == 3 %}
+                                <td style="color: red; border-right: 5px solid red;">{{ val.subcategoria }}</td>
+                                {% else %}
                                 <td>{{ val.subcategoria }}</td>
+                                {% endif %}
+                                
                                 <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>
                             </tr>
                             {% empty %}

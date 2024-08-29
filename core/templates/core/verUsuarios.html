@@ -3,6 +3,9 @@
 {% block titlePage %}
 Teamfit - Ver Usuarios
 {% endblock titlePage %}
+{% block titulo %}
+Usuarios Registrados
+{% endblock titulo %}
 {% block content %}
 <body>
 <div class="row">
@@ -12,9 +15,6 @@ Teamfit - Ver Usuarios
         <br>
         <br> 
         <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Usuarios Registrados</h4>
-            </div>
             <div class="container">
             {% if messages %}
             {% for mesg in messages %}
