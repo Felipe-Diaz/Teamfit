@@ -1,7 +1,7 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404, redirect
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
-from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro
-from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm, CategoriasForm
+from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User
+from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm, CategoriasForm , UsuarioForm
 from .forms import CATEGORIAS_MAPPING
 from datetime import datetime, timedelta, time
 import random
@@ -462,20 +462,34 @@ def pagina_principal(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
     
-    graficos = Graficos.objects.all()
-    data_list = list(graficos.values())
-    additional_data = pd.DataFrame(data_list)
+    subcategorias_incl = [
+            "Cambio de parametros",  # B1
+            "Cambio de configuraciones en la base de datos", # B2
+            "Limpieza de datos",     # C1
+            "Agregó Proyectos",      # E1
+            "Agregó usuario",        # E2
+            "Elimino usuario",       # E3
+            "Cambio un cargo",       # F1
+            "Actualizó permisos"     # F2
+            ]
+    historial = historialCambios.objects.all().filter(subcategoria__in=subcategorias_incl).values('idHist','fecha', 'categoria', 'subcategoria', 'prioridad', 'usuario__first_name','usuario__last_name').order_by('-fecha')[:5]
+    data = {'hist':historial}
+    # graficos = Graficos.objects.all()
+    # data_list = list(graficos.values())
+    # additional_data = pd.DataFrame(data_list)
     
-    bar_chart = go.Figure(data=[
-        go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
-        go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
-    ])
-    bar_chart = bar_chart.to_html(full_html=False)
+    # bar_chart = go.Figure(data=[
+    #     go.Bar(name='HH requerido', x=additional_data['semana'], y=additional_data['hhRequerido']),
+    #     go.Bar(name='HH disponible', x=additional_data['semana'], y=additional_data['hhDisponible'])
+    # ])
+    # bar_chart = bar_chart.to_html(full_html=False)
     
-    line_chart = px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
-    line_chart = line_chart.to_html(full_html=False)
+    # line_chart = px.line(additional_data, x='semana', y='utilizacion', title='Utilización (%)')
+    # line_chart = line_chart.to_html(full_html=False)
     
-    data = {'bar':bar_chart, 'line':line_chart}
+    # data = {'bar':bar_chart, 'line':line_chart}
+
+
     return render(request, 'core/index1.html', data)
 
 #Almacena el historial solicitando desc, tipoInfo y usuario
@@ -632,10 +646,30 @@ def crear_usuarios(request):
 
     return render(request, 'core/crearUsuarios.html', data)
 
+#Junily was here
+def editar_usuario(request, id):
+    usuario = get_object_or_404(User, id=id)
+    
+    data = {}
+    if request.method == 'POST':
+        form = UsuarioForm(request.POST, instance=usuario)
+        data['form'] = form
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Usuario actualizado correctamente')
+            return redirect('verUsuarios')  # Redirige de vuelta a la lista de usuarios
+    else:
+        form = UsuarioForm(instance=usuario)
+        data['form'] = form
+        data['usuario_editado'] = usuario
+
+    return render(request, 'core/editarUsuario.html', data)
+
 #Desactiva el usuario, validando si existe y si es superuser o no.
 def eliminarUsuarios(request, id):
     if(not request.user.is_staff):
         return redirect(ver_usuarios)
+    
     messages = []
     merror = []
     #Se desactiva el usuario

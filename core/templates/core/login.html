@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,7 @@
             background-color: #f4eeee;
             padding: 60px;
             border-radius: 15px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
             text-align: center;
         }
         .login-container img {
@@ -40,7 +40,7 @@
             text-align: center;
         }
         .login-container button {
-            padding: 10px 90px;
+            padding: 10px 35%;
             background-color: #ff0090;
             color: #fff;
             border: none;
@@ -52,7 +52,11 @@
         }
         .login-container .error {
             color: red;
-            margin-top: 10px;
+            margin-top: 30px;
+            font-size: smaller;
+        }
+        ::-webkit-scrollbar {
+         display: none;
         }
     </style>
 </head>
@@ -64,7 +68,7 @@
                 {% csrf_token %}
                 <input type="text" name="username" placeholder="Usuario" required>
                 <input type="password" name="password" placeholder="Contraseña" required>
-                <button type="submit">Ingresar</button>
+                <button type="submit">Iniciar&nbsp;Sesión</button>
             </form>
             {% if mesg %}
                 <div class="error">{{ mesg }}</div>

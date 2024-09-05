@@ -6,9 +6,10 @@ from django.forms import ModelForm, fields, Form
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from pkg_resources import require
-from .models import Ventas, Disponibilidad
+from .models import Ventas, Disponibilidad, PerfilUsuario
 from datetime import date, timedelta
 from django.core.exceptions import ValidationError
+from django import forms
 
 #Validaciones en Django Python
 def validar_longitud_maxima(value):
@@ -71,7 +72,11 @@ class DispForm(forms.Form):
 class UploadFileForm(forms.Form):
     file = forms.FileField( label='Selecciona un archivo CSV o XLSX',
                             help_text=' <br> Solo se permiten archivos CSV y XLSX',
-                            widget=forms.ClearableFileInput(attrs={'accept': '.csv, .xlsx', 'class':'btn btn-primary'}))
+                            widget=forms.ClearableFileInput(attrs={
+                            'accept': '.csv, .xlsx',
+                            'class':'custom-button',
+                            'style': 'background-color: var(--junily-white);',
+                            'placeholder': 'Selecciona un archivo'}))
     class Meta:
         fields = ['file']
 
@@ -101,7 +106,7 @@ class CrearUsuarioAdmin(UserCreationForm):
             raise ValidationError("Debe seleccionar un cargo válido.")
         return cargo
     username = forms.CharField(
-                            label="Nombre de Usuario",
+                            label="Usuario",
                             required=True,
                             max_length=150,
                             widget=forms.TextInput(attrs={'class':'form-control'})
@@ -119,24 +124,48 @@ class CrearUsuarioAdmin(UserCreationForm):
                             widget=forms.TextInput(attrs={'class':'form-control'})
                             )
     email = forms.CharField(
-                            label="Dirección de correo electrónico",
+                            label="Correo electrónico",
                             required=True,
                             max_length=150,
                             widget=forms.TextInput(attrs={'class':'form-control'})
                             )
     FIELD_LABELS={
-        'username':'Nombre de Usuario',
+        'username':'Usuario',
         'cargo':'Cargo',
         'first_name':'Nombre',
         'last_name':'Apellido',
-        'email':'Dirección de correo electrónico',
+        'email':'Correo electrónico',
         'password1':'Contraseña',
         'password2':'Contraseña (Confirmación)'
     }
     class Meta:
         model = User
         fields = ['username', 'first_name','last_name', 'email', 'is_staff', 'cargo']
+        labels = {'is_staff':'Administrador',}
 
+
+class UsuarioForm(forms.ModelForm):
+    CARGOS = [
+        ("na", 'Seleccione Cargo'),
+        ('1', 'Administrador'),
+        ('2', 'Jefe de Proyecto'),
+        ('3', 'Ingenierio de Proyecto'),
+    ]
+    cargo = forms.ChoiceField(
+        required=True,
+        choices=CARGOS,
+        widget=forms.Select(attrs={'class':'form-control'}),
+        label="Cargo"
+    )
+    def clean_cargo(self):
+        cargo = self.cleaned_data.get('cargo')
+        if cargo == "na":
+            raise ValidationError("Debe seleccionar un cargo válido.")
+        return cargo
+    
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'cargo', 'is_active']
 
 #Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.
 class proyectosForm(forms.Form):

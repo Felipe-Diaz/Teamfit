@@ -1,0 +1,34 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Editar Usuarios
+{% endblock titlePage %}
+{% block titulo %}
+Editar usuario {{ usuario_editado.first_name }} 
+{% endblock titulo %}
+{% block content %}
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h2>Editar Usuario</h2>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="{% url 'verUsuarios' %}" class="btn btn-danger">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock content %}
+{% block UJS %}
+<script>
+  $(document).ready(function () {
+    // Configuración básica de la tabla
+    $("#basic-datatables").DataTable({});
+  });
+</script>
+{% endblock UJS %}
+</html>

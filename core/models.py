@@ -76,10 +76,10 @@ class PerfilUsuario(models.Model):
     
 class historialCambios(models.Model):
     idHist = models.AutoField(primary_key=True, verbose_name="ID Historial")
-    fecha = models.DateTimeField(blank=False, null=False, verbose_name="Fecha Accion")
+    fecha = models.DateTimeField(blank=False, null=False, verbose_name="Fecha Acción")
     categoria = models.CharField(max_length=250, blank=False, null=False, default="No Registrado", verbose_name="Categoría")
     subcategoria = models.CharField(max_length=250, blank=False, null=False, default="No Registrado", verbose_name="Sub Categoría")
-    prioridad = models.IntegerField(blank=False, null=False, default=0, verbose_name="Priodidad")
+    prioridad = models.IntegerField(blank=False, null=False, default=0, verbose_name="Prioridad")
     #desc = models.CharField(max_length=300, blank=False, null=False, verbose_name="Descripción")
     #tipoInfo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de información")
     usuario = models.ForeignKey(User, on_delete=models.DO_NOTHING)
