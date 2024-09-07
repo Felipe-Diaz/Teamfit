@@ -18,7 +18,7 @@ Subir Proyectos
 
         :root {
             --junily-black: #333333;
-            --junily-white: #bbaaff;
+            --junily-white: #aaf8ff;
         }
         .container_a {
             display: flex;
@@ -61,6 +61,7 @@ Subir Proyectos
         }
         
       </style>
+
       {% endblock estiloHead %}
 
     <!-- Contenido -->
@@ -91,10 +92,15 @@ Subir Proyectos
         </div>
         <br>
         <div class="text-center hb">
-          <p class="text-center">O ingréselos a continuación</p>      
+          <p class="text-center">Solicitar proyectos de Odoo</p>
+          <form method="post" action="{% url 'consul_api' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Obtener Datos</button>
+        </form>    
         </div>
         <br>
       </div>
+
         <!-- Modal -->
         <div class="modal fade bd-example-modal-lg" id="dataModal" tabindex="-1" role="dialog" aria-labelledby="dataModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
@@ -166,14 +172,48 @@ Subir Proyectos
                 </div>
             </div>
         </div>
+        <!-- End modal -->
 
-        <!-- Scripts to trigger the modal -->
-        {% if showTable %}
-        <script>
-            $(document).ready(function() {
-                $('#dataModal').modal('show');
-            });
-        </script>
+        <!-- Futuro Modal de los proyectos de Odoo-->
+        <div class="table-responsive">
+            <table id="basic-datatables" class="display table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Proyecto</th>
+                        <th>Tipo</th>
+                        <th>Linea de trabajo</th>
+                        <th>Cliente</th>
+                        <th>Fecha Creacion</th>
+                        <th>Monto Oferta</th>
+                        <th>P.A.E</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  {% for item in datos %}
+                    <tr>
+                      <td>{{ item.id }}</td>
+                      <td>{{ item.name }}</td>
+                      <td>{{ item.business_unit }}</td>
+                      <td>{{ item.business_type }}</td>                            
+                      <td>{{ item.customer }}</td>
+                      <td>{{ item.create_date }}</td>
+                      <td>{{ item.amount }}</td>
+                      <td>{{ item.wa|yesno:"Sí,No" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+      <!-- End modal -->
+
+      <!-- Scripts to trigger the modal -->
+      {% if showTable %}
+      <script>
+        $(document).ready(function() {
+          $('#dataModal').modal('show');
+        });
+      </script>
         {% endif %}
     </div>
     </div>
@@ -265,6 +305,5 @@ Subir Proyectos
         });
       });
     </script>
-
 
     {% endblock UJS %}

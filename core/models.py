@@ -92,7 +92,7 @@ class historialCambios(models.Model):
     
 class proyectosAAgrupar(models.Model):
     id = models.IntegerField(primary_key=True, verbose_name="ID Proyecto")
-    proyecto = models.CharField(max_length=12, blank=False, null=False, verbose_name="Proyecto")
+    proyecto = models.CharField(max_length=12, blank=False, null=False, unique=False, verbose_name="Proyecto")
     lineaNegocio = models.CharField(max_length=6, blank=False, null=False, verbose_name="Línea de Negocio")
     tipo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de Proyecto")
     cliente = models.IntegerField(blank=True, null=True, verbose_name="ID Cliente")

@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404, redirect
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
 from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User
-from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm, CategoriasForm , UsuarioForm
+from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm, CategoriasForm , UsuarioForm #, PerfilUsuarioForm
 from .forms import CATEGORIAS_MAPPING
 from datetime import datetime, timedelta, time
 import random
@@ -17,7 +17,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
 import pytz
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from .clusters_data import realizar_clusterizacion
 
 # Create your views here.
 
@@ -448,10 +449,10 @@ def iniciar_sesion(request):
 
 #Crear un cerrar sesión
 def cerrar_sesion(request):
-    try:
-        user = request.user
-    except:
+    if request.user.is_anonymous:
         user = None
+    else:
+        user = request.user
     cat = {'Cat':'A','Sub':'2'}
     almacenado = almacenarHistorial(cat, user)
     logout(request)
@@ -461,7 +462,7 @@ def cerrar_sesion(request):
 def pagina_principal(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
-    
+    data = {}
     subcategorias_incl = [
             "Cambio de parametros",  # B1
             "Cambio de configuraciones en la base de datos", # B2
@@ -473,7 +474,14 @@ def pagina_principal(request):
             "Actualizó permisos"     # F2
             ]
     historial = historialCambios.objects.all().filter(subcategoria__in=subcategorias_incl).values('idHist','fecha', 'categoria', 'subcategoria', 'prioridad', 'usuario__first_name','usuario__last_name').order_by('-fecha')[:5]
-    data = {'hist':historial}
+    data['hist'] = historial
+
+    proyectos = proyectosAAgrupar.objects.all().order_by('-id')[:5]
+    data['proyectos'] = proyectos
+    list = []
+    for i in range(5):
+        list.append(i)
+    data['peng'] = list
     # graficos = Graficos.objects.all()
     # data_list = list(graficos.values())
     # additional_data = pd.DataFrame(data_list)
@@ -604,6 +612,11 @@ def ver_usuarios(request):
     usuarios = PerfilUsuario.objects.all().values('cargo',
                                                   'user__username','user__first_name','user__last_name',
                                                   'user__email','user__is_staff', 'user__is_active', 'user')
+
+    cargos_dict = dict(UsuarioForm.CARGOS)
+    for usuario in usuarios:
+        usuario['cargo'] = cargos_dict.get(usuario['cargo'], usuario['cargo'])
+    
     PerfilUsuario.objects.filter()
     data = {'usuarios':usuarios}
     return render (request, 'core/verUsuarios.html', data)
@@ -646,24 +659,44 @@ def crear_usuarios(request):
 
     return render(request, 'core/crearUsuarios.html', data)
 
-#Junily was here
+#Funcion para editar un usuario / Junily was here
 def editar_usuario(request, id):
+
     usuario = get_object_or_404(User, id=id)
+    pusuario = get_object_or_404(PerfilUsuario, user=usuario)
     
-    data = {}
     if request.method == 'POST':
-        form = UsuarioForm(request.POST, instance=usuario)
-        data['form'] = form
+        form = UsuarioForm(request.POST, instance=usuario, perfil_usuario=pusuario)
+        
         if form.is_valid():
             form.save()
+            pusuario.cargo = form.cleaned_data['cargo']
+            pusuario.save()
+
             messages.success(request, 'Usuario actualizado correctamente')
             return redirect('verUsuarios')  # Redirige de vuelta a la lista de usuarios
-    else:
-        form = UsuarioForm(instance=usuario)
-        data['form'] = form
-        data['usuario_editado'] = usuario
+        else:
+            error_messages = form.errors.as_data()
+            merror = []
+            for field, errors in error_messages.items():
+                field_label=form.FIELD_LABELS.get(field, field)
+                for field, errors in error_messages.items():
+                    for error in errors:
+                        errormsg = str(error.message)
+                        merror.append(f'Error en {field_label}: {errormsg}')
+                return render(request, 'core/editarUsuario.html', {'form': form, 'merror': merror})
 
+            data["merror"]=merror
+    else:
+        form = UsuarioForm(instance=usuario, perfil_usuario=pusuario)
+        
+    data =  {
+        'form': form,
+        'usuario_editado': usuario
+    }
     return render(request, 'core/editarUsuario.html', data)
+
+#Fin de la funcion para editar un usuario
 
 #Desactiva el usuario, validando si existe y si es superuser o no.
 def eliminarUsuarios(request, id):
@@ -768,7 +801,7 @@ def obtener_campos_secundarios(form):
 
 def obtener_valores_formulario_parametro(form):
     """
-    Obtiene los valores de los parámetros almacenados, para luego cargaros en el formulario
+    Obtiene los valores de los parámetros almacenados, para luego cargarlos en el formulario
     
     Parametros: Solicita el formulario de parámetros
     
@@ -810,8 +843,6 @@ def marcar_categorias_principales_parametros(initial_data):
             initial_data[CATEGORIAS_MAPPING[categoria]] = True
     return initial_data
 
-
-
 def eliminar_historial(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
@@ -845,3 +876,20 @@ def eliminar_historial(request):
     
     messages.error(request, 'Método no permitido.')
     return redirect(verHistorial)
+
+def consul_api(request):
+    url = 'https://66d8e1384ad2f6b8ed52e306.mockapi.io/Api/Odoo/crm_lead'
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        datos = response.json()
+
+        if isinstance(datos, list):
+            print(datos)            
+            return render(request, "core/subirProyectos.html", {'datos': datos})
+        else:
+            return render(request, "core/subirProyectos.html", {'error': 'datos inesperados'})
+    
+    except requests.RequestException as e:
+        print(f'error solicitud: {e}')
+        return render(request, "core/subirProyectos.html", {'error': 'no se pudieron obtener los datos'}) 

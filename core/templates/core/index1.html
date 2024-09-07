@@ -3,75 +3,138 @@
 {% block titulo %}
 Inicio
 {% endblock titulo %}
+{% block estiloHead %}
+<style>
+  .container .card .card-header {
+    background-color: rgb(245, 245, 245);
+    font-size: 1.5rem;
+    border-bottom: 2px solid darkgray;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    letter-spacing: 1px;
+  }
+  .table-responsive {
+    overflow-x: auto;
+  }
+  @media (max-width: 992px) {
+    .col-md-6 {
+      width: 100%;
+      margin-bottom: 20px;}
+    }
+</style>
+{% endblock estiloHead %}
 {% block content %}
   <body>
     <br><br><br><br>
-    <div class="container">
-      <div class="row">
+    <div class="container"">
+      <div class="row" >
           <!-- New Customers section -->
           <div class="col-md-6">
               <div class="card">
                   <div class="card-header">
                       Historial
                   </div>
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Fecha</th>
-                        <th>Categoria</th>
-                        <th>Sub-Categoria</th>
-                        <th>Usuario</th>
-                      </tr>
-                      <tbody>
-                        {% for val in hist %}
-                        <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
-                        <tr class="project-row">
-                            <td>{{ val.idHist }}</td>
-                            <td>{{ val.fecha }}</td>
-                            <td>{{ val.categoria }}</td>
-                            {% if val.prioridad == 3 %}
-                            <td style="color: red;">{{ val.subcategoria }}</td>
-                            {% else %}
-                            <td>{{ val.subcategoria }}</td>
-                            {% endif %}
-                            
-                            <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>
-                        </tr>
-                        {% empty %}
+                  <div class="table-responsive">
+                    <table class="table">
+                      <thead>
                         <tr>
-                            <td colspan="15">No se han encontrado datos en el historial</td>
-                        </tr>   
-                        {% endfor %}
-                      </tbody>
-                    </thead>
-                  </table>
+                          <th>ID</th>
+                          <th>Fecha</th>
+                          <th>Categoria</th>
+                          <th>Sub-Categoria</th>
+                          <th>Usuario</th>
+                        </tr>
+                        <tbody>
+                          {% for val in hist %}
+                          <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+                          <tr class="project-row">
+                              <td>{{ val.idHist }}</td>
+                              <td>{{ val.fecha }}</td>
+                              <td>{{ val.categoria }}</td>
+                              {% if val.prioridad == 3 %}
+                              <td style="color: red;">{{ val.subcategoria }}</td>
+                              {% else %}
+                              <td>{{ val.subcategoria }}</td>
+                              {% endif %}
+                              
+                              <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>
+                          </tr>
+                          {% empty %}
+                          <tr>
+                              <td colspan="15">No se han encontrado datos en el historial</td>
+                          </tr>   
+                          {% endfor %}
+                        </tbody>
+                      </thead>
+                    </table>
+                  </div>
               </div>
           </div>
+
+          <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Últimos Proyectos
+                </div>
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Proyecto</th>
+                        <th>Linea Negocio</th>
+                        <th>Tipo Proyecto</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                      {% for val in proyectos %}
+                      <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+                      <tr class="project-row">
+                          <td>{{ val.id }}</td>
+                          <td>{{ val.proyecto }}</td>
+                          <td>{{ val.lineaNegocio }}</td>
+                          <td>{{ val.tipo }}</td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                          <td colspan="15">No se han encontrado proyectos</td>
+                      </tr>   
+                      {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
           
-          <div class="col-md-8">
+          <div class="col-md-6">
               <div class="card">
                   <div class="card-header">
                       ????????
                   </div>
-                  <table class="table">
+                  <div class="table-responsive">
+                    <table class="table">
                       <thead>
                       <tr>
-                          <th>Penguins</th>
-                          <th>Penguins</th>
-                          <th>Penguins</th>
-                          <th>Penguins</th>
+                          {% for val in peng %}
+                          <th>Penguin</th>
+                          <th>Penguin</th>
+                          <th>Penguin</th>
+                          <th>Penguin</th>
+                          {%endfor%}
                       </tr>
                       </thead>
                       <tbody>
                       <tr>
-                          <td><img style="width: 30%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
-                          <td><img style="width: 30%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
-                          <td><img style="width: 30%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
-                          <td><img style="width: 30%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
+                          {% for val in peng %}
+                          <td><img style="width: 100%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
+                          <td><img style="width: 100%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
+                          <td><img style="width: 100%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
+                          <td><img style="width: 100%;" src="https://z-p3-scontent.fscl19-1.fna.fbcdn.net/v/t39.30808-6/319512203_600107682118113_8405459327496889291_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHNfWWGLCx-1HmuE9zuik65-LvOqIxKygf4u86ojErKB6Bs5BWjpxWrTiyaVHtI1PbJ8Nzy5oWNKoedztlJd4H2&_nc_ohc=V0Va9mesy6YQ7kNvgFN6HdG&_nc_zt=23&_nc_ht=z-p3-scontent.fscl19-1.fna&oh=00_AYA6EOyy7N4A7bIrWQgNEOiICC87ts2yumKNgMvYyUIwGw&oe=66DEDAC7"></td>
+                          {% endfor %}
                       </tr>
                       </tbody>
                   </table>
+                  </div>
               </div>
           </div>
       </div>

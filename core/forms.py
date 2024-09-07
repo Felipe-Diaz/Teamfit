@@ -143,7 +143,7 @@ class CrearUsuarioAdmin(UserCreationForm):
         fields = ['username', 'first_name','last_name', 'email', 'is_staff', 'cargo']
         labels = {'is_staff':'Administrador',}
 
-
+#Formulario para editar usuarios junily
 class UsuarioForm(forms.ModelForm):
     CARGOS = [
         ("na", 'Seleccione Cargo'),
@@ -157,15 +157,49 @@ class UsuarioForm(forms.ModelForm):
         widget=forms.Select(attrs={'class':'form-control'}),
         label="Cargo"
     )
+
+    def __init__(self, *args, **kwargs):
+        perfil_usuario = kwargs.pop('perfil_usuario', None)
+        super(UsuarioForm, self).__init__(*args, **kwargs)
+        if perfil_usuario:
+            self.fields['cargo'].initial = perfil_usuario.cargo
+
     def clean_cargo(self):
         cargo = self.cleaned_data.get('cargo')
         if cargo == "na":
             raise ValidationError("Debe seleccionar un cargo válido.")
         return cargo
     
+    first_name = forms.CharField(
+                            label="Nombre",
+                            required=True,
+                            max_length=150,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    last_name = forms.CharField(
+                            label="Apellidos",
+                            required=True,
+                            max_length=150,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    email = forms.CharField(
+                            label="Correo electrónico",
+                            required=True,
+                            max_length=150,
+                            widget=forms.TextInput(attrs={'class':'form-control'})
+                            )
+    
+    FIELD_LABELS={
+        'cargo':'Cargo',
+        'first_name':'Nombre',
+        'last_name':'Apellido',
+        'email':'Correo electrónico',
+        'is_active':'Es Administrador'
+    }
+    
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'cargo', 'is_active']
+        fields = ['first_name', 'last_name', 'email', 'is_active']
 
 #Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.
 class proyectosForm(forms.Form):
