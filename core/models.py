@@ -97,13 +97,13 @@ class proyectosAAgrupar(models.Model):
     tipo = models.CharField(max_length=50, blank=False, null=False, verbose_name="Tipo de Proyecto")
     cliente = models.IntegerField(blank=True, null=True, verbose_name="ID Cliente")
     createDate = models.DateTimeField(null=False, blank=False, verbose_name="Fecha de creación")
-    cierre = models.DateField(null=False, blank=False, verbose_name="Cierre del proyecto")
-    egresosNoHHCLP = models.IntegerField(null=False, blank=False, verbose_name="Egresos no HH CLP")
+    cierre = models.DateField(null=True, blank=True, verbose_name="Cierre del proyecto") #
+    egresosNoHHCLP = models.IntegerField(null=False, blank=False, default=0, verbose_name="Egresos no HH CLP") #
     montoOfertaCLP = models.IntegerField(null=False, blank=False, verbose_name="Monto Oferta CLP")
     usoAgencia = models.BooleanField(null=False, blank=False, default=0, verbose_name="Apoyo de Agencia")
-    ocupacionInicio = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, verbose_name="Porcentaje de uso inicial")
-    disponibilidad = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de disponibilidad")
-    utilizacion = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de utilización")
+    ocupacionInicio = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, verbose_name="Porcentaje de uso inicial") #
+    disponibilidad = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de disponibilidad") #
+    utilizacion = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de utilización") #
 
     class Meta:
         db_table = 'PROYECTOS'

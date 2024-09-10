@@ -878,18 +878,77 @@ def eliminar_historial(request):
     return redirect(verHistorial)
 
 def consul_api(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+
+    if request.method == 'POST':
+        if 'action' in request.POST and request.POST['action'] == 'add':
+            url = 'https://66d8e1384ad2f6b8ed52e306.mockapi.io/Api/Odoo/crm_lead'
+            
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                datos = response.json()
+                print(datos)
+
+                if isinstance(datos, list):
+                    for item in datos:
+                        proyectosAAgrupar.objects.update_or_create(
+                            id=item.get('id'),
+                            defaults={
+                                'proyecto': item.get('name'),
+                                'lineaNegocio': item.get('business_unit'),
+                                'tipo': item.get('business_type'),
+                                'cliente': item.get('customer'),
+                                'createDate': item.get('create_date'),
+                                'cierre': None,
+                                'egresosNoHHCLP': 0,
+                                'montoOfertaCLP': item.get('amount'),
+                                'usoAgencia': item.get('wa'),
+                                'ocupacionInicio': 0,
+                                'disponibilidad': 0,
+                                'utilizacion': 0
+                            }
+                        )
+                    user = request.user
+                    cat = {'Cat':'E','Sub':'1'}
+                    almacenado = almacenarHistorial(cat, user)
+                    print(almacenado)
+                    return redirect(ver_proyectos)
+                else:
+                    messages.error(request, 'Datos inesperados.')
+                    return redirect(subirProyectos)
+            
+            except requests.RequestException as e:
+                messages.error(request, 'No se pudieron obtener los datos.')
+                return redirect(subirProyectos)
+            except Exception as e:
+                messages.error(request, 'No se pudieron guardar los datos en la base de datos.')
+                return redirect(subirProyectos) 
+
     url = 'https://66d8e1384ad2f6b8ed52e306.mockapi.io/Api/Odoo/crm_lead'
+    data = {'form':UploadFileForm}
     try:
         response = requests.get(url)
         response.raise_for_status()
         datos = response.json()
 
         if isinstance(datos, list):
-            print(datos)            
-            return render(request, "core/subirProyectos.html", {'datos': datos})
+            data['datos'] = datos
+            data['showTableOdoo'] = True
+            return render(request, "core/subirProyectos.html", data)
         else:
-            return render(request, "core/subirProyectos.html", {'error': 'datos inesperados'})
+            data['error'] = 'Datos inesperados'
+            return render(request, "core/subirProyectos.html", data)
     
     except requests.RequestException as e:
         print(f'error solicitud: {e}')
-        return render(request, "core/subirProyectos.html", {'error': 'no se pudieron obtener los datos'}) 
+        data['error'] = 'No se pudieron obtener los datos'
+        return render(request, "core/subirProyectos.html", data) 
+    
+def cluster(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
+    return render(request, "core/cluster.html")
+    

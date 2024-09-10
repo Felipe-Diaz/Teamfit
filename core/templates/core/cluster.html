@@ -1,0 +1,33 @@
+<!-- Carga de bloque base -->
+{% extends 'core/base.html' %}
+<!-- Carga de estilos -->
+{% load static %}
+ <!-- Título del document -->
+{% block titlePage %}
+Teamfit - Cluster
+{% endblock titlePage %}
+<!-- Titulo de navegador -->
+{% block titulo %}
+Cluster
+{% endblock titulo %}
+
+
+<!-- Head -->
+{% block estiloHead %}
+{% endblock estiloHead %}
+<!-- Body -->
+{% block content %}
+    <div class="container">
+        <div class="card">
+            <h3>
+                Cluster
+            </h3>
+            <button class="btn btn-primary">Iniciar Cluster</button>
+        </div>
+    </div>
+
+{% endblock content %}
+
+<!-- Javascript -->
+{% block UJS %}
+{% endblock UJS %}
