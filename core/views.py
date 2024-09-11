@@ -950,5 +950,15 @@ def cluster(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
     
-    return render(request, "core/cluster.html")
+    data = {}
+    
+    if(request.method == 'POST'):
+        clusterizacion = realizar_clusterizacion
+    
+        if(clusterizacion):
+            data = {'mesg':'Se ha realizado la clusterización'}
+        else:
+            data = {'mesg':'No se ha realizado la clusterización'}
+        
+    return render(request, "core/cluster.html", data)
     
