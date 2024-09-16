@@ -6,6 +6,8 @@ from .views import pagina_principal, cerrar_sesion, subirProyectos, ver_proyecto
 from .views import ver_usuarios, editar_usuario, eliminarUsuarios, ajuste_parametros
 from .views import eliminar_historial, consul_api, cluster
 
+from .views import asignaciones_data,proyectos_data,recursos_asignados_data,eliminar_asignaciones
+from .views import asignaciones_list, ejecutar_asignacion, asignaciones_list
 #Se indican las distintas URL para el sistema.
 ##A la izquierda es el valor que aparecerá en la URL
 ##En el centro se llama a la función que renderiza la página
@@ -30,4 +32,11 @@ urlpatterns = [
     path('eliminar_historial', eliminar_historial, name='eliminar_historial'),
     path('consul_api', consul_api, name='consul_api'),
     path('cluster', cluster, name='cluster'),
+    ###Ingresar las URLS del grupo 2 desde acá hacia abajo.
+    path('asignaciones/', asignaciones_list, name='asignaciones_list'),
+    path('asignaciones/data/', asignaciones_data, name='asignaciones_data'),
+    path('proyectos_data/', proyectos_data, name='proyectos_data'),
+    path('recursos_asignados_data/', recursos_asignados_data, name='recursos_asignados_data'),  # Nueva URL para los totales semanales
+    path('ejecutar_asignacion/', ejecutar_asignacion, name='ejecutar_asignacion'),
+    path('eliminar-asignaciones/', eliminar_asignaciones, name='eliminar_asignaciones'),
 ]

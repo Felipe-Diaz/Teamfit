@@ -1,14 +1,14 @@
 from django.shortcuts import redirect, render, get_object_or_404, redirect
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
 from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User
-from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin, proyectosForm, CategoriasForm , UsuarioForm #, PerfilUsuarioForm
+from .models import Proyecto, Recurso, Disponibilidad, Asignacion, AsignacionControl
+from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
+from .forms import proyectosForm, CategoriasForm , UsuarioForm
 from .forms import CATEGORIAS_MAPPING
-from datetime import datetime, timedelta, time
-import random
+from datetime import timedelta, datetime
+from django.core.paginator import Paginator
 import requests
-import json
-#from openpyxl import load_workbook
-import csv
+from django.db.models import Sum
 from django.contrib import messages
 import pandas as pd
 import plotly.express as px
@@ -16,9 +16,10 @@ import plotly.graph_objects as go
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
-import pytz
 from django.http import HttpResponse, JsonResponse
 from .clusters_data import realizar_clusterizacion
+import logging
+from django.db import DatabaseError, IntegrityError, OperationalError
 
 # Create your views here.
 
@@ -960,3 +961,278 @@ def cluster(request):
         
     return render(request, "core/cluster.html", data)
     
+    
+##Funciones Grupo 2
+##  Acá deben escribir las funciones exclusivas del grupo 2
+##  Esto significa que NO deben escribir arriba, A MENOS que sea necesario (PARAMETROS)
+##  De otra forma, solo escriben acá
+##  Si, acá 
+##  Espero se haya entendido
+
+
+
+def asignar_recursos():
+    """
+    Algoritmo que asigna recursos semana a semana.
+    Ordena los proyectos y recursos según sus prioridades y distribuye las horas.
+    """
+    mensaje = ""
+    asignacion_realizada = False
+    asignacion_previa_detectada = False
+
+    # Iteramos sobre las semanas, de la 1 a la 52
+    for semana in range(1, 53):
+        proyectos = Proyecto.objects.filter(semana_inicio__lte=semana).order_by('-tipo_proyecto__prioridad', 'nombre')
+
+        for proyecto in proyectos:
+            if semana > proyecto.semana_inicio + proyecto.duracion_semanas - 1:
+                continue  # Saltar si la semana actual está fuera del rango del proyecto
+
+            # Verificar si el rol requerido está disponible
+            recursos_disponibles = Recurso.objects.filter(rol=proyecto.rol_requerido).order_by('-prioridad', 'nombre')
+            if not recursos_disponibles.exists():
+                print(f"No hay recursos disponibles para el rol requerido '{proyecto.rol_requerido}' del proyecto '{proyecto.nombre}'.")
+                continue
+
+            horas_demandadas = proyecto.horas_demandadas
+
+            for recurso in recursos_disponibles:
+                disponibilidades = Disponibilidad.objects.filter(recurso=recurso, semana=semana)
+
+                if not disponibilidades.exists():
+                    print(f"No hay disponibilidad registrada para el recurso '{recurso.nombre}' en la semana {semana}.")
+                    continue
+
+                for disponibilidad in disponibilidades:
+                    asignacion_existente = Asignacion.objects.filter(proyecto=proyecto, recurso=recurso, semana=semana).first()
+
+                    if asignacion_existente:
+                        print(f"Asignación ya existente para el proyecto '{proyecto.nombre}' con el recurso '{recurso.nombre}' en la semana {semana}.")
+                        asignacion_previa_detectada = True
+                        continue  # Continuar sin hacer una nueva asignación
+
+                    if disponibilidad.horas_disponibles >= horas_demandadas:
+                        # Asignar las horas demandadas
+                        Asignacion.objects.create(
+                            proyecto=proyecto,
+                            recurso=recurso,
+                            semana=semana,
+                            horas_asignadas=horas_demandadas
+                        )
+                        disponibilidad.horas_disponibles -= horas_demandadas
+                        disponibilidad.save()
+                        horas_demandadas = 0
+                        asignacion_realizada = True
+                        break
+                    else:
+                        # Asignar las horas disponibles y continuar con la siguiente disponibilidad
+                        Asignacion.objects.create(
+                            proyecto=proyecto,
+                            recurso=recurso,
+                            semana=semana,
+                            horas_asignadas=disponibilidad.horas_disponibles
+                        )
+                        horas_demandadas -= disponibilidad.horas_disponibles
+                        disponibilidad.horas_disponibles = 0
+                        disponibilidad.save()
+
+            if horas_demandadas > 0:
+                proyecto.horas_demandadas = horas_demandadas
+                proyecto.save()
+
+        if semana == 52:
+            for proyecto in proyectos:
+                if proyecto.horas_demandadas > 0:
+                    print(f'Proyecto {proyecto.nombre} tiene {proyecto.horas_demandadas} horas pendientes después de la semana 52.')
+
+    # Mensaje final basado en lo que ocurrió
+    if asignacion_realizada and not asignacion_previa_detectada:
+        return "Asignación de recursos realizada con éxito."
+    elif asignacion_previa_detectada:
+        return "Asignaciones ya existen para algunos o todos los recursos en estas semanas."
+    else:
+        return "No se pudo realizar la asignación."
+    
+def asignaciones_list(request):
+    """
+    Vista que muestra la lista de asignaciones en una tabla paginada.
+    """
+
+    # Obtener todas las asignaciones
+    asignaciones = Asignacion.objects.all().order_by('semana')
+
+    # Configurar el paginador para mostrar 10 asignaciones por página
+    paginator = Paginator(asignaciones, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Calcular el rango de páginas para mostrar en la interfaz
+    num_pages = paginator.num_pages
+    current_page = page_obj.number
+    start_page = max(current_page - 5, 1)
+    end_page = min(current_page + 5, num_pages)
+
+    # Crear una lista de páginas visibles
+    page_range = list(range(start_page, end_page + 1))
+
+    data = {'asignaciones':page_obj, 'num_pages':num_pages, 'current_page':current_page, 'page_range':page_range}
+    # Renderizar el template con las asignaciones paginadas
+    return render(request, 'core/asignaciones_list.html', data)
+
+
+def asignaciones_data(request):
+    # Definir el orden por defecto
+    order_column = request.GET.get('order[0][column]', 0)  # Obtiene el índice de la columna a ordenar
+    order_dir = request.GET.get('order[0][dir]', 'asc')  # Obtiene el orden (ascendente o descendente)
+    
+    # Mapear el índice de la columna a los nombres de los campos del modelo
+    columns = [
+        'proyecto__nombre',
+        'recurso__nombre',
+        'semana',
+        'horas_asignadas'
+    ]
+    
+    # Obtener el campo por el que ordenar
+    order_field = columns[int(order_column)]
+    
+    # Realizar la consulta con ordenación
+    asignaciones = Asignacion.objects.all().select_related('proyecto', 'recurso').values(
+        'proyecto__nombre', 'recurso__nombre', 'semana', 'horas_asignadas'
+    ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
+
+    # Configurar la paginación
+    paginator = Paginator(asignaciones, request.GET.get('length', 10))
+    page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
+    page_obj = paginator.get_page(page_number)
+
+    # Preparar la respuesta JSON
+    data = {
+        'draw': int(request.GET.get('draw', 1)),
+        'recordsTotal': paginator.count,
+        'recordsFiltered': paginator.count,
+        'data': list(page_obj)
+    }
+
+    return JsonResponse(data)
+
+
+# Proyectos
+def proyectos_data(request):
+    proyectos = Proyecto.objects.all().values(
+        'nombre', 'duracion_semanas', 'horas_demandadas', 'tipo_proyecto__prioridad', 'rol_requerido'
+    )
+    paginator = Paginator(proyectos, request.GET.get('length', 10))
+    page_number = request.GET.get('start', 1)
+    page_obj = paginator.get_page(int(page_number) // paginator.per_page + 1)
+    data = {
+        'draw': int(request.GET.get('draw', 1)),
+        'recordsTotal': paginator.count,
+        'recordsFiltered': paginator.count,
+        'data': list(page_obj)
+    }
+    return JsonResponse(data)
+
+
+# Recursos
+def recursos_asignados_data(request):
+    # Realizamos una agregación de las horas asignadas por proyecto y semana
+    asignaciones = Asignacion.objects.values(
+        'proyecto__nombre',  # Nombre del proyecto
+        'semana',  # Número de la semana
+    ).annotate(
+        total_horas_semanales=Sum('horas_asignadas')  # Suma de las horas asignadas por semana
+    )
+
+    # Implementamos paginación de resultados
+    paginator = Paginator(asignaciones, request.GET.get('length', 10))
+    page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
+    page_obj = paginator.get_page(page_number)
+
+    # Estructura de datos para enviar a DataTables
+    data = {
+        'draw': int(request.GET.get('draw', 1)),
+        'recordsTotal': paginator.count,
+        'recordsFiltered': paginator.count,
+        'data': list(page_obj)
+    }
+
+    return JsonResponse(data)
+
+
+# Configuración de logging
+logger = logging.getLogger(__name__)
+
+def ejecutar_asignacion(request):
+    if request.method == 'POST':
+        try:
+            control, created = AsignacionControl.objects.get_or_create(id=1)  # Usa un único registro para controlar
+            mensaje = ""
+
+            if not created:
+                # Si ya existe un registro, verifica si se realizó una ejecución hoy
+                if control.fecha_ultimo_ejecucion == datetime.today():
+                    logger.warning("Intento de ejecutar la asignación más de una vez en el mismo día.")
+                    return HttpResponse("La asignación ya ha sido ejecutada hoy.", status=400)
+
+            # Ejecutar la asignación de recursos y capturar el mensaje de retorno
+            mensaje_asignacion = asignar_recursos()
+
+            # Si la asignación fue exitosa o parcial, actualiza el registro de control
+            if "éxito" in mensaje_asignacion or "ya existen" in mensaje_asignacion:
+                control.ejecuciones_exitosas += 1
+                control.fecha_ultimo_ejecucion = datetime.today()
+                control.save()
+
+            mensaje = mensaje_asignacion
+
+        except IntegrityError as e:
+            # Manejar errores de integridad (claves duplicadas, etc.)
+            control.ejecuciones_fallidas += 1
+            control.save()
+            logger.error(f"Error de integridad en la asignación: {e}")
+            mensaje = f"Error de integridad: {str(e)}"
+            return HttpResponse(mensaje, status=500)
+
+        except OperationalError as e:
+            # Manejar errores operacionales, como problemas de conexión a la base de datos
+            control.ejecuciones_fallidas += 1
+            control.save()
+            logger.critical(f"Error operacional durante la asignación: {e}")
+            mensaje = f"Error operacional: {str(e)}"
+            return HttpResponse(mensaje, status=500)
+
+        except DatabaseError as e:
+            # Manejar cualquier otro error relacionado con la base de datos
+            control.ejecuciones_fallidas += 1
+            control.save()
+            logger.error(f"Error de base de datos: {e}")
+            mensaje = f"Error de base de datos: {str(e)}"
+            return HttpResponse(mensaje, status=500)
+
+        except Exception as e:
+            # Manejar cualquier otra excepción inesperada
+            control.ejecuciones_fallidas += 1
+            control.save()
+            logger.exception(f"Error inesperado en la asignación: {e}")
+            mensaje = f"Error inesperado: {str(e)}"
+            return HttpResponse(mensaje, status=500)
+
+        # Asegúrate de devolver una respuesta con el mensaje adecuado
+        return HttpResponse(mensaje, status=200)
+
+    return HttpResponse(status=405)  # Método no permitido
+
+
+def eliminar_asignaciones(request):
+    """
+    Vista para eliminar todas las asignaciones actuales.
+    """
+    if request.method == 'POST':
+        # Eliminar todas las asignaciones
+        Asignacion.objects.all().delete()
+
+        # Redirigir o devolver una respuesta de éxito
+        return redirect('asignaciones_list')  # Redirige a la página de asignaciones
+
+    return HttpResponse(status=405)  # Devuelve un error si no es un POST

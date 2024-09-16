@@ -160,7 +160,7 @@
                 <li class="nav-item">
                   <a data-bs-toggle="collapse" href="#forms">
                     <i class="fa fa-folder-open" aria-hidden="true"></i>
-                    <p>Carga de horas</p>
+                    <p>Asignaciones</p>
                     <span class="caret"></span>
                   </a>
                   <div class="collapse" id="forms">
@@ -174,7 +174,12 @@
                           <a href="{% url 'graficar_Datos' %}">
                             <span class="sub-item">Ver Diagramas</span>
                           </a>
-                        </li>
+                      </li>
+                      <li>
+                        <a href="{% url 'asignaciones_list' %}">
+                          <span class="sub-item">Asignaciones</span>
+                        </a>
+                      </li>
                     </ul>
                   </div>
                 </li>
@@ -449,7 +454,7 @@ document.getElementById('btn-utilizacion').addEventListener('click', function(e)
 
               // Cada minuto equivale a 60000
               // Tiempo en milisegundos antes de mostrar el modal (ej. 4 minutos) [mostrar modal]
-              warningTime = setTimeout(showModal, 84000);  // 14 minutos
+              warningTime = setTimeout(showModal, 840000);  // 14 minutos
 
               // Tiempo total de inactividad (modal más tiempo de espera para logout)
               time = setTimeout(logout, 900000);  // 15 minutos
