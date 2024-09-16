@@ -951,10 +951,8 @@ def cluster(request):
         return redirect(iniciar_sesion)
     
     data = {}
-    print('Hola mi nombre es Gogiga gagagigo')
     if(request.method == 'POST'):
         clusterizacion = realizar_clusterizacion
-    
         if(clusterizacion):
             data = {'mesg':'Se ha realizado la clusterización'}
         else:
