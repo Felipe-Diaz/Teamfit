@@ -953,7 +953,6 @@ def cluster(request):
     data = {}
     if(request.method == 'POST'):
         clusterizacion = realizar_clusterizacion
-    
         if(clusterizacion):
             data = {'mesg':'Se ha realizado la clusterización'}
         else:
