@@ -966,6 +966,7 @@ def cluster2_testing(request):
     
     data = {}
     if(request.method == 'POST'):
+        print('Nanananana')
         clusterizacion = realizar_clusterizacion
         if(clusterizacion):
             data = {'mesg':'Se ha realizado la clusterización'}
