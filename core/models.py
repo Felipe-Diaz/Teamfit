@@ -116,6 +116,34 @@ class Parametro(models.Model):
         return self.nombre_parametro
     
     
+class HorasPredecidas(models.Model):
+    linea_negocio = models.CharField(max_length=10, blank=False, null=False, verbose_name='Linea de Negocio')
+    tipo = models.CharField(max_length=255, blank=False, null=False, verbose_name='Tipo')
+    rol = models.CharField(max_length=50, blank=False, null=False, verbose_name='Rol')
+    hh_max = models.FloatField(null=False, blank=False, default=0, verbose_name='Horas Hombre Max')
+    hh_prom = models.FloatField(null=False, blank=False, default=0, verbose_name='Horas Hombre Prom')
+    hh_min = models.FloatField(null=False, blank=False, default=0, verbose_name='Horas Hombre Min')
+    cluster = models.IntegerField(null=False, blank=False, default=0, verbose_name='Cluster')
+    
+    class Meta:
+        db_table = 'HORAS_PREDECIDAS'
+        
+    def __str__(self):
+        return self.linea_negocio + ' - ' + self.tipo + ' - ' + self.rol
+    
+class proyectosSemanas(models.Model):
+    proyecto = models.ForeignKey(proyectosAAgrupar, on_delete=models.DO_NOTHING)
+    horas = models.ForeignKey(HorasPredecidas, on_delete=models.DO_NOTHING)
+    semana = models.IntegerField(null=False, blank=False, default=0, verbose_name='Semana del proyecto')
+    tipoSemana = models.CharField(max_length=50, blank=False, null=False, verbose_name='Tipo de Semana')
+    
+    class Meta:
+        db_table = 'SEMANA_PROYECTOS'
+    
+    def __str__(self):
+        return str(self.semana) + ' - ' + str(self.proyecto)
+    
+
 ### MODELOS GRUPO 2 - ESCRIBIR MODELOS DE ACÁ HACIA ABAJO
     
     

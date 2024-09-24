@@ -15,18 +15,16 @@ Cluster
 <!-- Head -->
 {% block estiloHead %}
 {% endblock estiloHead %}
+
 <!-- Body -->
 {% block content %}
-    <div class="container">
+    <!-- <div class="container">
         <div class="card">
-            <h3>
-                Cluster
-            </h3>
         </div>
         <div>
             <form method="POST">
                 {% csrf_token %}
-                <!-- <button class="btn btn-primary">Iniciar Cluster</button> -->
+                <button class="btn btn-primary">Iniciar Cluster</button>
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Subir archivo</button>
                 </div>
@@ -34,10 +32,143 @@ Cluster
         </div>
         <div class="text-center">
             <h3><strong>{{mesg}}</strong></h3>
+        </div> -->
+
+<!-- Tabla con filtro de datos incluido -->
+<div class="row">
+    <div class="col-md-12">
+    <br>
+    <br>
+    <br>
+    <br>
+        <div class="card">
+            <div class="card-body">
+                <div class="col-md-2">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <!-- <button class="btn btn-primary">Iniciar Cluster</button> -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Realizar clusterizacion</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="text-center">
+                    <h3><strong>{{mesg}}</strong></h3>
+                </div>
+                <div class="table-responsive">
+                <table id="multi-filter-select" class="display table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Proyecto</th>
+                            <th>Linea de trabajoTipo</th>
+                            <th>Tipo</th>
+                            <th>Semana</th>
+                            <th>Tipo de semana</th>
+                            <th>HH Max</th>
+                            <th>HH Prom</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            {% for p in proyectos %}
+                            <tr class="project-row">
+                                <td>{{ p.proyecto.id }}</td>
+                                <td>{{ p.proyecto.proyecto }}</td>
+                                <td>{{ p.proyecto.lineaNegocio }}</td>
+                                <td>{{ p.proyecto.tipo }}</td>
+                                <td>{{ p.semana }}</td>
+                                <td>{{ p.tipoSemana }}</td>
+                                <td>{{ p.horas.hh_max }}</td>
+                                <td>{{ p.horas.hh_prom }}</td>
+                            </tr>
+                            {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
         </div>
     </div>
+</div>
+    <!-- </div> -->
+
+    <!-- {% for p in proyectos %}
+    <tr>
+        <td>{{ p.proyecto.proyecto }}</td>
+        <td>{{ p.proyecto.lineaNegocio }}</td>
+        <td>{{ p.proyecto.tipo }}</td>
+        <td>{{ p.semana }}</td>
+        <td>{{ p.tipoSemana }}</td>
+        <td>{{ p.horas.hh_max }}</td>
+        <td>{{ p.horas.hh_prom }}</td>
+    </tr>
+    {% endfor %} -->
 {% endblock content %}
 
 <!-- Javascript -->
 {% block UJS %}
+<script>
+	$(document).ready(function () {
+// Configuración básica de la tabla
+$("#basic-datatables").DataTable({});
+
+// Configuración de la tabla con filtros múltiples
+$("#multi-filter-select").DataTable({
+	pageLength: 10,
+	initComplete: function () {
+	this.api()
+		.columns()
+		.every(function () {
+		var column = this;
+		// Filtra solo las columnas relevantes
+		if (column.index() >= 2 && column.index() <= 4) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)
+			var select = $(
+			'<select class="form-select"><option value=""></option></select>'
+			)
+			.appendTo($(column.footer()).empty())
+			.on("change", function () {
+				var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+				column
+				.search(val ? "^" + val + "$" : "", true, false)
+				.draw();
+			});
+
+			column
+			.data()
+			.unique()
+			.sort()
+			.each(function (d, j) {
+				select.append(
+				'<option value="' + d + '">' + d + "</option>"
+				);
+			});
+		} else {
+			$(column.footer()).empty(); // Limpiar pie de columna no relevante
+		}
+		});
+	},
+});
+
+// Configuración de la tabla para agregar filas
+$("#add-row").DataTable({
+	pageLength: 10,
+});
+
+// Acción para agregar una fila
+var action =
+	'<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+$("#addRowButton").click(function () {
+	$("#add-row")
+	.dataTable()
+	.fnAddData([
+		$("#addName").val(),
+		$("#addPosition").val(),
+		$("#addOffice").val(),
+		action,
+	]);
+	$("#addRowModal").pmodal("hide");
+});
+});
+</script>
 {% endblock UJS %}

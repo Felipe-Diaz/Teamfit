@@ -1,7 +1,8 @@
 from django.shortcuts import redirect, render, get_object_or_404, redirect
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
 from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User
-from .models import Proyecto, Recurso, Disponibilidad, Asignacion, AsignacionControl
+from .models import Proyecto, Recurso, Disponibilidad, Asignacion, AsignacionControl, HorasPredecidas
+from .models import proyectosSemanas
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from .forms import proyectosForm, CategoriasForm , UsuarioForm
 from .forms import CATEGORIAS_MAPPING
@@ -470,7 +471,8 @@ def pagina_principal(request):
             "Limpieza de datos",     # C1
             "Agregó Proyectos",      # E1
             "Agregó usuario",        # E2
-            "Elimino usuario",       # E3
+            "Desactivo usuario",     # E3
+            "Activo usuario",        # E4
             "Cambio un cargo",       # F1
             "Actualizó permisos"     # F2
             ]
@@ -546,7 +548,8 @@ def obtener_subcategorias():
     "D1": "Errores",
     "E1": "Agregó Proyectos",
     "E2": "Agregó usuario",
-    "E3": "Elimino usuario",
+    "E3": "Desactivo usuario",
+    "E4": "Activo usuario",
     "F1": "Cambio un cargo",
     "F2": "Actualizó permisos",
     "G1": "Realizó la clusterización"
@@ -580,6 +583,7 @@ def obtener_prioridades():
         "E1": "2",
         "E2": "3",
         "E3": "3",
+        "E4": "3",
         "F1": "3",
         "F2": "3",
         "F3": "2",
@@ -674,6 +678,12 @@ def editar_usuario(request, id):
             pusuario.cargo = form.cleaned_data['cargo']
             pusuario.save()
 
+            if(usuario.is_active):
+                usuario.is_active = True
+                user = request.user
+                cat = {'Cat':'E','Sub':'4'}
+                almacenado = almacenarHistorial(cat, user)
+
             messages.success(request, 'Usuario actualizado correctamente')
             return redirect('verUsuarios')  # Redirige de vuelta a la lista de usuarios
         else:
@@ -736,7 +746,9 @@ def eliminarUsuarios(request, id):
     usuarios = PerfilUsuario.objects.all().values('cargo',
                                                   'user__username','user__first_name','user__last_name',
                                                   'user__email','user__is_staff', 'user__is_active', 'user')
-    
+    cargos_dict = dict(UsuarioForm.CARGOS)
+    for usuario in usuarios:
+        usuario['cargo'] = cargos_dict.get(usuario['cargo'], usuario['cargo'])
     data = {'messages':messages, 'usuarios':usuarios, 'merror':merror}
     return render (request, 'core/verUsuarios.html', data)
 
@@ -951,13 +963,17 @@ def cluster(request):
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
     
-    data = {}
+    proyectos = HorasPredecidas.objects.all()
+    proyectos_data = {'proyectos':proyectos}
+    proyectos = proyectosSemanas.objects.select_related('proyecto', 'horas').all()
+    
+    data = {'proyectos':proyectos}
     if(request.method == 'POST'):
         clusterizacion = realizar_clusterizacion
         if(clusterizacion):
-            data = {'mesg':'Se ha realizado la clusterización'}
+            data['mesg'] = 'Se ha realizado la clusterización'
         else:
-            data = {'mesg':'No se ha realizado la clusterización'}
+            data['mesg'] = 'No se ha realizado la clusterización'
         
     return render(request, "core/cluster.html", data)
     
@@ -967,8 +983,7 @@ def cluster(request):
 ##  Esto significa que NO deben escribir arriba, A MENOS que sea necesario (PARAMETROS)
 ##  De otra forma, solo escriben acá
 ##  Si, acá 
-##  Espero se haya entendido
-
+##  Espero se haya entendido, (No entendi)
 
 
 def asignar_recursos():

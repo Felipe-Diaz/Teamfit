@@ -259,8 +259,12 @@
                       />
                     </div>
                     <span class="profile-username">
-                      <span class="op-7">Hola,</span>
-                      <span class="fw-bold">{{ user.first_name}}</span>
+                      {% if user.perfilusuario %}
+                      <div>{{ user.perfilusuario.cargo }}</div>
+                      {% else %}
+                      <div>Cargo no disponible</div>
+                      {% endif %}
+                      <span class="fw-bold">{{ user.first_name}} {{ user.last_name}}</span>
                     </span>
                   </a>
                   <ul class="dropdown-menu dropdown-user animated fadeIn">

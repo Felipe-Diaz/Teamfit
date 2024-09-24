@@ -157,6 +157,23 @@ class UsuarioForm(forms.ModelForm):
         widget=forms.Select(attrs={'class':'form-control'}),
         label="Cargo"
     )
+    
+    is_staff = forms.BooleanField(
+        required=False,
+        widget=forms.HiddenInput(),
+        label="Es Staff"  # No se mostrará, ya que es un campo oculto
+    )
+    def clean(self):
+        cleaned_data = super().clean()
+        cargo = cleaned_data.get('cargo')
+        
+        # Asigna is_staff según el cargo seleccionado
+        if cargo == '1':  # Administrador
+            cleaned_data['is_staff'] = True
+        else:
+            cleaned_data['is_staff'] = False
+        
+        return cleaned_data
 
     def __init__(self, *args, **kwargs):
         perfil_usuario = kwargs.pop('perfil_usuario', None)
@@ -199,7 +216,7 @@ class UsuarioForm(forms.ModelForm):
     
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'is_active']
+        fields = ['first_name', 'last_name', 'email', 'is_active', 'is_staff']
 
 #Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.
 class proyectosForm(forms.Form):
