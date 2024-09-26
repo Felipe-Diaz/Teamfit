@@ -70,12 +70,11 @@ class DispForm(forms.Form):
 #Formulario para subir archivos 
 
 class UploadFileForm(forms.Form):
-    file = forms.FileField( label='Selecciona un archivo CSV o XLSX',
-                            help_text=' <br> Solo se permiten archivos CSV y XLSX',
+    file = forms.FileField( label='<h2>Papitas</h2>',
+                            help_text='Solo se permiten archivos CSV y XLSX',
                             widget=forms.ClearableFileInput(attrs={
                             'accept': '.csv, .xlsx',
-                            'class':'custom-button',
-                            'style': 'background-color: var(--junily-white);',
+                            'class':'custom-file',
                             'placeholder': 'Selecciona un archivo'}))
     class Meta:
         fields = ['file']
@@ -279,7 +278,8 @@ CATEGORIAS_MAPPING = {
     'E': 'auditoria',
     'E1': 'quien_agrego_documentos',
     'E2': 'quien_agrego_usuario',
-    'E3': 'quien_elimino_usuario',
+    'E3': 'quien_desactivo_usuario',
+    'E4': 'quien_activo_usuario',
     'F': 'seguridad',
     'F1': 'cambio_de_cargo',
     'F2': 'actualizacion_permisos',
@@ -327,7 +327,8 @@ class CategoriasForm(forms.Form):
     auditoria = forms.BooleanField(required=False, label="Auditoría", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
     quien_agrego_documentos = forms.BooleanField(required=False, label="Quien agregó documentos", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
     quien_agrego_usuario = forms.BooleanField(required=False, label="Quién agregó usuario", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
-    quien_elimino_usuario = forms.BooleanField(required=False, label="Quien eliminó usuario", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    quien_desactivo_usuario = forms.BooleanField(required=False, label="Quien desactivó usuarios", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    quien_activo_usuario = forms.BooleanField(required=False, label="Quien activó usuarios", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
     
     # Seguridad
     seguridad = forms.BooleanField(required=False, label="Seguridad", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
@@ -338,12 +339,58 @@ class CategoriasForm(forms.Form):
     # Modelo
     modelo = forms.BooleanField(required=False, label="Modelo", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
     realizacion_clusterizacion = forms.BooleanField(required=False, label="Realización de la clusterización", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
-    
+
     def get_field_by_code(self, code):
         field_name = CATEGORIAS_MAPPING.get(code)
         if field_name:
             return self[field_name]
         return None
     
+PROGRAMACION_MAPPING = {
+    'A1': 'diario',
+    'A2': 'semanal',
+    'A3': 'mensual',
+    'B1': 'lunes',
+    'B2': 'martes',
+    'B3': 'miercoles',
+    'B4': 'jueves',
+    'B5': 'viernes',
+    'B6': 'sabado',
+    'B7': 'domingo',
+    #'hora': 'hora',
+    #'minutos': 'minutos',
+}
 
+class ProgramacionForm(forms.Form):
+    # Programacion
+    # Frecuencia
+    diario = forms.BooleanField(required=False, label="Diario", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    semanal = forms.BooleanField(required=False, label="Semanal", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    mensual = forms.BooleanField(required=False, label="Mensual", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
 
+    # Dia
+    lunes = forms.BooleanField(required=False, label="Lunes", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    martes = forms.BooleanField(required=False, label="Martes", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    miercoles = forms.BooleanField(required=False, label="Miercoles", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    jueves = forms.BooleanField(required=False, label="Jueves", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    viernes = forms.BooleanField(required=False, label="Viernes", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    sabado = forms.BooleanField(required=False, label="Sabado", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    domingo = forms.BooleanField(required=False, label="Domingo", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+
+    # Hora y Minutos
+    hora = forms.ChoiceField(
+        choices=[(h, f"{h:02d}") for h in range(24)],
+        label="Hora",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    minutos = forms.ChoiceField(
+        choices=[(m, f"{m:02d}") for m in [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]],
+        label="Minutos",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    def get_field_by_code(self, code):
+        field_name = PROGRAMACION_MAPPING.get(code)
+        if field_name:
+            return self[field_name]
+        return None

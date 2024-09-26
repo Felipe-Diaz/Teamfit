@@ -243,56 +243,65 @@
                 {% block titulo %}
                 {% endblock titulo %}
               </h2>
-              <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
-                <li class="nav-item topbar-user dropdown hidden-caret">
-                  <a
-                    class="dropdown-toggle profile-pic"
-                    data-bs-toggle="dropdown"
-                    href="#"
-                    aria-expanded="false"
-                  >
-                    <div class="avatar-sm">
-                      <img
-                        src="{% static 'core/img/Template/profile.jpg' %}"
-                        alt="..."
-                        class="avatar-img rounded-circle"
-                      />
-                    </div>
-                    <span class="profile-username">
-                      {% if user.perfilusuario %}
-                      <div>{{ user.perfilusuario.cargo }}</div>
-                      {% else %}
-                      <div>Cargo no disponible</div>
-                      {% endif %}
-                      <span class="fw-bold">{{ user.first_name}} {{ user.last_name}}</span>
-                    </span>
-                  </a>
-                  <ul class="dropdown-menu dropdown-user animated fadeIn">
-                    <div class="dropdown-user-scroll scrollbar-outer">
-                      <li>
-                        <div class="user-box">
-                          <div class="avatar-lg">
-                            <img
-                              src="{% static 'core/img/Template/profile.jpg'%}"
-                              alt="image profile"
-                              class="avatar-img rounded"
-                            />
+              <div class="dropdown">
+                <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                  <li class="nav-item topbar-user dropdown">
+                    <a
+                      class="dropdown-toggle profile-pic"
+                      data-bs-toggle="dropdown"
+                      href="#"
+                      aria-expanded="false"
+                    >
+                      <div class="avatar-sm">
+                        <img
+                          src="{% static 'core/img/Template/profile.jpg' %}"
+                          alt="..."
+                          class="avatar-img rounded-circle"
+                        />
+                      </div>
+                      <span class="profile-username">
+                        {% if user.perfilusuario %}
+                          {% if user.perfilusuario.cargo == '1' %}
+                          <div>Administrador</div>
+                          {% elif user.perfilusuario.cargo == '2' %}
+                          <div>Jefe de Proyecto</div>
+                          {% elif user.perfilusuario.cargo == '3' %}
+                          <div>Ingeniero de Proyecto</div>
+                          {% endif %}
+                        <!-- <div>{{ user.perfilusuario.cargo }}</div> -->
+                        {% else %}
+                        <div>Cargo no disponible</div>
+                        {% endif %}
+                        <span class="fw-bold">{{ user.first_name}} {{ user.last_name}}</span>
+                      </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user animated fadeIn">
+                      <div class="dropdown-user-scroll scrollbar-outer">
+                        <li>
+                          <div class="user-box">
+                            <div class="avatar-lg">
+                              <img
+                                src="{% static 'core/img/Template/profile.jpg'%}"
+                                alt="image profile"
+                                class="avatar-img rounded"
+                              />
+                            </div>
+                            <div class="u-text">
+                              <h4>{{ user.first_name}} {{user.last_name}}</h4>
+                              <p class="text-muted">{{user.email}}</p>
+                              {% if user.is_authenticated %}
+                              <a
+                                class="btn btn-xs btn-secondary" btn-sm href="{% url 'logout' %}"
+                                >Cerrar sesión</a>
+                                {% endif %}
+                            </div>
                           </div>
-                          <div class="u-text">
-                            <h4>{{ user.first_name}} {{user.last_name}}</h4>
-                            <p class="text-muted">{{user.email}}</p>
-                            {% if user.is_authenticated %}
-                            <a
-                              class="btn btn-xs btn-secondary" btn-sm href="{% url 'logout' %}"
-                              >Cerrar sesión</a>
-                              {% endif %}
-                          </div>
-                        </div>
-                      </li>
-                    </div>
-                  </ul>
-                </li>
-              </ul>
+                        </li>
+                      </div>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
             </div>
           </nav>
         </div>

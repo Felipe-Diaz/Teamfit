@@ -7,14 +7,19 @@ Teamfit - Subir Proyectos
 Subir Proyectos
 {% endblock titulo %}
 {% block estiloHead %}
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<!-- asdasd -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<!-- asdasd -->
+
+
 <style>
 	:root {
-		--junily-black: #333333;
-		--junily-white: #808080;
+		--junily-black: #f0f0f0;
+		--junily-white: #8d6d9f;
 	}
 
 	.container_a {
@@ -31,23 +36,23 @@ Subir Proyectos
 		justify-content: center;
 		align-items: center;
 		width: 600px;
-		margin-bottom: 20px; /* Espacio entre el formulario y el cuadro */
+		margin-bottom: 20px;
 	}
 
 	.box {
 		width: 80%;
 		height: 20%;
-		border: 3px dotted var(--junily-black); /* Línea punteada */
+		border: 3px dashed var(--junily-white); /* Línea punteada */
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		position: relative;
-		background-color: #f5f5dc; /* Color de fondo similar al de la imagen */
+		background-color: var(--junily-black); /* Color de fondo similar al de la imagen */
 	}
 
 	.custom-button {
 		color: #fff;
-		border: 1px solid var(--junily-black);
+		border: 1px solid var(--junily-white);
 		padding: 10px 20px;
 		border-radius: 5px;
 		font-size: 16px;
@@ -57,28 +62,35 @@ Subir Proyectos
 	.custom-button:hover {
 	  	background-color: #0056b3;
 	}
-  </style>
+</style>
 
 {% endblock estiloHead %}
 
 <!-- Contenido -->
 {% block content %}
-<br>
-<div class="container">
+<div class="container position-absolute top-50 start-50 translate-middle">
   	<p class="text-center">
     Agregue los proyectos de forma manual, para predecir la carga de horas de<br>
     su equipo profesional en base a la estimación de ventas.
   	</p>
-  <div class="container_a">
+  	<div class="container_a">
     {% if not showTableOdoo %}
 		<div class="box">
-	  		<div class="text-center mb-4">
-			<br>
-				<form method="post" enctype="multipart/form-data">
-		  		{% csrf_token %}
-		  		{{ form }}
-		  		<br>
-		  		<button type="submit" class="btn btn-primary">Subir archivo</button>
+	  		<div class="text-center mb-4"><br>
+				<span><img src="{% static 'core/img/upload.png' %}" alt=""></span>
+				
+				<form class="mt-4" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				{{ form.file }}
+				<label for="{{ form.file.id_for_label }}"><br>
+					<h5>Arraste y suelte el archivo</h5>
+					<p>Puede cargar un archivo manualmente desde su computador</p>
+					<p style="color: #3858c3;">Solo se pueden cargar archivos en formato CSV o XLSX.</p>
+				</label>
+				
+				<br><br>
+				<button type="submit" class="btn btn-primary" data-bs-toggle="tooltip"
+				data-bs-placement="left" title="Solo se permiten archivos CSV y XLSX">Subir archivo</button>
 				</form>
 
 				{% if merror %}
@@ -88,20 +100,21 @@ Subir Proyectos
 		  		{% endfor %}
 				{% endif %}
 			</div>
-    </div>
+    	</div>
     {% else %}
-    <a href="{% url 'subirProyectos' %}">Para subir un proyecto a través del sistema. Por favor, regrese a la página anterior</a>
+		<div>
+			<a href="{% url 'subirProyectos' %}">Para subir un proyecto a del sistema. Por favor, regrese a la página anterior</a>
+		</div>
     {% endif %}
-		<br>
-  		<div class="text-center hb">
-			<p class="text-center">Solicitar proyectos de Odoo</p>
-	  	<a id="#dataTable" class="btn btn-primary" href="{% url 'consul_api' %}">
-		    Consultar proyectos
-      </a>
-  		</div>
-  		<br>
+		<section class="justify-content-center"><br>
+			<div class="text-center hb">
+				<span><img style="width: 100px;" src="{% static 'core/img/odoo.png' %}" alt=""></span>
+				<p class="text-center">Solicitar proyectos de Odoo</p>
+				<a id="#dataTable" class="btn btn-primary" href="{% url 'consul_api' %}">Consultar proyectos</a>
+			</div>
+		</section>
 	</div>
-
+</div>
 
 <!-- Modal -->
 <div class="modal fade bd-example-modal-lg" id="dataModal" tabindex="-1" role="dialog" aria-labelledby="dataModalLabel" aria-hidden="true">
@@ -217,13 +230,13 @@ Subir Proyectos
         </div>
         {% endif %}
       </div>
-      <div class="modal-footer d-flex justify-content-center">
-					<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Volver</button>
-          <form method="post" action="{% url 'consul_api' %}">
-            {% csrf_token %}
-					  <button type="submit" name="action" value="add" class="btn btn-success">Subir Proyectos</button>
-          </form>
-			</div>
+      	<div class="modal-footer d-flex justify-content-center">
+			<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Volver</button>
+			<form method="post" action="{% url 'consul_api' %}">
+			{% csrf_token %}
+				<button type="submit" name="action" value="add" class="btn btn-success">Subir Proyectos</button>
+			</form>
+		</div>
     </div>
   </div>
 </div>
@@ -296,8 +309,9 @@ $(document).ready(function () {
 	pageLength: 5,
   });
 
+
   var action =
-	'<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+	'<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="Selecciona un archivo csv o xlsx" class="btn btn-secondary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
 
   $("#addRowButton").click(function () {
 	$("#add-row")
@@ -332,13 +346,12 @@ $(document).ready(function () {
 			}
 		}
 	});
-  </script>
-  <script>
+</script>
+<script>
 	$(document).ready(function(){
 	  $('[data-toggle="tooltip"]').tooltip({
 		html: true
 	  });
 	});
-  </script>
-
+</script>
 {% endblock UJS %}

@@ -123,6 +123,7 @@ class HorasPredecidas(models.Model):
     hh_max = models.FloatField(null=False, blank=False, default=0, verbose_name='Horas Hombre Max')
     hh_prom = models.FloatField(null=False, blank=False, default=0, verbose_name='Horas Hombre Prom')
     hh_min = models.FloatField(null=False, blank=False, default=0, verbose_name='Horas Hombre Min')
+    tipo_semana = models.CharField(max_length=20 ,null=True, blank=True, default='Intermedio', verbose_name='Tipo de Semana')
     cluster = models.IntegerField(null=False, blank=False, default=0, verbose_name='Cluster')
     
     class Meta:

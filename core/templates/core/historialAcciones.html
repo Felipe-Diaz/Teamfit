@@ -21,9 +21,12 @@ Historial del Sistema
                     <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                 {% endfor %}
               {% endif %}
+
+
               <form action="{% url 'eliminar_historial' %}" method="post" class="col-md-3 offset-md-10">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Eliminar Datos</button>
+                
               </form>
             </div>
             <div class="card-body">
@@ -45,10 +48,16 @@ Historial del Sistema
                                 <td>{{ val.idHist }}</td>
                                 <td>{{ val.fecha }}</td>
                                 <td>{{ val.categoria }}</td>
-                                {% if val.prioridad == 3 %}
-                                <td style="color: red; border-right: 5px solid red;">{{ val.subcategoria }}</td>
+                                {% if val.prioridad == 1 %}
+                                <td><span class="badge rounded-pill bg-info-subtle normal">{{ val.subcategoria }}</span></td>
+                                {% elif val.prioridad == 2 %}
+                                <td><span class="badge rounded-pill bg-success-subtle listo">{{ val.subcategoria }}</span></td>
+                                {% elif val.prioridad == 3 %}
+                                <td><span class="badge rounded-pill bg-warning-subtle control">{{ val.subcategoria }}</span></td>
+                                {% elif val.prioridad == 4 %}
+                                <td><span class="badge rounded-pill bg-danger-subtle importante">{{ val.subcategoria }}</span></td>
                                 {% else %}
-                                <td>{{ val.subcategoria }}</td>
+                                <td><span class="badge rounded-pill bg-secondary-subtle detalle">{{ val.subcategoria }}</span></td>
                                 {% endif %}
                                 
                                 <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>

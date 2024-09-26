@@ -18,21 +18,6 @@ Cluster
 
 <!-- Body -->
 {% block content %}
-    <!-- <div class="container">
-        <div class="card">
-        </div>
-        <div>
-            <form method="POST">
-                {% csrf_token %}
-                <button class="btn btn-primary">Iniciar Cluster</button>
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary">Subir archivo</button>
-                </div>
-            </form>
-        </div>
-        <div class="text-center">
-            <h3><strong>{{mesg}}</strong></h3>
-        </div> -->
 
 <!-- Tabla con filtro de datos incluido -->
 <div class="row">
@@ -46,7 +31,6 @@ Cluster
                 <div class="col-md-2">
                     <form method="POST">
                         {% csrf_token %}
-                        <!-- <button class="btn btn-primary">Iniciar Cluster</button> -->
                         <div class="text-center">
                             <button type="submit" class="btn btn-primary">Realizar clusterizacion</button>
                         </div>
@@ -61,10 +45,12 @@ Cluster
                         <tr>
                             <th>ID</th>
                             <th>Proyecto</th>
-                            <th>Linea de trabajoTipo</th>
+                            <th>Linea de trabajo</th>
                             <th>Tipo</th>
                             <th>Semana</th>
                             <th>Tipo de semana</th>
+                            <th>Rol</th>
+                            <th>HH Min</th>
                             <th>HH Max</th>
                             <th>HH Prom</th>
                         </tr>
@@ -78,6 +64,8 @@ Cluster
                                 <td>{{ p.proyecto.tipo }}</td>
                                 <td>{{ p.semana }}</td>
                                 <td>{{ p.tipoSemana }}</td>
+                                <td>{{ p.horas.rol }}</td>
+                                <td>{{ p.horas.hh_min }}</td>
                                 <td>{{ p.horas.hh_max }}</td>
                                 <td>{{ p.horas.hh_prom }}</td>
                             </tr>
@@ -89,19 +77,6 @@ Cluster
         </div>
     </div>
 </div>
-    <!-- </div> -->
-
-    <!-- {% for p in proyectos %}
-    <tr>
-        <td>{{ p.proyecto.proyecto }}</td>
-        <td>{{ p.proyecto.lineaNegocio }}</td>
-        <td>{{ p.proyecto.tipo }}</td>
-        <td>{{ p.semana }}</td>
-        <td>{{ p.tipoSemana }}</td>
-        <td>{{ p.horas.hh_max }}</td>
-        <td>{{ p.horas.hh_prom }}</td>
-    </tr>
-    {% endfor %} -->
 {% endblock content %}
 
 <!-- Javascript -->

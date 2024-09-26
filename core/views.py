@@ -4,8 +4,8 @@ from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario
 from .models import Proyecto, Recurso, Disponibilidad, Asignacion, AsignacionControl, HorasPredecidas
 from .models import proyectosSemanas
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
-from .forms import proyectosForm, CategoriasForm , UsuarioForm
-from .forms import CATEGORIAS_MAPPING
+from .forms import proyectosForm, CategoriasForm , UsuarioForm, ProgramacionForm
+from .forms import CATEGORIAS_MAPPING, PROGRAMACION_MAPPING
 from datetime import timedelta, datetime
 from django.core.paginator import Paginator
 import requests
@@ -20,6 +20,9 @@ from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 from .clusters_data import realizar_clusterizacion
 import logging
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
+from apscheduler.triggers.cron import CronTrigger
 from django.db import DatabaseError, IntegrityError, OperationalError
 
 # Create your views here.
@@ -574,7 +577,7 @@ def obtener_prioridades():
         "A2": "1",
         "A3": "1",
         "A4": "1",
-        "B1": "3",
+        "B1": "4",
         "B2": "3",
         "C1": "3",
         "C2": "3",
@@ -761,18 +764,37 @@ def ajuste_parametros(request):
     data = {}
     
     if request.method == 'POST':
-        form = CategoriasForm(request.POST)
-        if(form.is_valid()):
+        form_categorias = CategoriasForm(request.POST, prefix='categorias')
+        form_programacion = ProgramacionForm(request.POST, prefix='programacion')
+
+        if form_categorias.is_valid() and form_programacion.is_valid():
             try:
-                to_keep = obtener_campos_secundarios(form=form)
-                print(to_keep)
+                to_keep_categorias = obtener_campos_secundarios(form=form_categorias, tipo='Cat')
+
+                to_keep_programacion = obtener_campos_secundarios(form=form_programacion, tipo='Cron')
+
+                hora = int(form_programacion.cleaned_data['hora'])
+                minutos = int(form_programacion.cleaned_data['minutos'])
+                to_keep_programacion.append({'hora': hora, 'minutos': minutos})###
+                tiempo = {'hora':hora, 'minutos':minutos}
+                
+                
                 valor_parametro = {
-                    'valores_a_mantener':to_keep
+                    'valores_a_mantener': to_keep_categorias,
+                    'valores_programacion': to_keep_programacion,
+                    'tiempo':tiempo
                 }
+
                 parametro, created = Parametro.objects.update_or_create(
                     nombre_parametro='historial.mantener',
                     defaults={'valor': valor_parametro},
                 )
+
+                # scheduler = BackgroundScheduler()
+                # job = scheduler.get_job('perro')
+                # job.modify(trigger=CronTrigger(hour=hora, minute=minutos))
+                # print(f"Tarea actualizada a las {hora}:{minutos}.")
+                      
                 user = request.user
                 cat = {'Cat':'B','Sub':'1'}
                 almacenado = almacenarHistorial(cat, user)
@@ -789,16 +811,21 @@ def ajuste_parametros(request):
             mesg = 'Ha ocurrido un error. Por favor, verifique los campos correctamente o intentelo de nuevo más tarde.'
             merror.append(mesg)
             
-    form = obtener_valores_formulario_parametro(CategoriasForm())
-    data['form'] = form
+    form_categorias = obtener_valores_formulario_parametro(CategoriasForm(prefix='categorias'))
+    form_programacion = obtener_valores_formulario_parametro_programacion(ProgramacionForm(prefix='programacion'))
+
+    data['form_categorias'] = form_categorias
+    data['form_programacion'] = form_programacion
     data['messages'] = messages
     data['merror'] = merror
         
     return render(request, 'core/parameters.html',data)
 
-
-def obtener_campos_secundarios(form):
-    sub_cats = obtener_subcategorias()
+def obtener_campos_secundarios(form,tipo):
+    if(tipo == 'Cat'):
+        sub_cats = obtener_subcategorias()
+    elif(tipo == 'Cron'):
+        sub_cats = PROGRAMACION_MAPPING
     to_keep = []
     try:
         for val in sub_cats:
@@ -810,7 +837,6 @@ def obtener_campos_secundarios(form):
     except Exception as e:
         print('Error al obtener los campos secundarios: ' + str(e))
         return []
-
 
 def obtener_valores_formulario_parametro(form):
     """
@@ -832,12 +858,11 @@ def obtener_valores_formulario_parametro(form):
     for val in valores_a_mantener:
         field = CATEGORIAS_MAPPING.get(val)
         if field:
-            initial_data[field] = True
-    print(initial_data)            
+            initial_data[field] = True          
     initial_data = marcar_categorias_principales_parametros(initial_data=initial_data)
 
-    form = CategoriasForm(initial=initial_data)
-    return form
+    form_categorias = CategoriasForm(initial=initial_data, prefix='categorias')
+    return form_categorias
 
 
 def marcar_categorias_principales_parametros(initial_data):
@@ -855,6 +880,41 @@ def marcar_categorias_principales_parametros(initial_data):
         if all(initial_data[CATEGORIAS_MAPPING[sub_key]] for sub_key in sub_categorias):
             initial_data[CATEGORIAS_MAPPING[categoria]] = True
     return initial_data
+
+#################
+def obtener_valores_formulario_parametro_programacion(form):
+    try:
+        parametro = Parametro.objects.get(nombre_parametro='historial.mantener')
+        valor_parametro = parametro.valor
+        valores_programacion = valor_parametro.get('valores_programacion', [])
+    except:
+        valores_programacion = []
+    
+    initial_data = {field_name: False for field_name in PROGRAMACION_MAPPING.values()}
+    
+    for val in valores_programacion:
+        if isinstance(val, dict):
+            initial_data['hora'] = val.get('hora', 0)
+            initial_data['minutos'] = val.get('minutos', 0)
+        else:
+            field = PROGRAMACION_MAPPING.get(val)
+            if field:
+                initial_data[field] = True        
+    initial_data = marcar_programacion_principal_parametros(initial_data=initial_data)
+
+    form = ProgramacionForm(initial=initial_data, prefix='programacion')
+    return form
+
+
+def marcar_programacion_principal_parametros(initial_data):
+    programaciones_principales  = set(key for key in PROGRAMACION_MAPPING.keys() if len(key) == 1)
+    for programacion  in programaciones_principales :
+        sub_programaciones   = [sub_key for sub_key in PROGRAMACION_MAPPING.keys() if sub_key.startswith(programacion) and len(sub_key) > 1]
+        
+        if all(initial_data[PROGRAMACION_MAPPING[sub_key]] for sub_key in sub_programaciones):
+            initial_data[PROGRAMACION_MAPPING[programacion]] = True
+    return initial_data
+#################
 
 def eliminar_historial(request):
     if not request.user.is_authenticated:
@@ -969,14 +1029,35 @@ def cluster(request):
     
     data = {'proyectos':proyectos}
     if(request.method == 'POST'):
-        clusterizacion = realizar_clusterizacion
+        clusterizacion = realizar_clusterizacion()
         if(clusterizacion):
             data['mesg'] = 'Se ha realizado la clusterización'
         else:
             data['mesg'] = 'No se ha realizado la clusterización'
         
     return render(request, "core/cluster.html", data)
+
+
+def eliminar_historial_automatico():
+    # Obtener el parámetro con la clave "historial.mantener"
+    parametro = Parametro.objects.filter(nombre_parametro='historial.mantener').first()
     
+    if parametro:
+        valores_a_mantener = parametro.valor.get('valores_a_mantener', [])
+        subcategorias = obtener_subcategorias()
+        nombres_subs = []
+
+        for idx, val in enumerate(valores_a_mantener):
+            nombres_subs.append(subcategorias.get(val, "Subcategoría desconocida"))
+
+        if valores_a_mantener:
+            # Eliminar registros que no estén en la lista de valores a mantener
+            count, _ = historialCambios.objects.exclude(subcategoria__in=nombres_subs).delete()
+            print(f'{count} registros eliminados exitosamente.')
+        else:
+            print('La lista de valores a mantener está vacía. No se eliminaron datos.')
+    else:
+        print('Parámetro no encontrado.')
     
 ##Funciones Grupo 2
 ##  Acá deben escribir las funciones exclusivas del grupo 2

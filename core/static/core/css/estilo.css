@@ -1,3 +1,54 @@
 .justified-text {
     text-align: justify;
 }
+
+
+.importante {
+    color: rgb(231, 76, 60);
+    font-weight: bold;
+    font-size:0.9em;
+    padding: 10px;
+    border-color: rgb(231, 76, 60);
+}
+
+.normal {
+    color: rgb(52, 152, 219);
+    font-weight: bold;
+    font-size:0.9em;
+    padding: 10px;
+    border-color: rgb(52, 152, 219);
+}
+
+.control {
+    color: rgb(255, 207, 50);
+    font-weight: bold;
+    font-size:0.9em;
+    padding: 10px;
+    border-color: rgb(255, 207, 50);
+}
+
+.listo {
+    color: rgb(46, 204, 113);
+    font-weight: bold;
+    font-size:0.9em;
+    padding: 10px;
+    border-color: rgb(46, 204, 113);
+}
+
+.detalle {
+    color: rgb(96, 96, 96);
+    font-weight: bold;
+    font-size:0.9em;
+    padding: 10px;
+    border-color: rgb(96, 96, 96);
+}
+
+.custom-file {
+    display: inline-block;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: rgb(177, 131, 205);
+    border-radius: 10px;
+    width: 80%;
+    height: 100%;
+}
