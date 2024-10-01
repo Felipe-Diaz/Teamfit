@@ -66,10 +66,10 @@ Ver Proyectos
 						<tr>
 							<th>ID</th>
 							<th>Proyecto</th>
-							<th>Tipo</th>
-							<th>Linea de trabajo</th>
-							<th>Agencia</th>
-							<th>Ocupación</th>
+							<th>Tipo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Tipo de Proyecto"></i></button></th>
+							<th>Linea de trabajo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Linea de Trabajo"></i></button></th>
+							<th>Agencia <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Agencia"></i></button></th>
+							<th>Ocupación <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Porcentaje de ocupación de los trabajores al inicio del proyecto."></i></button></th>
 						</tr>
 					</thead>
 						<tbody>
@@ -103,7 +103,7 @@ Ver Proyectos
 								<td>No</td>
 								{% endif %}
 								<!-- <td>{{ proyectos.usoAgencia }}</td> -->
-								<td>{{ proyectos.ocupacionInicio }}%</td>
+								<td>{{ proyectos.ocupacionInicio }}% </td>
 							</tr>
 							{% empty %}
 						<tr>

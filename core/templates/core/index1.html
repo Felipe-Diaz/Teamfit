@@ -19,17 +19,63 @@ Inicio
   @media (max-width: 992px) {
     .col-md-6 {
       width: 100%;
-      margin-bottom: 20px;}
+      margin-bottom: 10px;}
     }
 </style>
 {% endblock estiloHead %}
 {% block content %}
   <body>
-    <br><br><br><br>
+    <!-- Tajetas de informacion Junily  -->
+    <div class="container-fluid" style=" margin-top: 100px;">
+      <div class="row">
+        <!-- Tarjeta 1: Proyectos Subidos -->
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Proyectos Subidos</h5>
+              <p class="card-text"><strong>{{ total_proyectos }}</strong></p>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Tarjeta 2: Temporada (Mes y Semana) -->
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Temporada Actual</h5>
+              <p class="card-text">Mes: <strong>{{ current_month }}</strong></p>
+              <p class="card-text">Semana: <strong>{{ current_week }}</strong></p>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Tarjeta 3: Semanas Restantes en el Año -->
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Semanas Restantes del Año</h5>
+              <p class="card-text"><strong>{{ remaining_weeks }}</strong> semanas</p>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Tarjeta 4: Cantidad de Empleados -->
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Empleados</h5>
+              <p class="card-text"><strong>{{ total_employees }}</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Historial y Proyectos -->
     <div class="container">
       <div class="row" >
           <!-- New Customers section -->
-          <div class="col-md-7">
+          <div class="col-md-6">
               <div class="card">
                   <div class="card-header">
                       Historial
@@ -71,7 +117,7 @@ Inicio
               </div>
           </div>
 
-          <div class="col-md-5">
+          <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
                     Últimos Proyectos

@@ -329,19 +329,24 @@ Parámetros del sistema
     const checkboxes = document.querySelectorAll('#autenticacion-fields input[type="checkbox"]');
     const diaCheckboxes = document.getElementById('dia-checkboxes');
 
+    function updateDiaCheckbox(){
+        // Mostrar u ocultar los días según la opción seleccionada
+        if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-semanal"]').checked) {
+            diaCheckboxes.style.display = 'block';
+        } else {
+            diaCheckboxes.style.display = 'none';
+        }
+    }
+
+
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => {
             checkboxes.forEach(cb => {
                 if (cb !== checkbox) cb.checked = false;
             });
-
-            // Mostrar u ocultar los días según la opción seleccionada
-            if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-semanal"]').checked) {
-                diaCheckboxes.style.display = 'block';
-            } else {
-                diaCheckboxes.style.display = 'none';
-            }
+            updateDiaCheckbox();
         });
     });
+    document.addEventListener('DOMContentLoaded', updateDiaCheckbox);
 </script>
 {% endblock UJS %}

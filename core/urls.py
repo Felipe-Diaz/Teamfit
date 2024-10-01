@@ -1,5 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+from . import views
 
 from .views import development_Buttons, llenar_DB, iniciar_sesion, crear_usuarios, graficar_Datos 
 from .views import pagina_principal, cerrar_sesion, subirProyectos, ver_proyectos, verHistorial

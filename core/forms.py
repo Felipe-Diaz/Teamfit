@@ -212,10 +212,29 @@ class UsuarioForm(forms.ModelForm):
         'email':'Correo electrónico',
         'is_active':'Es Administrador'
     }
+
+    password = forms.CharField(
+        label="Contraseña",
+        required=True,
+        widget=forms.PasswordInput(attrs={'class':'form-control'})
+    )
+
+    new_password = forms.CharField(
+        label="Nueva Contraseña",
+        required=True,
+        widget=forms.PasswordInput(attrs={'class':'form-control'})
+    )
+
+    new_password2 = forms.CharField(
+        label="Confirmar Nueva Contraseña",
+        required=True,
+        widget=forms.PasswordInput(attrs={'class':'form-control'})
+    )
     
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'is_active', 'is_staff']
+        fields = ['first_name', 'last_name', 'email', 'is_active', 'is_staff', 'password', 'new_password','new_password2']
+
 
 #Agregar nuevo formulario para ingresar los nuevos valores del modelo Proyectos.
 class proyectosForm(forms.Form):

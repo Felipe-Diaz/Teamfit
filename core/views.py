@@ -1,7 +1,7 @@
 from django.shortcuts import redirect, render, get_object_or_404, redirect
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
-from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User
-from .models import Proyecto, Recurso, Disponibilidad, Asignacion, AsignacionControl, HorasPredecidas
+from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User 
+from .models import Proyecto, Recurso, Disponibilidad, Asignacion, AsignacionControl, HorasPredecidas 
 from .models import proyectosSemanas
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from .forms import proyectosForm, CategoriasForm , UsuarioForm, ProgramacionForm
@@ -17,6 +17,8 @@ import plotly.graph_objects as go
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
+# importacion de dashboard x1
+from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from .clusters_data import realizar_clusterizacion
 import logging
@@ -24,6 +26,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from apscheduler.triggers.cron import CronTrigger
 from django.db import DatabaseError, IntegrityError, OperationalError
+import json
+from django.core.mail import send_mail, BadHeaderError
+
 
 # Create your views here.
 
@@ -223,8 +228,7 @@ def graficar_Datos(request):
     else:
         data['mesg'] = 'No se visualizaron momentos en que haya sobreutilización ni subtulización.'
     
-    return render(request, 'core/dashboard.html', data)
-    
+    return render(request, 'core/dashboard.html', data)   
 
 def development_Buttons(request):
     if not request.user.is_authenticated:
@@ -669,26 +673,47 @@ def crear_usuarios(request):
 
 #Funcion para editar un usuario / Junily was here
 def editar_usuario(request, id):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
 
     usuario = get_object_or_404(User, id=id)
     pusuario = get_object_or_404(PerfilUsuario, user=usuario)
+    merror = []
     
     if request.method == 'POST':
         form = UsuarioForm(request.POST, instance=usuario, perfil_usuario=pusuario)
         
         if form.is_valid():
-            form.save()
             pusuario.cargo = form.cleaned_data['cargo']
-            pusuario.save()
+            password = form.cleaned_data['password']
+            new_password = form.cleaned_data['new_password']
+            new_password2 = form.cleaned_data['new_password2']
+            
+            
+            if(not authenticate(username=usuario.username, password=password)):
+                form.add_error('password', 'La contraseña ingresada no es correcta.')
+                merror.append('La contraseña ingresada en el campo Contraseña debe ser la contraseña actual de usuario.')
+                
+            if password == new_password:
+                form.add_error('password', 'La contraseña nueva no debe ser igual a la anterior')
+                merror.append('La contraseña nueva no debe ser igual a la anterior')
+
+            if new_password != new_password2:
+                form.add_error('new_password', 'Las contraseñas no coinciden')
+                merror.append('Las contraseñas no coinciden')
 
             if(usuario.is_active):
                 usuario.is_active = True
                 user = request.user
                 cat = {'Cat':'E','Sub':'4'}
                 almacenado = almacenarHistorial(cat, user)
-
-            messages.success(request, 'Usuario actualizado correctamente')
-            return redirect('verUsuarios')  # Redirige de vuelta a la lista de usuarios
+                
+            if(not merror):
+                usuario.set_password(new_password)
+                usuario.save()
+                pusuario.save()
+                messages.success(request, 'Usuario actualizado correctamente')
+                return redirect('verUsuarios')  # Redirige de vuelta a la lista de usuarios
         else:
             error_messages = form.errors.as_data()
             merror = []
@@ -706,11 +731,44 @@ def editar_usuario(request, id):
         
     data =  {
         'form': form,
-        'usuario_editado': usuario
+        'usuario_editado': usuario,
+        'merror' : merror
     }
     return render(request, 'core/editarUsuario.html', data)
 
 #Fin de la funcion para editar un usuario
+
+#Funcion de dashboard inicio Junily
+def dashboard_view(request):
+    # Ejemplo de cálculo de proyectos subidos
+    total_proyectos = Proyecto.objects.count()  # Suponiendo que tienes un modelo 'Proyecto'
+
+    # Obtener la fecha actual
+    today = datetime.date.today()
+
+    # Mes actual
+    current_month = today.strftime('%B')
+
+    # Semana actual
+    current_week = today.isocalendar()[1]
+
+    # Calcular semanas restantes en el año
+    weeks_in_year = datetime.date(today.year, 12, 31).isocalendar()[1]
+    remaining_weeks = weeks_in_year - current_week
+
+    # Ejemplo de cantidad de empleados (suponiendo que tienes un modelo 'Empleado')
+    total_employees = 43
+
+    context = {
+        'total_proyectos': total_proyectos,
+        'current_month': current_month,
+        'current_week': current_week,
+        'remaining_weeks': remaining_weeks,
+        'total_employees': total_employees,
+    }
+
+    return render(request, 'dashboard.html', context)
+
 
 #Desactiva el usuario, validando si existe y si es superuser o no.
 def eliminarUsuarios(request, id):
@@ -789,12 +847,9 @@ def ajuste_parametros(request):
                     nombre_parametro='historial.mantener',
                     defaults={'valor': valor_parametro},
                 )
-
-                # scheduler = BackgroundScheduler()
-                # job = scheduler.get_job('perro')
-                # job.modify(trigger=CronTrigger(hour=hora, minute=minutos))
-                # print(f"Tarea actualizada a las {hora}:{minutos}.")
-                      
+                    
+                cambiar_scheduler(hora=hora, minutos=minutos, id='borrar_historial')
+                
                 user = request.user
                 cat = {'Cat':'B','Sub':'1'}
                 almacenado = almacenarHistorial(cat, user)
@@ -820,6 +875,18 @@ def ajuste_parametros(request):
     data['merror'] = merror
         
     return render(request, 'core/parameters.html',data)
+
+def cambiar_scheduler(hora, minutos, id):
+    from .scheduler import scheduler
+    try:
+        job = scheduler.get_job(id)
+        scheduler.reschedule_job(id, trigger='cron', hour= hora, minute= minutos)
+        print(f"Tarea actualizada a las {hora}:{minutos}.")
+        return(True)
+    except Exception as e:
+        print(f'Ha ocurrido un error: \n {e}')
+        return False
+    
 
 def obtener_campos_secundarios(form,tipo):
     if(tipo == 'Cat'):
@@ -962,8 +1029,6 @@ def consul_api(request):
                 response = requests.get(url)
                 response.raise_for_status()
                 datos = response.json()
-                print(datos)
-
                 if isinstance(datos, list):
                     for item in datos:
                         proyectosAAgrupar.objects.update_or_create(
@@ -986,7 +1051,6 @@ def consul_api(request):
                     user = request.user
                     cat = {'Cat':'E','Sub':'1'}
                     almacenado = almacenarHistorial(cat, user)
-                    print(almacenado)
                     return redirect(ver_proyectos)
                 else:
                     messages.error(request, 'Datos inesperados.')
@@ -1005,7 +1069,19 @@ def consul_api(request):
         response = requests.get(url)
         response.raise_for_status()
         datos = response.json()
-
+        
+        #Forma 2
+        url2 = 'https://66faed6a8583ac93b40a65bc.mockapi.io/api/crm_lead/search'
+        response2 = requests.get(url2)
+        response2.raise_for_status()
+        datos2 = response2.json()
+        datos2 = datos2[0]
+        if(datos2['success']):
+            print('Se pueden subir los datos')
+            #print(f"Datos del Json: \n {datos2}")
+        else:
+            print('No se pueden subir los datos')
+        
         if isinstance(datos, list):
             data['datos'] = datos
             data['showTableOdoo'] = True
@@ -1013,6 +1089,8 @@ def consul_api(request):
         else:
             data['error'] = 'Datos inesperados'
             return render(request, "core/subirProyectos.html", data)
+    
+
     
     except requests.RequestException as e:
         print(f'error solicitud: {e}')
