@@ -317,11 +317,19 @@ def development_Buttons(request):
     return render(request, 'core/boton.html', data)
 
 def llenar_DB(request):
-    Hh_Estimado_Detalle_Semanal.objects.all().delete()
-    Perfil_hh_Detalle_Semanal.objects.all().delete()
-    historialCambios.objects.all().delete()
-    proyectosAAgrupar.objects.all().delete()
-    User.objects.all().delete()
+    # Hh_Estimado_Detalle_Semanal.objects.all().delete()
+    # Perfil_hh_Detalle_Semanal.objects.all().delete()
+    # historialCambios.objects.all().delete()
+    # proyectosAAgrupar.objects.all().delete()
+    # User.objects.all().delete()
+    
+    # usuario = get_object_or_404(User, id=15)
+    # usuario.set_password('Admin@123')
+    # usuario.save()
+    
+    usuario = get_object_or_404(User, id=33)
+    usuario.set_password('Contra12$%')
+    usuario.save()
 
     
     # proyecto1 = proyectosAAgrupar.objects.update_or_create(
@@ -343,56 +351,56 @@ def llenar_DB(request):
     # )
     
     #Usuario de testing
-    usuario = User.objects.create_user(username="admin", password='Admin@123')
-    usuario.first_name = "Pedro"
-    usuario.last_name = "Martinez"
-    usuario.email = "admin@admin.com"
-    usuario.is_superuser = True
-    usuario.is_staff = True
-    usuario.save()
+    # usuario = User.objects.create_user(username="admin", password='Admin@123')
+    # usuario.first_name = "Pedro"
+    # usuario.last_name = "Martinez"
+    # usuario.email = "admin@admin.com"
+    # usuario.is_superuser = True
+    # usuario.is_staff = True
+    # usuario.save()
     
-    perfil = PerfilUsuario.objects.update_or_create(user=usuario, cargo='Administrador')
+    # perfil = PerfilUsuario.objects.update_or_create(user=usuario, cargo='Administrador')
     
-    #Crear un usuario inactivo y modificar el login para no dejarlo loguearse
-    usuarioAnon = User.objects.create_user(username="Anon", password='anon') #ZKfg!)nkLSp163SD
-    usuarioAnon.first_name = "Anonimo"
-    usuarioAnon.last_name = "anon"
-    usuarioAnon.email = "none"
-    usuarioAnon.is_superuser = False
-    usuarioAnon.is_staff = False
-    usuarioAnon.is_active = False
-    usuarioAnon.save()
+    # #Crear un usuario inactivo y modificar el login para no dejarlo loguearse
+    # usuarioAnon = User.objects.create_user(username="Anon", password='anon') #ZKfg!)nkLSp163SD
+    # usuarioAnon.first_name = "Anonimo"
+    # usuarioAnon.last_name = "anon"
+    # usuarioAnon.email = "none"
+    # usuarioAnon.is_superuser = False
+    # usuarioAnon.is_staff = False
+    # usuarioAnon.is_active = False
+    # usuarioAnon.save()
     
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '1', 
-        hh = 1.8
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '2', 
-        hh = 2.1
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '3', 
-        hh = 1.9
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '1', 
-        numSemana = '4', 
-        hh = 1.5
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '1', 
-        hh = 1.5
-        )
-    Perfil_hh_Detalle_Semanal.objects.update_or_create(
-        idTipoProyecto = '2', 
-        numSemana = '2', 
-        hh = 3
-        )
+    # Perfil_hh_Detalle_Semanal.objects.update_or_create(
+    #     idTipoProyecto = '1', 
+    #     numSemana = '1', 
+    #     hh = 1.8
+    #     )
+    # Perfil_hh_Detalle_Semanal.objects.update_or_create(
+    #     idTipoProyecto = '1', 
+    #     numSemana = '2', 
+    #     hh = 2.1
+    #     )
+    # Perfil_hh_Detalle_Semanal.objects.update_or_create(
+    #     idTipoProyecto = '1', 
+    #     numSemana = '3', 
+    #     hh = 1.9
+    #     )
+    # Perfil_hh_Detalle_Semanal.objects.update_or_create(
+    #     idTipoProyecto = '1', 
+    #     numSemana = '4', 
+    #     hh = 1.5
+    #     )
+    # Perfil_hh_Detalle_Semanal.objects.update_or_create(
+    #     idTipoProyecto = '2', 
+    #     numSemana = '1', 
+    #     hh = 1.5
+    #     )
+    # Perfil_hh_Detalle_Semanal.objects.update_or_create(
+    #     idTipoProyecto = '2', 
+    #     numSemana = '2', 
+    #     hh = 3
+    #     )
     return redirect(pagina_principal)
 
 #Casi Funcional
@@ -746,6 +754,7 @@ def editar_usuario(request, id):
         return redirect(iniciar_sesion)
 
     usuario = get_object_or_404(User, id=id)
+    
     pusuario = get_object_or_404(PerfilUsuario, user=usuario)
     merror = []
     
@@ -754,22 +763,26 @@ def editar_usuario(request, id):
         
         if form.is_valid():
             pusuario.cargo = form.cleaned_data['cargo']
+            change_pass = False
             password = form.cleaned_data['password']
             new_password = form.cleaned_data['new_password']
             new_password2 = form.cleaned_data['new_password2']
+            #print(form.cleaned_data['password'])
             
-            
-            if(not authenticate(username=usuario.username, password=password)):
-                form.add_error('password', 'La contraseña ingresada no es correcta.')
-                merror.append('La contraseña ingresada en el campo Contraseña debe ser la contraseña actual de usuario.')
-                
-            if password == new_password:
-                form.add_error('password', 'La contraseña nueva no debe ser igual a la anterior')
-                merror.append('La contraseña nueva no debe ser igual a la anterior')
+            if(password):
+                print('Se ha cambiado la contra')
+                change_pass = True 
+                if(not authenticate(username=usuario.username, password=password)):
+                    form.add_error('password', 'La contraseña ingresada no es correcta.')
+                    merror.append('La contraseña ingresada en el campo Contraseña debe ser la contraseña actual de usuario.')
+                    
+                if password == new_password:
+                    form.add_error('password', 'La contraseña nueva no debe ser igual a la anterior')
+                    merror.append('La contraseña nueva no debe ser igual a la anterior')
 
-            if new_password != new_password2:
-                form.add_error('new_password', 'Las contraseñas no coinciden')
-                merror.append('Las contraseñas no coinciden')
+                if new_password != new_password2:
+                    form.add_error('new_password', 'Las contraseñas no coinciden')
+                    merror.append('Las contraseñas no coinciden')
 
             if(usuario.is_active):
                 usuario.is_active = True
@@ -778,8 +791,17 @@ def editar_usuario(request, id):
                 almacenado = almacenarHistorial(cat, user)
                 
             if(not merror):
-                usuario.set_password(new_password)
-                usuario.save()
+                userToSave = get_object_or_404(User, id=id)
+                if(change_pass):
+                    userToSave.set_password(new_password)
+                
+                userToSave.first_name = usuario.first_name
+                userToSave.last_name = usuario.last_name
+                userToSave.email = usuario.email
+                userToSave.is_active = usuario.is_active
+                userToSave.is_staff = usuario.is_staff
+                
+                userToSave.save()
                 pusuario.save()
                 messages.success(request, 'Usuario actualizado correctamente')
                 return redirect('verUsuarios')  # Redirige de vuelta a la lista de usuarios

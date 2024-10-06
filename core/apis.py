@@ -5,7 +5,7 @@ import re
 import ast
 
 URL_BASE = 'https://teamfit.openscorp.com/api/'
-API_KEY = 'NO INCLUIDA'
+API_KEY = 'NO INCLUIDA - DATO CONFIDENCIAL'
 
 
 def enviar_datos_planning_slots(id, employee_id, allocated_hours, start_datetime, end_datetime, name):

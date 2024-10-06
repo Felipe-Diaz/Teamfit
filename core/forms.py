@@ -215,19 +215,19 @@ class UsuarioForm(forms.ModelForm):
 
     password = forms.CharField(
         label="Contraseña",
-        required=True,
+        required=False,
         widget=forms.PasswordInput(attrs={'class':'form-control'})
     )
 
     new_password = forms.CharField(
         label="Nueva Contraseña",
-        required=True,
+        required=False,
         widget=forms.PasswordInput(attrs={'class':'form-control'})
     )
 
     new_password2 = forms.CharField(
         label="Confirmar Nueva Contraseña",
-        required=True,
+        required=False,
         widget=forms.PasswordInput(attrs={'class':'form-control'})
     )
     
