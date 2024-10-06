@@ -6,7 +6,7 @@ from .models import proyectosSemanas
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from .forms import proyectosForm, CategoriasForm , UsuarioForm, ProgramacionForm
 from .forms import CATEGORIAS_MAPPING, PROGRAMACION_MAPPING
-from datetime import timedelta, datetime
+import locale
 from django.core.paginator import Paginator
 import requests
 from django.db.models import Sum
@@ -17,17 +17,35 @@ import plotly.graph_objects as go
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
-# importacion de dashboard x1
+# importacion de dashboard x4
+import locale
+from datetime import timedelta, datetime, date
+from django.db.models import Count
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from .clusters_data import realizar_clusterizacion
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, timedelta
+
 from apscheduler.triggers.cron import CronTrigger
 from django.db import DatabaseError, IntegrityError, OperationalError
 import json
 from django.core.mail import send_mail, BadHeaderError
+# import plotly.express as px
+# import plotly.graph_objects as go
+# from django.contrib.auth import authenticate, login, logout
+# from django.contrib.auth.models import User
+from django.db.models import Sum, Q, Count
+from django.db import transaction
+from django.db.models import F
+from decimal import Decimal
+from django.core.paginator import Paginator
+from io import BytesIO
+from .apis import obtener_api_empleados, obtener_planning_slots, obtener_resource_calendar, enviar_datos_planning_slots
+from .apis import obtener_api_recursos, convertir_fecha_a_chile, convertir_fecha_a_gmt, convertir_fecha_a_string
+from .apis import cal_disponibilidad, obtener_empleados_con_horas, convertir_datos_asignacion, obtener_horas_recurso
+from .apis import obtener_planning_slots_por_semana
+
 
 
 # Create your views here.
@@ -64,14 +82,15 @@ def subirProyectos(request, upload='Sh'):
                 montoOfertaCLP=row['montoOfertaCLP'],
                 usoAgencia=row['usoAgencia'],
                 ocupacionInicio=row['ocupacionInicio'],
-                disponibilidad = 0,
-                utilizacion = 0
+                #fechaInicio = row['fechaInicio']
+                #fechaFin = row['fechaFin']
             )
             cont += 1
             proyecto.save()
         cat = {'Cat':'E','Sub':'1'}
         almacenado = almacenarHistorial(cat, request.user)
         request.session.pop('df_proyectos')
+        clusterizacion = realizar_clusterizacion()
         return redirect(ver_proyectos)
     
     if request.method == 'POST' and 'file' in request.FILES:
@@ -84,13 +103,14 @@ def subirProyectos(request, upload='Sh'):
                 df = pd.read_excel(file) if file.name.endswith('.xlsx') else pd.read_csv(file)
                 required_columns = ['id', 'Proyecto', 'Línea de Negocio', 'tipo', 'cliente', 'create_date', 
                                     'Cierre', 'Egresos No HH CLP', 'Monto Oferta CLP',
-                                    'C/Agencia', 'Ocupación Al Iniciar (%)']
+                                    'C/Agencia', 'Ocupación Al Iniciar (%)'] #, 'Inicio Proyecto', 'Fin Planificado']
                 if not all(col in df.columns for col in required_columns):
                     mesg = ('<div style="container col-md-6"> El archivo <strong>no contiene</strong> las columnas requeridas:'
                                     '<ul> <li>id</li> <li>Proyecto</li> <li>Línea de Negocio</li> <li>tipo</li>'
                                     '<li>cliente</li> <li>create_date</li> <li>Cierre</li> <li>Egresos No HH CLP</li>'
                                     '<li>Monto Oferta CLP</li> <li>C/Agencia</li> <li>Ocupación Al Iniciar (%)</li> </ul>'
                                     '<br> Por favor, suba un archivo con estas columnas.</div>')
+                                    #<li>Inicio Proyecto</li> <li>Fin Planificado</li>
                     merror.append(mesg)
                     
                 else:
@@ -103,6 +123,7 @@ def subirProyectos(request, upload='Sh'):
                                     '<li>cliente</li> <li>create_date</li> <li>Cierre</li> <li>Egresos No HH CLP</li>'
                                     '<li>Monto Oferta CLP</li> <li>C/Agencia</li> <li>Ocupación Al Iniciar (%)</li> </ul>'
                                     '<br> Por favor, suba un archivo solo con estas columnas.</div>')
+                                    #<li>Inicio Proyecto</li> <li>Fin Planificado</li>
                         merror.append(mesg)
                     else:
                         df = cambiarFormatoAlmacenarDf(df)
@@ -132,6 +153,8 @@ def cambiarFormatoAlmacenarDf(df):
     df = df
     df['create_date'] = df['create_date'].astype(str)
     df['Cierre'] = df['Cierre'].astype(str)
+    #df['Inicio Proyecto'] = df['Inicio Proyecto'].astype(str)
+    #df['Fin Planificado'] = df['Fin Planificado'].astype(str)
     df.rename(columns={'Proyecto': 'proyecto'}, inplace=True)
     df.rename(columns={'Línea de Negocio': 'lineaNegocio'}, inplace=True)
     df.rename(columns={'create_date': 'createDate'}, inplace=True)
@@ -140,6 +163,8 @@ def cambiarFormatoAlmacenarDf(df):
     df.rename(columns={'Monto Oferta CLP': 'montoOfertaCLP'}, inplace=True)    
     df.rename(columns={'C/Agencia': 'usoAgencia'}, inplace=True)
     df.rename(columns={'Ocupación Al Iniciar (%)': 'ocupacionInicio'}, inplace=True)
+    #df.rename(columns={'Inicio Proyecto': 'InicioProyecto'}, inplace=True)
+    #df.rename(columns={'Fin Planificado': 'FinPlanificado'}, inplace=True)
     df['ocupacionInicio'] = df['ocupacionInicio'].round(2)
     df['ocupacionInicio'] = df['ocupacionInicio'] * 100
     return df
@@ -148,6 +173,8 @@ def cambiarFormatoAlmacenarDb(df):
     df = pd.DataFrame(df)
     df['createDate'] = pd.to_datetime(df['createDate'])
     df['cierre'] = pd.to_datetime(df['cierre'])
+    #df['InicioProyecto'] = pd.to_datetime(df['InicioProyecto'])
+    #df['FinPlanificado'] = pd.to_datetime(df['FinPlanificado'])
     df['cierre'] = df['cierre'].fillna(df['createDate'])
     df['cliente'] = df['cliente'].astype(int)
     df['usoAgencia'] = df['usoAgencia'].fillna(0)
@@ -506,20 +533,62 @@ def pagina_principal(request):
     # line_chart = line_chart.to_html(full_html=False)
     
     # data = {'bar':bar_chart, 'line':line_chart}
+    
+    # obj2 = obtener_empleados_con_horas()
+    # print(obj2['1'])
+    # print('-----------')
+    obj = cal_disponibilidad(41, 2023)
+    print(obj)
+    #obtener_planning_slots_por_semana(semana=41)
+    #obtener_api_empleados()
+    #obtener_resource_calendar()
+    #enviar_datos_planning_slots(id=1, employee_id=1, allocated_hours=8, start_datetime='2024-10-04T08:30:00', end_datetime='2024-10-04T20:00:00', name='Testing_Value_3')
+    #obtener_api_recursos()
+    #convertir_fecha_a_chile(convertir_fecha_a_string(convertir_fecha_a_gmt('2024-10-08T08:30:00')))
+    
+    #Cargar Dashboard
+    proyectos = proyectosSemanas.objects.select_related('proyecto', 'horas').all()
 
+    total_proyectos = proyectos.count()
+
+
+    try:
+        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')  # Unix / Linux / MacOS
+    except locale.Error:
+        locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')  # Windows
+    
+    today = date.today()
+    current_month = today.strftime('%B') #Deberia ser Octubre o 'October'.
+    current_week = today.strftime('%U')
+
+    # Calcular semanas restantes en el año
+    weeks_in_year = 52
+    remaining_weeks = weeks_in_year - int(current_week)
+
+    empleados_count = proyectos.values('horas__rol').annotate(count=Count('horas__rol'))
+
+    jefes = proyectosSemanas.objects.filter(horas__rol='Jefe de Proyectos').count()
+    ingenieros = proyectosSemanas.objects.filter(horas__rol='Ingeniero de Proyecto').count()
+
+    data['total_proyectos'] = total_proyectos
+    data['current_month'] = current_month
+    data['current_week'] = current_week
+    data['remaining_weeks'] = remaining_weeks
+    data['ingenieros'] = ingenieros
+    data['jefes'] = jefes
 
     return render(request, 'core/index1.html', data)
 
 #Almacena el historial solicitando desc, tipoInfo y usuario
 def almacenarHistorial(categoria={'Cat':"A",'Sub':'1'}, usuario=None):
-    """Almacena el historial.
+    """**Almacena el historial.**
 
-        Parametros: 
-        categoria: Diccionario con la categoria y la subcategoría. Debe venir con clave Cat para categoria, y Sub para la subcategoria.
+        **Parametros:**\n 
+        categoria: Diccionario con la categoria y la subcategoría. Debe venir con clave Cat para categoria, y Sub para la subcategoria.\n
         usuario: Usuario para almacenar e indicar quien realizar la acción. En caso de venir nulo es un usuario anónimo
         
-        Return:
-        histCambios: Objeto de tipo Historial Cambios.
+        **Return:**\n
+        histCambios: Objeto de tipo HistorialCambios.
     """
     fecha = timezone.now()
     
@@ -738,37 +807,6 @@ def editar_usuario(request, id):
 
 #Fin de la funcion para editar un usuario
 
-#Funcion de dashboard inicio Junily
-def dashboard_view(request):
-    # Ejemplo de cálculo de proyectos subidos
-    total_proyectos = Proyecto.objects.count()  # Suponiendo que tienes un modelo 'Proyecto'
-
-    # Obtener la fecha actual
-    today = datetime.date.today()
-
-    # Mes actual
-    current_month = today.strftime('%B')
-
-    # Semana actual
-    current_week = today.isocalendar()[1]
-
-    # Calcular semanas restantes en el año
-    weeks_in_year = datetime.date(today.year, 12, 31).isocalendar()[1]
-    remaining_weeks = weeks_in_year - current_week
-
-    # Ejemplo de cantidad de empleados (suponiendo que tienes un modelo 'Empleado')
-    total_employees = 43
-
-    context = {
-        'total_proyectos': total_proyectos,
-        'current_month': current_month,
-        'current_week': current_week,
-        'remaining_weeks': remaining_weeks,
-        'total_employees': total_employees,
-    }
-
-    return render(request, 'dashboard.html', context)
-
 
 #Desactiva el usuario, validando si existe y si es superuser o no.
 def eliminarUsuarios(request, id):
@@ -833,8 +871,11 @@ def ajuste_parametros(request):
 
                 hora = int(form_programacion.cleaned_data['hora'])
                 minutos = int(form_programacion.cleaned_data['minutos'])
-                to_keep_programacion.append({'hora': hora, 'minutos': minutos})###
-                tiempo = {'hora':hora, 'minutos':minutos}
+                dias = form_programacion.cleaned_data.get('dia', [])
+
+                to_keep_programacion.append({'hora': hora, 'minutos': minutos, 'dias': dias})###
+                tiempo = {'hora':hora, 'minutos':minutos, 'dias': dias}
+                print(tiempo)
                 
                 
                 valor_parametro = {
@@ -863,6 +904,10 @@ def ajuste_parametros(request):
                 merror.append(mesg)
                 print('Error al procesar el formulario: ' + str(e))
         else:
+            if form_categorias.errors:
+                print("Errores en form_categorias:", form_categorias.errors)
+            if form_programacion.errors:
+                print("Errores en form_programacion:", form_programacion.errors)
             mesg = 'Ha ocurrido un error. Por favor, verifique los campos correctamente o intentelo de nuevo más tarde.'
             merror.append(mesg)
             
@@ -1145,88 +1190,386 @@ def eliminar_historial_automatico():
 ##  Espero se haya entendido, (No entendi)
 
 
-def asignar_recursos():
-    """
-    Algoritmo que asigna recursos semana a semana.
-    Ordena los proyectos y recursos según sus prioridades y distribuye las horas.
-    """
-    mensaje = ""
-    asignacion_realizada = False
-    asignacion_previa_detectada = False
+# LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION 
+# LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION 
+# LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION 
+# LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION # LOGICA DE ASIGNACION 
 
-    # Iteramos sobre las semanas, de la 1 a la 52
-    for semana in range(1, 53):
-        proyectos = Proyecto.objects.filter(semana_inicio__lte=semana).order_by('-tipo_proyecto__prioridad', 'nombre')
+#ESTA FUNCIÓN TE GENERA LOS DATOS DE LAS TABLAS EN EXEL Y PDF
 
-        for proyecto in proyectos:
-            if semana > proyecto.semana_inicio + proyecto.duracion_semanas - 1:
-                continue  # Saltar si la semana actual está fuera del rango del proyecto
+#Esta es la función que genera el exel de la tabla horas_por_recurso_data
+def generar_excel_proyectos(request):
+    # Obtener los datos de la tabla horas por recurso
+    proyectos = Asignacion.objects.values(
+        'recurso__nombre',  # Nombre del recurso
+        'recurso__rol',     # Rol del recurso
+        'semana',           # Semana
+    ).annotate(
+        total_horas_rol=Sum('horas_asignadas')  # Total de horas asignadas
+    )
 
-            # Verificar si el rol requerido está disponible
-            recursos_disponibles = Recurso.objects.filter(rol=proyecto.rol_requerido).order_by('-prioridad', 'nombre')
-            if not recursos_disponibles.exists():
-                print(f"No hay recursos disponibles para el rol requerido '{proyecto.rol_requerido}' del proyecto '{proyecto.nombre}'.")
-                continue
+    # Crear un DataFrame a partir de los datos de los proyectos
+    df = pd.DataFrame(list(proyectos))
 
-            horas_demandadas = proyecto.horas_demandadas
+    # Crear un nuevo DataFrame pivotado
+    df_pivot = df.pivot_table(
+        index=['recurso__nombre', 'recurso__rol'],  # Agrupar por nombre y rol del recurso
+        columns='semana',                           # Semanas se convierten en columnas
+        values='total_horas_rol',                   # Valores que se colocan en la tabla
+        fill_value=0                                # Rellenar con 0 donde no hay horas asignadas
+    ).reset_index()
 
-            for recurso in recursos_disponibles:
-                disponibilidades = Disponibilidad.objects.filter(recurso=recurso, semana=semana)
+    # Renombrar las columnas para incluir "Semana"
+    df_pivot.columns.name = None  # Eliminar el nombre de la columna
+    df_pivot.columns = [f'Semana {col}' if isinstance(col, int) else str(col) for col in df_pivot.columns]
 
-                if not disponibilidades.exists():
-                    print(f"No hay disponibilidad registrada para el recurso '{recurso.nombre}' en la semana {semana}.")
-                    continue
+    # Calcular el total de horas por recurso y añadirlo como una nueva fila por rol
+    total_row = df_pivot.iloc[:, 2:].sum().to_frame().T  # Sumar las horas, omitiendo las dos primeras columnas (nombre y rol)
+    total_row['recurso__nombre'] = 'Total'  # Asignar el nombre de la fila total
+    total_row['recurso__rol'] = ''  # Dejar vacío el campo de rol en la fila total
+    df_pivot = pd.concat([df_pivot, total_row], ignore_index=True)
 
-                for disponibilidad in disponibilidades:
-                    asignacion_existente = Asignacion.objects.filter(proyecto=proyecto, recurso=recurso, semana=semana).first()
+    output = BytesIO()
 
-                    if asignacion_existente:
-                        print(f"Asignación ya existente para el proyecto '{proyecto.nombre}' con el recurso '{recurso.nombre}' en la semana {semana}.")
-                        asignacion_previa_detectada = True
-                        continue  # Continuar sin hacer una nueva asignación
+    # Crear el archivo Excel
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_pivot.to_excel(writer, index=False, sheet_name='Horas por Recurso y Semana')
 
-                    if disponibilidad.horas_disponibles >= horas_demandadas:
-                        # Asignar las horas demandadas
-                        Asignacion.objects.create(
-                            proyecto=proyecto,
-                            recurso=recurso,
-                            semana=semana,
-                            horas_asignadas=horas_demandadas
-                        )
-                        disponibilidad.horas_disponibles -= horas_demandadas
-                        disponibilidad.save()
-                        horas_demandadas = 0
-                        asignacion_realizada = True
-                        break
-                    else:
-                        # Asignar las horas disponibles y continuar con la siguiente disponibilidad
-                        Asignacion.objects.create(
-                            proyecto=proyecto,
-                            recurso=recurso,
-                            semana=semana,
-                            horas_asignadas=disponibilidad.horas_disponibles
-                        )
-                        horas_demandadas -= disponibilidad.horas_disponibles
-                        disponibilidad.horas_disponibles = 0
-                        disponibilidad.save()
+    # Posicionar el buffer al inicio para leer los datos
+    output.seek(0)
 
-            if horas_demandadas > 0:
-                proyecto.horas_demandadas = horas_demandadas
-                proyecto.save()
+    # Preparar la respuesta de Excel
+    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="reporte_horas_por_recurso.xlsx"'
+    return response
 
-        if semana == 52:
-            for proyecto in proyectos:
-                if proyecto.horas_demandadas > 0:
-                    print(f'Proyecto {proyecto.nombre} tiene {proyecto.horas_demandadas} horas pendientes después de la semana 52.')
+#Función que genera el exel de la segunda tabla
+def generar_excel_recursos(request):
+    # Obtener los datos de asignaciones de la tabla actualizada
+    asignaciones = Asignacion.objects.values(
+        'proyecto__nombre',  # Nombre del proyecto
+        'semana',            # Semana
+    ).annotate(
+        total_horas_proyecto=Sum('horas_asignadas')  # Total de horas asignadas por proyecto
+    )
 
-    # Mensaje final basado en lo que ocurrió
-    if asignacion_realizada and not asignacion_previa_detectada:
-        return "Asignación de recursos realizada con éxito."
-    elif asignacion_previa_detectada:
-        return "Asignaciones ya existen para algunos o todos los recursos en estas semanas."
-    else:
-        return "No se pudo realizar la asignación."
+    # Crear un DataFrame a partir de los datos de las asignaciones
+    df = pd.DataFrame(list(asignaciones))
+
+    # Crear un nuevo DataFrame pivotado
+    df_pivot = df.pivot_table(
+        index='proyecto__nombre',  # Agrupar por nombre del proyecto
+        columns='semana',          # Semanas se convierten en columnas
+        values='total_horas_proyecto',  # Valores que se colocan en la tabla
+        fill_value=0               # Rellenar con 0 donde no hay horas asignadas
+    ).reset_index()
+
+    # Renombrar las columnas para incluir "Semana"
+    df_pivot.columns.name = None  # Eliminar el nombre de la columna
+    df_pivot.columns = [f'Semana {col}' if isinstance(col, int) else str(col) for col in df_pivot.columns]
+
+    # Calcular el total de horas por proyecto y añadirlo como una nueva fila
+    total_row = df_pivot.iloc[:, 1:].sum().to_frame().T  # Sumar las horas, omitiendo la primera columna que es el proyecto
+    total_row['proyecto__nombre'] = 'Total'  # Asignar el nombre de la fila total
+    df_pivot = pd.concat([df_pivot, total_row], ignore_index=True)
+
+    output = BytesIO()
+
+    # Crear el archivo Excel
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_pivot.to_excel(writer, index=False, sheet_name='Horas por Proyecto y Semana')
+
+    # Posicionar el buffer al inicio para leer los datos
+    output.seek(0)
+
+    # Preparar la respuesta de Excel
+    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="reporte_horas_por_proyecto.xlsx"'
+    return response
     
+from io import BytesIO
+from django.http import HttpResponse
+import pandas as pd
+from .models import Asignacion  # Asegúrate de que este sea el nombre correcto de tu modelo
+
+#Esta es la función que genera el exel de la tabla asignaciones
+def generar_excel_asignacion(request):
+    # Obtener el formato seleccionado desde el request
+    formato = request.GET.get('formato')
+
+    # Obtener los datos de las asignaciones
+    asignaciones = Asignacion.objects.all().values(
+        'proyecto__nombre',  # Accediendo al nombre del proyecto
+        'recurso__nombre',   # Accediendo al nombre del recurso
+        'recurso__rol',      # Accediendo al rol del recurso
+        'semana',
+        'año',
+        'horas_asignadas'
+    )
+
+    # Generar Excel
+    if formato == 'excel':
+        # Crear un DataFrame a partir de los datos de las asignaciones
+        df = pd.DataFrame(list(asignaciones))
+
+        # Crear un nuevo DataFrame pivotado
+        df_pivot = df.pivot_table(
+            index=['proyecto__nombre', 'recurso__nombre', 'recurso__rol'],  # Mantener estas columnas como índices
+            columns=['semana'],  # Las semanas se convierten en columnas
+            values='horas_asignadas',  # Valores que se colocan en la tabla
+            fill_value=0  # Rellenar con 0 donde no hay horas asignadas
+        ).reset_index()
+
+        # Renombrar las columnas para mayor claridad
+        df_pivot.columns.name = None  # Eliminar el nombre de la columna
+        df_pivot.columns = [f'Semana {col}' if col not in ['proyecto__nombre', 'recurso__nombre', 'recurso__rol'] else col for col in df_pivot.columns]
+
+        # Calcular el total de horas por semana
+        total_horas = df_pivot.loc[:, df_pivot.columns.str.startswith('Semana ')]
+        total_horas_sum = total_horas.sum().to_frame().T  # Transponer para que sea una fila
+        total_horas_sum['proyecto__nombre'] = ''
+        total_horas_sum['recurso__nombre'] = ''
+        total_horas_sum['recurso__rol'] = 'Total Horas'  # Etiqueta para la fila de totales
+
+        # Concatenar los datos pivotados con los totales
+        df_final = pd.concat([df_pivot, total_horas_sum], ignore_index=True)
+
+        output = BytesIO()
+
+        # Crear el archivo Excel
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df_final.to_excel(writer, index=False, sheet_name='Asignaciones')
+
+        # Posicionar el buffer al inicio para leer los datos
+        output.seek(0)
+
+        # Preparar la respuesta de Excel
+        response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="reporte_asignaciones.xlsx"'
+        return response
+
+    # Si no se selecciona un formato válido
+    else:
+        return HttpResponse('Formato no soportado', status=400)
+
+#ESTA ES LA FUNCIÓN DE BUSQUEDA SI TIENE QUE MIDIFICAR ALGO PARA BUSCAR QUE SEA AQUI NO TOQUEN LO DEMAS
+def busqueda_de_datos(queryset, search_value, search_fields):
+    """
+    Función que realiza la búsqueda de datos en los campos especificados.
+    
+    Args:
+        queryset: El conjunto de datos que se va a filtrar.
+        search_value: El valor de búsqueda que el usuario ha ingresado.
+        search_fields: Una lista de campos donde se debe buscar el valor.
+
+    Returns:
+        Un queryset filtrado por el valor de búsqueda.
+    """
+    if search_value:
+        query = Q()
+        for field in search_fields:
+            query |= Q(**{f"{field}__icontains": search_value})
+        queryset = queryset.filter(query)
+    
+    return queryset
+
+# PRIMERA TABLA
+def horas_por_recurso_data(request):
+    order_column = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+
+    # Definición de las columnas para ordenar
+    columns = ['recurso__nombre','recurso__rol', 'semana', 'total_horas_rol']
+    order_field = columns[int(order_column)]
+
+    # Búsqueda por valor
+    search_value = request.GET.get('search[value]', '')
+
+    # Agrupar por semana y rol requerido
+    proyectos = Asignacion.objects.values(
+        'recurso__nombre',
+        'recurso__rol',
+        'semana',
+    ).annotate(
+        total_horas_rol=Sum('horas_asignadas'),
+        
+    ).filter(
+        Q(recurso__rol__icontains=search_value) |
+        Q(semana__icontains=search_value)
+    ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
+
+    # Paginar los resultados
+    paginator = Paginator(proyectos, request.GET.get('length', 10))
+    page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
+    page_obj = paginator.get_page(page_number)
+
+    data = {
+        'draw': int(request.GET.get('draw', 1)),
+        'recordsTotal': paginator.count,
+        'recordsFiltered': paginator.count,
+        'data': list(page_obj)
+    }
+
+    return JsonResponse(data)
+
+
+# Recursos agrupados por proyecto (SEGUNDA TABLA)
+def horas_por_proyecto_data(request):
+    order_column = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+
+    # Definición de las columnas para ordenar
+    columns = ['proyecto__nombre', 'semana', 'total_horas_proyecto']
+    order_field = columns[int(order_column)]
+
+    search_value = request.GET.get('search[value]', '')
+
+    # Agrupar por semana y nombre del proyecto
+    asignaciones = Asignacion.objects.values(
+        'proyecto__nombre',
+        'semana'
+    ).annotate(
+        total_horas_proyecto=Sum('horas_asignadas')
+    ).filter(
+        Q(proyecto__nombre__icontains=search_value) |
+        Q(semana__icontains=search_value)
+    ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
+
+    # Paginación de resultados
+    paginator = Paginator(asignaciones, request.GET.get('length', 10))
+    page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
+    page_obj = paginator.get_page(page_number)
+
+    data = {
+        'draw': int(request.GET.get('draw', 1)),
+        'recordsTotal': paginator.count,
+        'recordsFiltered': paginator.count,
+        'data': list(page_obj)
+    }
+
+    return JsonResponse(data)
+
+
+# # Proyectos (PRIMERA TABLA)
+# def proyectos_data(request):
+#     # Definir el orden por defecto
+#     order_column = request.GET.get('order[0][column]', 0)
+#     order_dir = request.GET.get('order[0][dir]', 'asc')
+
+#     columns = ['nombre', 'duracion_semanas', 'horas_demandadas', 'tipo_proyecto__prioridad', 'rol_requerido']
+#     order_field = columns[int(order_column)]
+
+#     search_value = request.GET.get('search[value]', '')
+
+#     proyectos = Proyecto.objects.filter(
+#         Q(nombre__icontains=search_value) |
+#         Q(duracion_semanas__icontains=search_value) |
+#         Q(horas_demandadas__icontains=search_value) |
+#         Q(tipo_proyecto__prioridad__icontains=search_value) |
+#         Q(rol_requerido__icontains=search_value)
+#     ).values(
+#         'nombre', 'duracion_semanas', 'horas_demandadas', 'tipo_proyecto__prioridad', 'rol_requerido'
+#     ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
+
+#     # Si se solicita un formato de salida (solo Excel)
+#     if 'formato' in request.GET and request.GET.get('formato') == 'excel':
+#         return generar_excel(request, proyectos)  # Pasar los datos de 'proyectos'
+
+#     paginator = Paginator(proyectos, request.GET.get('length', 10))
+#     page_number = request.GET.get('start', 1)
+#     page_obj = paginator.get_page(int(page_number) // paginator.per_page + 1)
+
+#     data = {
+#         'draw': int(request.GET.get('draw', 1)),
+#         'recordsTotal': paginator.count,
+#         'recordsFiltered': paginator.count,
+#         'data': list(page_obj)
+#     }
+
+#     return JsonResponse(data)
+
+
+# # Recursos (SEGUNDA TABLA)
+# def recursos_asignados_data(request):
+#     # Definir el orden por defecto
+#     order_column = request.GET.get('order[0][column]', 0)
+#     order_dir = request.GET.get('order[0][dir]', 'asc')
+
+#     columns = ['proyecto__nombre', 'semana', 'total_horas_semanales']
+#     order_field = columns[int(order_column)]
+
+#     search_value = request.GET.get('search[value]', '')
+
+#     asignaciones = Asignacion.objects.values(
+#         'proyecto__nombre',
+#         'semana'
+#     ).annotate(
+#         total_horas_semanales=Sum('horas_asignadas')
+#     ).filter(
+#         Q(proyecto__nombre__icontains=search_value) |
+#         Q(semana__icontains=search_value)
+#     ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
+
+#     # Si se solicita un formato de salida (solo Excel)
+#     if 'formato' in request.GET and request.GET.get('formato') == 'excel':
+#         return generar_excel(request, asignaciones)
+
+#     paginator = Paginator(asignaciones, request.GET.get('length', 10))
+#     page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
+#     page_obj = paginator.get_page(page_number)
+
+#     data = {
+#         'draw': int(request.GET.get('draw', 1)),
+#         'recordsTotal': paginator.count,
+#         'recordsFiltered': paginator.count,
+#         'data': list(page_obj)
+#     }
+
+#     return JsonResponse(data)
+
+# (TERCERA TABLA)
+# Vista para mostrar horas agrupadas por rol y semana
+# Vista para mostrar horas agrupadas por rol y semana
+
+
+# TERCERA TABLA
+def asignaciones_data(request):
+    order_column = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+
+    # Definir las columnas para ordenar
+    columns = ['recurso__rol', 'semana', 'total_horas']
+    order_field = columns[int(order_column)]
+
+    # Obtener el valor de búsqueda del DataTable
+    search_value = request.GET.get('search[value]', '')
+
+    # Agrupar las horas asignadas por rol y semana
+    asignaciones_agrupadas = Asignacion.objects.values(
+        'recurso__rol',  # Agrupar por rol
+        'semana'         # Agrupar por semana
+    ).annotate(
+        total_horas=Sum('horas_asignadas')  # Sumar todas las horas asignadas en cada semana para el rol
+    ).filter(
+        Q(recurso__rol__icontains=search_value) |
+        Q(semana__icontains=search_value)
+    ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
+
+    # Paginación de los resultados
+    paginator = Paginator(asignaciones_agrupadas, request.GET.get('length', 10))
+    page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
+    page_obj = paginator.get_page(page_number)
+
+    # Preparar el resultado para DataTables
+    data = {
+        'draw': int(request.GET.get('draw', 1)),
+        'recordsTotal': paginator.count,
+        'recordsFiltered': paginator.count,
+        'data': list(page_obj)
+    }
+
+    return JsonResponse(data)
+
 def asignaciones_list(request):
     """
     Vista que muestra la lista de asignaciones en una tabla paginada.
@@ -1249,89 +1592,14 @@ def asignaciones_list(request):
     # Crear una lista de páginas visibles
     page_range = list(range(start_page, end_page + 1))
 
-    data = {'asignaciones':page_obj, 'num_pages':num_pages, 'current_page':current_page, 'page_range':page_range}
     # Renderizar el template con las asignaciones paginadas
-    return render(request, 'core/asignaciones_list.html', data)
+    return render(request, 'core/asignaciones_list.html', {
+        'asignaciones': page_obj,
+        'num_pages': num_pages,
+        'current_page': current_page,
+        'page_range': page_range,
+    })
 
-
-def asignaciones_data(request):
-    # Definir el orden por defecto
-    order_column = request.GET.get('order[0][column]', 0)  # Obtiene el índice de la columna a ordenar
-    order_dir = request.GET.get('order[0][dir]', 'asc')  # Obtiene el orden (ascendente o descendente)
-    
-    # Mapear el índice de la columna a los nombres de los campos del modelo
-    columns = [
-        'proyecto__nombre',
-        'recurso__nombre',
-        'semana',
-        'horas_asignadas'
-    ]
-    
-    # Obtener el campo por el que ordenar
-    order_field = columns[int(order_column)]
-    
-    # Realizar la consulta con ordenación
-    asignaciones = Asignacion.objects.all().select_related('proyecto', 'recurso').values(
-        'proyecto__nombre', 'recurso__nombre', 'semana', 'horas_asignadas'
-    ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
-
-    # Configurar la paginación
-    paginator = Paginator(asignaciones, request.GET.get('length', 10))
-    page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
-    page_obj = paginator.get_page(page_number)
-
-    # Preparar la respuesta JSON
-    data = {
-        'draw': int(request.GET.get('draw', 1)),
-        'recordsTotal': paginator.count,
-        'recordsFiltered': paginator.count,
-        'data': list(page_obj)
-    }
-
-    return JsonResponse(data)
-
-
-# Proyectos
-def proyectos_data(request):
-    proyectos = Proyecto.objects.all().values(
-        'nombre', 'duracion_semanas', 'horas_demandadas', 'tipo_proyecto__prioridad', 'rol_requerido'
-    )
-    paginator = Paginator(proyectos, request.GET.get('length', 10))
-    page_number = request.GET.get('start', 1)
-    page_obj = paginator.get_page(int(page_number) // paginator.per_page + 1)
-    data = {
-        'draw': int(request.GET.get('draw', 1)),
-        'recordsTotal': paginator.count,
-        'recordsFiltered': paginator.count,
-        'data': list(page_obj)
-    }
-    return JsonResponse(data)
-
-
-# Recursos
-def recursos_asignados_data(request):
-    # Realizamos una agregación de las horas asignadas por proyecto y semana
-    asignaciones = Asignacion.objects.values(
-        'proyecto__nombre',  # Nombre del proyecto
-        'semana',  # Número de la semana
-    ).annotate(
-        total_horas_semanales=Sum('horas_asignadas')  # Suma de las horas asignadas por semana
-    )
-
-    # Implementamos paginación de resultados
-    paginator = Paginator(asignaciones, request.GET.get('length', 10))
-    page_number = int(request.GET.get('start', 0)) // paginator.per_page + 1
-    page_obj = paginator.get_page(page_number)
-
-    # Estructura de datos para enviar a DataTables
-    data = {
-        'draw': int(request.GET.get('draw', 1)),
-        'recordsTotal': paginator.count,
-        'recordsFiltered': paginator.count,
-        'data': list(page_obj)
-    }
-
-    return JsonResponse(data)
 
 
 # Configuración de logging
@@ -1397,7 +1665,6 @@ def ejecutar_asignacion(request):
 
     return HttpResponse(status=405)  # Método no permitido
 
-
 def eliminar_asignaciones(request):
     """
     Vista para eliminar todas las asignaciones actuales.
@@ -1410,3 +1677,140 @@ def eliminar_asignaciones(request):
         return redirect('asignaciones_list')  # Redirige a la página de asignaciones
 
     return HttpResponse(status=405)  # Devuelve un error si no es un POST
+
+
+
+
+# def proyectos_a_asignar(request):
+#     # Filtrar proyectos que necesitan asignación para mostrar
+#     proyectos_necesitan_asignacion = proyectos.objects.filter(
+#         ocupacionInicio__lt=80.00,  # Ocupación menor al 80%
+#         disponibilidad__gt=0        # Debe tener disponibilidad
+#     )
+
+#     # Contexto para renderizar
+#     context = {
+#         'proyectos': proyectos_necesitan_asignacion,
+#         'asignaciones': asignacion.objects.all()
+#     }
+
+#     return render(request, 'core/proyectos_a_asignar.html', context)
+
+# def limpiar_asignaciones(request):
+#     # Limpiar asignaciones previas
+#     asignacion.objects.all().delete()
+#     return redirect('proyectos_a_asignar')
+
+# def limpiar_proyectos(request):
+#     if request.method == 'POST':
+#         proyectos.objects.all().delete()
+#         messages.success(request, "Todos los proyectos han sido eliminados exitosamente.")
+#         return redirect('asignar_recursos')
+    
+# def pruebas(request):
+#     # Puedes incluir lógica aquí si es necesario
+#     # Por ahora, esta vista simplemente renderiza la plantilla con el contexto recibido
+#     return render(request, 'core/pruebas.html')
+
+def asignar_recursos():
+    """
+    Algoritmo que asigna recursos semana a semana según la duración y la semana de inicio de cada proyecto.
+    Se asegura de que solo se asigne un jefe de proyecto por proyecto y que si no hay jefe disponible,
+    la asignación sea marcada como 'Sin jefe de proyecto asignado' en lugar de 0 horas.
+    Además, si un empleado está asignado a más de un proyecto en una semana, las horas se distribuyen equitativamente.
+    """
+    mensaje = ""
+    asignacion_realizada = False  # Para verificar si se realizó alguna asignación
+
+    # Iteramos sobre cada proyecto para asignar recursos según su duración
+    proyectos = Proyecto.objects.all().order_by('-tipo_proyecto__prioridad', 'nombre')
+
+    for proyecto in proyectos:
+        # Obtener la semana de inicio y la duración del proyecto
+        semana_inicio = proyecto.semana_inicio
+        duracion_semanas = proyecto.duracion_semanas
+        
+        print(f"Procesando proyecto '{proyecto.nombre}' con duración de {duracion_semanas} semanas, comenzando en la semana {semana_inicio}...")
+
+        # Iteramos sobre las semanas que abarca el proyecto
+        for i in range(duracion_semanas):
+            # Calcular la semana de asignación considerando el ciclo de 52 semanas
+            semana_asignacion = (semana_inicio + i - 1) % 52 + 1  # Reiniciar el conteo al llegar a la semana 53
+            print(f"Asignando en la semana {semana_asignacion}...")
+
+            # Obtener los recursos disponibles para el rol requerido
+            rol_requerido = proyecto.rol_requerido
+            recursos_disponibles = Recurso.objects.filter(rol=rol_requerido).order_by('-prioridad', 'nombre')
+
+            if not recursos_disponibles.exists():
+                print(f"No hay recursos disponibles para el rol '{rol_requerido}' del proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
+                continue
+
+            horas_demandadas = proyecto.horas_demandadas
+            
+            for recurso in recursos_disponibles:
+                # Recuperar la disponibilidad del recurso para la semana en curso
+                disponibilidad = Disponibilidad.objects.filter(recurso=recurso, semana=semana_asignacion).first()
+
+                if not disponibilidad or disponibilidad.horas_disponibles <= 0:
+                    print(f"Recurso '{recurso.nombre}' no tiene horas disponibles en la semana {semana_asignacion}.")
+                    continue
+
+                # Verificar si el proyecto ya ha terminado
+                if i >= duracion_semanas:
+                    break
+
+                # Comprobamos si ya hay una asignación existente
+                asignacion_existente = Asignacion.objects.filter(proyecto=proyecto, recurso=recurso, semana=semana_asignacion).first()
+
+                if asignacion_existente:
+                    print(f"Asignación previa ya detectada para el recurso '{recurso.nombre}' en el proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
+                    continue
+
+                # Verificar todos los proyectos a los que el recurso está asignado en esta semana
+                proyectos_con_recurso = Proyecto.objects.filter(asignacion__recurso=recurso, asignacion__semana=semana_asignacion)
+
+                if proyectos_con_recurso.exists():
+                    # Si el recurso está asignado a varios proyectos, dividir las horas entre todos ellos
+                    demanda_total = sum(proj.horas_demandadas for proj in proyectos_con_recurso)
+                    proporcion = horas_demandadas / demanda_total if demanda_total > 0 else 1
+                    horas_a_asignar = min(disponibilidad.horas_disponibles * proporcion, horas_demandadas)
+                else:
+                    # Si solo está en un proyecto, asignar todas las horas posibles
+                    horas_a_asignar = min(horas_demandadas, disponibilidad.horas_disponibles)
+
+                print(f"Asignando {horas_a_asignar} horas del recurso '{recurso.nombre}' al proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
+
+                # Realizar la asignación
+                Asignacion.objects.create(
+                    proyecto=proyecto,
+                    recurso=recurso,
+                    semana=semana_asignacion,
+                    horas_asignadas=horas_a_asignar
+                )
+
+                # Actualizar la disponibilidad del recurso
+                disponibilidad.horas_disponibles -= horas_a_asignar
+                disponibilidad.save()
+
+                # Reducir la demanda del proyecto
+                horas_demandadas -= horas_a_asignar
+                asignacion_realizada = True  # Marcamos que se ha realizado una asignación
+
+                # Si se asignaron todas las horas demandadas, salir del bucle
+                if horas_demandadas <= 0:
+                    print(f"Se completaron todas las horas demandadas para el proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
+                    break
+
+            # Si quedan horas no asignadas, las guardamos para la siguiente semana
+            if horas_demandadas > 0:
+                print(f"Quedan {horas_demandadas} horas no asignadas para el proyecto '{proyecto.nombre}' después de la semana {semana_asignacion}.")
+                proyecto.horas_demandadas = horas_demandadas
+                proyecto.save()
+
+    # Mensaje final de depuración
+    if asignacion_realizada:
+        return "Asignación de recursos realizada con éxito."
+    else:
+        return "No se pudo realizar la asignación. Verifique la disponibilidad de recursos y la demanda de horas."
+

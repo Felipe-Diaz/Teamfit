@@ -91,12 +91,14 @@ class proyectosAAgrupar(models.Model):
     cliente = models.IntegerField(blank=True, null=True, verbose_name="ID Cliente")
     createDate = models.DateTimeField(null=False, blank=False, verbose_name="Fecha de creación")
     cierre = models.DateField(null=True, blank=True, verbose_name="Cierre del proyecto") #
+    fechaInicio = models.DateField(null=True, blank=True, verbose_name="Inicio del proyecto")
+    fechaFin = models.DateField(null=True, blank=True, verbose_name="Fin del proyecto") 
     egresosNoHHCLP = models.IntegerField(null=False, blank=False, default=0, verbose_name="Egresos no HH CLP") #
     montoOfertaCLP = models.IntegerField(null=False, blank=False, verbose_name="Monto Oferta CLP")
     usoAgencia = models.BooleanField(null=False, blank=False, default=0, verbose_name="Apoyo de Agencia")
     ocupacionInicio = models.DecimalField(max_digits=6, decimal_places=2, null=False, blank=False, verbose_name="Porcentaje de uso inicial") #
-    disponibilidad = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de disponibilidad") #
-    utilizacion = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de utilización") #
+    #disponibilidad = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de disponibilidad") #
+    #utilizacion = models.DecimalField(max_digits=6, decimal_places=2, default=0, null=False, blank=False, verbose_name="Porcentaje de utilización") #
 
     class Meta:
         db_table = 'PROYECTOS'
@@ -148,6 +150,18 @@ class proyectosSemanas(models.Model):
 ### MODELOS GRUPO 2 - ESCRIBIR MODELOS DE ACÁ HACIA ABAJO
     
     
+# Modelo TipoProyecto
+class TipoProyecto(models.Model):
+    nombre = models.CharField(max_length=255)
+    prioridad = models.IntegerField()  # Cuanto mayor es el número, mayor es la prioridad
+
+    class Meta:
+        db_table = "TipoProyecto"
+
+    def __str__(self):
+        return self.nombre
+
+# Modelo Recurso
 class Recurso(models.Model):
     nombre = models.CharField(max_length=255)
     rol = models.CharField(max_length=100)  # Por ejemplo, "Ingeniero de Proyectos", "Jefe de Proyecto"
@@ -159,7 +173,6 @@ class Recurso(models.Model):
 
     def __str__(self):
         return f'{self.nombre} - {self.rol}'
-    
 
 # Modelo Disponibilidad
 class Disponibilidad(models.Model):
@@ -172,20 +185,7 @@ class Disponibilidad(models.Model):
 
     def __str__(self):
         return f'{self.recurso.nombre} - Semana {self.semana}'
-    
-    
-# Modelo TipoProyecto
-class TipoProyecto(models.Model):
-    nombre = models.CharField(max_length=255)
-    prioridad = models.IntegerField()  # Cuanto mayor es el número, mayor es la prioridad
 
-    class Meta:
-        db_table = "TipoProyecto"
-
-    def __str__(self):
-        return self.nombre
-    
-    
 # Modelo Proyecto
 class Proyecto(models.Model):
     nombre = models.CharField(max_length=255)
@@ -199,7 +199,6 @@ class Proyecto(models.Model):
         db_table = "Proyecto"
     def __str__(self):
         return self.nombre
-    
 
 # Modelo Asignacion
 class Asignacion(models.Model):
@@ -207,12 +206,14 @@ class Asignacion(models.Model):
     recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
     semana = models.IntegerField()
     horas_asignadas = models.IntegerField()
+    año = models.IntegerField(default=2024) 
 
     class Meta:
         db_table = "Asignacion"
     def __str__(self):
         return f'{self.proyecto.nombre} - {self.recurso.nombre} - Semana {self.semana} - {self.horas_asignadas} horas'
-    
+
+
 
 class AsignacionControl(models.Model):
     fecha_ultimo_ejecucion = models.DateField(null=True, blank=True)

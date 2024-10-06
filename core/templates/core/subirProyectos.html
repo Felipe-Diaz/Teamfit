@@ -101,7 +101,7 @@ Subir Proyectos
 				{% endif %}
 			</div>
     	</div>
-    {% else %}
+    <!-- {% else %}
 		<div>
 			<a href="{% url 'subirProyectos' %}">Para subir un proyecto a del sistema. Por favor, regrese a la página anterior</a>
 		</div>
@@ -112,7 +112,7 @@ Subir Proyectos
 				<p class="text-center">Solicitar proyectos de Odoo</p>
 				<a id="#dataTable" class="btn btn-primary" href="{% url 'consul_api' %}">Consultar proyectos</a>
 			</div>
-		</section>
+		</section> -->
 	</div>
 </div>
 
@@ -327,26 +327,7 @@ $(document).ready(function () {
 });
 </script>
 
-<script>
-	//Busca distintos Divs, para luego agregar una ID específica a cada input
-	document.addEventListener('DOMContentLoaded', function() {
-		//Buscar y cambia la ID específica del input dentro del HTML
-		for (var i = 0; i < 5; i++) {
-			var idTextBoxHh = 'id_' + i + '-HorasHombre';
-			var idTextBoxSem = 'id_' + i + '-semana';
 
-			var TextBoxSem = document.getElementById(idTextBoxSem);
-			TextBoxSem.value = '3' + (i+1);
-
-			var TextBoxHh = document.getElementById(idTextBoxHh);
-			if(i <= 1){
-			  TextBoxHh.value = 5
-			}else{
-			  TextBoxHh.value = 6
-			}
-		}
-	});
-</script>
 <script>
 	$(document).ready(function(){
 	  $('[data-toggle="tooltip"]').tooltip({

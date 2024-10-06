@@ -15,11 +15,11 @@ def realizar_clusterizacion():
             linea_negocio=proy.lineaNegocio, 
             tipo=proy.tipo
         )
-        print(horas_filtradas)
         for hora in horas_filtradas:
+            #print(f'{hora.linea_negocio} - {hora.tipo} - {hora.rol} - {hora.tipo_semana}')
             proyectosSemanas.objects.update_or_create(
                 semana=1,
-                tipoSemana='Inicial',
+                tipoSemana=hora.tipo_semana,
                 horas=hora,
                 proyecto=proy
             )

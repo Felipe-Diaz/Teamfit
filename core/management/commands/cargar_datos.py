@@ -11,11 +11,18 @@ class Command(BaseCommand):
         tp3 = TipoProyecto.objects.create(nombre="Baja", prioridad=1)
 
         # Crear recursos
-        for i in range(10):
+        for i in range(4):
             Recurso.objects.create(nombre=f"Ingeniero {i+1}", rol="Ingeniero de Proyectos", prioridad=3, horas_promedio=8)
-
-        for i in range(2):
-            Recurso.objects.create(nombre=f"Jefe de Proyecto {i+1}", rol="Jefe de Proyecto", prioridad=3, horas_promedio=8)
+        for i in range(4, 8):
+            Recurso.objects.create(nombre=f"Ingeniero {i+1}", rol="Ingeniero de Proyectos", prioridad=2, horas_promedio=8)
+        for i in range(8, 11 ):
+            Recurso.objects.create(nombre=f"Ingeniero {i+1}", rol="Ingeniero de Proyectos", prioridad=3, horas_promedio=8)
+        for i in range(1):
+            Recurso.objects.create(nombre=f"Jefe de Proyecto {i+1}", rol="Jefe de Proyecto", prioridad=1, horas_promedio=8)
+        for i in range(1, 3):
+            Recurso.objects.create(nombre=f"Jefe de Proyecto {i+1}", rol="Jefe de Proyecto", prioridad=2, horas_promedio=8)  
+        for i in range(3, 4):
+            Recurso.objects.create(nombre=f"Jefe de Proyecto {i+1}", rol="Jefe de Proyecto", prioridad=3, horas_promedio=8)          
 
         # Crear disponibilidad de recursos por semana
         for recurso in Recurso.objects.all():

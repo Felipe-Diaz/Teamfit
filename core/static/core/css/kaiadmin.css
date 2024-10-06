@@ -926,7 +926,7 @@ body {
   .sidebar.sidebar-style-2 .nav .nav-item.active a:before {
     background: transparent; }
   .sidebar.sidebar-style-2 .nav .nav-item .active a {
-    background: rgba(199, 199, 199, 0.2); }
+    background: rgba(255, 0, 0, 0.2); }
     .sidebar.sidebar-style-2 .nav .nav-item .active a p, .sidebar.sidebar-style-2 .nav .nav-item .active a i {
       color: #575962 !important; }
   .sidebar.sidebar-style-2 .nav .nav-item.submenu {

@@ -70,142 +70,142 @@
     </div>
 
     <div class="wrapper">
-        <!-- Sidebar -->
-        <div class="sidebar" data-background-color="dark">
-          <div class="sidebar-logo">
-            <!-- Logo Header -->
-            <div class="logo-header" data-background-color="dark">
-              <a href="{% url 'index' %}" class="logo">
-                <img
-                  src="{% static 'core/img/roda-logo.png' %}"
-                  alt="navbar brand"
-                  class="navbar-brand"
-                  height="60"
-          
-                />
-              </a>
-              <div class="nav-toggle">
-                <button class="btn btn-toggle toggle-sidebar">
-                  <i class="gg-menu-right"></i>
-                </button>
-                <button class="btn btn-toggle sidenav-toggler">
-                  <i class="gg-menu-left"></i>
-                </button>
-              </div>
-              <button class="topbar-toggler more">
-                <i class="gg-more-vertical-alt"></i>
+      <!-- Sidebar -->
+      <div class="sidebar" data-background-color="dark">
+        <div class="sidebar-logo">
+          <!-- Logo Header -->
+          <div class="logo-header" data-background-color="dark">
+            <a href="{% url 'index' %}" class="logo">
+              <img
+                src="{% static 'core/img/roda-logo.png' %}"
+                alt="navbar brand"
+                class="navbar-brand"
+                height="60"
+        
+              />
+            </a>
+            <div class="nav-toggle">
+              <button class="btn btn-toggle toggle-sidebar">
+                <i class="gg-menu-right"></i>
+              </button>
+              <button class="btn btn-toggle sidenav-toggler">
+                <i class="gg-menu-left"></i>
               </button>
             </div>
-            <!-- End Logo Header -->
+            <button class="topbar-toggler more">
+              <i class="gg-more-vertical-alt"></i>
+            </button>
           </div>
-          <div class="sidebar-wrapper scrollbar scrollbar-inner">
-            <div class="sidebar-content">
-              <ul class="nav nav-secondary">
-                <li class="nav-item">
-                  <a
-                    class="collapsed"
-                    aria-expanded="false"
-                    href="{% url 'index' %}"
-                  >
-                    <i class="fas fa-home"></i>
-                    <p>Inicio</p>
-                  </a>
-                </li>
-                <li class="nav-section">
-                  <span class="sidebar-mini-icon">
-                    <i class="fa fa-ellipsis-h"></i>
-                  </span>
-                </li>
-                <li class="nav-item">
-                  <a data-bs-toggle="collapse" href="#base">
-                    <i class="fas fa-layer-group"></i>
-                    <p>Proyectos</p>
-                    <span class="caret"></span>
-                  </a>
-                  <div class="collapse" id="base">
-                    <ul class="nav nav-collapse">
-                      <li>
-                        <a href="{% url 'subirProyectos' %}">
-                          <span class="sub-item">Subir Proyectos</span>
+          <!-- End Logo Header -->
+        </div>
+        <div class="sidebar-wrapper scrollbar scrollbar-inner">
+          <div class="sidebar-content">
+            <ul class="nav nav-secondary">
+              <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+                <a
+                  class="collapsed"
+                  aria-expanded="false"
+                  href="{% url 'index' %}"
+                >
+                  <i class="fas fa-home"></i>
+                  <p>Inicio</p>
+                </a>
+              </li>
+              <li class="nav-section">
+                <span class="sidebar-mini-icon">
+                  <i class="fa fa-ellipsis-h"></i>
+                </span>
+              </li>
+              <li class="nav-item {% if request.path == '/subirProyectos/' or request.path == '/verProyectos/' %}active{% endif %}">
+                <a data-bs-toggle="collapse" href="#base">
+                  <i class="fas fa-layer-group"></i>
+                  <p>Proyectos</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse {% if request.path == '/subirProyectos/' or request.path == '/verProyectos/' %}show{% endif %}" id="base">
+                  <ul class="nav nav-collapse">
+                    <li class="{% if request.path == '/subirProyectos/' %}active{% endif %}">
+                      <a href="{% url 'subirProyectos' %}">
+                        <span class="sub-item">Subir Proyectos</span>
+                      </a>
+                    </li>
+                    <li class="{% if request.path == '/verProyectos/' %}active{% endif %}">
+                      <a href="{% url 'verProyectos' %}">
+                        <span class="sub-item">Ver Proyectos</span>
+                      </a>
+                    </li>
+                </div>
+              </li>
+              <li class="nav-item {% if request.path == '/crearUsuarios' or request.path == '/verUsuarios' %}active{% endif %}">
+                <a data-bs-toggle="collapse" href="#sidebarLayouts">
+                  <i class="fa fa-users" aria-hidden="true"></i>
+                  <p>Administrar Usuarios</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse {% if request.path == '/crearUsuarios' or request.path == '/verUsuarios' %}show{% endif %}" id="sidebarLayouts">
+                  <ul class="nav nav-collapse">
+                    <li class="{% if request.path == '/crearUsuarios' %}active{% endif %}">
+                      <a href="{% url 'crearUsuarios' %}">
+                        <span class="sub-item">Crear Usuario</span>
+                      </a>
+                    </li>
+                    <li class="{% if request.path == '/verUsuarios' %}active{% endif %}">
+                      <a href="{% url 'verUsuarios' %}">
+                        <span class="sub-item">Ver Usuarios</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item {% if request.path == '/graficar_Datos' or request.path == '/asignaciones/' %}active{% endif %}">
+                <a data-bs-toggle="collapse" href="#forms">
+                  <i class="fa fa-folder-open" aria-hidden="true"></i>
+                  <p>Asignaciones</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse {% if request.path == '/graficar_Datos' or request.path == '/asignaciones/' %}show{% endif %}" id="forms">
+                  <ul class="nav nav-collapse">
+                    <li>
+                      <a href="#">
+                        <span class="sub-item">Carga Horas</span>
+                      </a>
+                    </li>
+                    <li class="{% if request.path == '/graficar_Datos' %}active{% endif %}">
+                        <a href="{% url 'graficar_Datos' %}">
+                          <span class="sub-item">Ver Diagramas</span>
                         </a>
-                      </li>
-                      <li>
-                        <a href="{% url 'verProyectos' %}">
-                          <span class="sub-item">Ver Proyectos</span>
-                        </a>
-                      </li>
-                  </div>
-                </li>
-                <li class="nav-item">
-                  <a data-bs-toggle="collapse" href="#sidebarLayouts">
-                    <i class="fa fa-users" aria-hidden="true"></i>
-                    <p>Administrar Usuarios</p>
-                    <span class="caret"></span>
+                    </li>
+                    <li class="{% if request.path == '/asignaciones/' %}active{% endif %}">
+                      <a href="{% url 'asignaciones_list' %}">
+                        <span class="sub-item">Asignaciones</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item {% if request.path == '/historial' %}active{% endif %}">
+                <a href="{% url 'historial' %}">
+                  <i class="fa fa-history" aria-hidden="true"></i>
+                  <p>Historial</p>
+                </a>
+              </li>
+              <li class="nav-item {% if request.path == '/cluster' %}active{% endif %}">
+                <a href="{% url 'cluster'%}">
+                    <i class="fa fa-chart-bar" aria-hidden="true"></i>
+                    <p>Cluster</p>
+                </a>
+              </li>
+              <li class="nav-item {% if request.path == '/parametros' %}active{% endif %}">
+                  <a href="{% url 'parametros'%}">
+                      <i class="fa fa-cog" aria-hidden="true"></i>
+                      <p>Parametros</p>
                   </a>
-                  <div class="collapse" id="sidebarLayouts">
-                    <ul class="nav nav-collapse">
-                      <li>
-                        <a href="{% url 'crearUsuarios' %}">
-                          <span class="sub-item">Crear Usuario</span>
-                        </a>
-                      </li>
-                      <li>
-                        <a href="{% url 'verUsuarios' %}">
-                          <span class="sub-item">Ver Usuarios</span>
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="nav-item">
-                  <a data-bs-toggle="collapse" href="#forms">
-                    <i class="fa fa-folder-open" aria-hidden="true"></i>
-                    <p>Asignaciones</p>
-                    <span class="caret"></span>
-                  </a>
-                  <div class="collapse" id="forms">
-                    <ul class="nav nav-collapse">
-                      <li>
-                        <a href="#">
-                          <span class="sub-item">Carga Horas</span>
-                        </a>
-                      </li>
-                      <li>
-                          <a href="{% url 'graficar_Datos' %}">
-                            <span class="sub-item">Ver Diagramas</span>
-                          </a>
-                      </li>
-                      <li>
-                        <a href="{% url 'asignaciones_list' %}">
-                          <span class="sub-item">Asignaciones</span>
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="nav-item">
-                  <a href="{% url 'historial' %}">
-                    <i class="fa fa-history" aria-hidden="true"></i>
-                    <p>Historial</p>
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a href="{% url 'cluster'%}">
-                      <i class="fa fa-chart-bar" aria-hidden="true"></i>
-                      <p>Cluster</p>
-                  </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'parametros'%}">
-                        <i class="fa fa-cog" aria-hidden="true"></i>
-                        <p>Parametros</p>
-                    </a>
-                </li>
-              </ul>
-            </div>
+              </li>
+            </ul>
           </div>
         </div>
-        <!-- End Sidebar -->  
+      </div>
+      <!-- End Sidebar -->  
     {% endblock SideBar %}
     {% block NavBar %}
     <div class="main-panel">
@@ -305,6 +305,7 @@
             </div>
           </nav>
         </div>
+      
     {% endblock NavBar%}
 
 {% block content %}
@@ -487,6 +488,7 @@ document.getElementById('btn-utilizacion').addEventListener('click', function(e)
       inactivityTime();  // Inicia el script de inactividad
   });
 </script>
+
 
 {% endblock EJS%}
 

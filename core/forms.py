@@ -407,7 +407,11 @@ class ProgramacionForm(forms.Form):
         label="Minutos",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-
+    dia = forms.ChoiceField(
+        choices=[(h, f"{h:02d}") for h in range(1, 29)],
+        label="Dia",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     def get_field_by_code(self, code):
         field_name = PROGRAMACION_MAPPING.get(code)
         if field_name:
