@@ -56,17 +56,18 @@ Parámetros del sistema
 {% endblock titulo %}
 {% block content %}
 <body>
-    <div class="container-fluid" style="margin-top: 70px;">
+    <div class="container-fluid" style="margin-top: 80px;">
         <div class = "row">
             <div class = "col-md-12">
                 <div class = "card">
                     <div>
-                        <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#parametros-content" aria-expanded="true" aria-controls="parametros-content">
-                            <h2 class="custom-grey-bg mb-0 col-md-6">
-                                Parámetros eliminación de Registro
+                        <!-- <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#parametros-content" aria-expanded="true" aria-controls="parametros-content"> -->
+                            <!-- <h2 class="custom-grey-bg mb-0 col-md-6"> -->
+                            <h2 class="custom-grey-bg">
+                                Eliminación de Registro
                             </h2>
-                            <span class="arrow-icon">▼</span>
-                        </button>
+                            <!-- <span class="arrow-icon">▼</span>
+                        </button> -->
                         <div id="parametros-content" class="collapse show">
                             <br>
                             <div class="container">
@@ -158,6 +159,8 @@ Parámetros del sistema
                                         <h6 class="gray-bg"><strong>{{ form_categorias.modelo }} {{form_categorias.modelo.label}}</strong></h6>
                                         <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
                                             <div class="offset-md-1">{{ form_categorias.realizacion_clusterizacion }}{{ form_categorias.realizacion_clusterizacion.label }}</div>
+                                            <div class="offset-md-1">{{ form_categorias.asignacion_de_recursos }}{{ form_categorias.asignacion_de_recursos.label }}</div>
+                                            <div class="offset-md-1">{{ form_categorias.inyeccion_a_odoo }}{{ form_categorias.inyeccion_a_odoo.label }}</div>
                                         </div>
                                         <!--  -->
                                     </div>
@@ -210,8 +213,39 @@ Parámetros del sistema
                                                 <hr>
                                             </div>
                                         </div>
-                                        <div class="text-align-center offset-sm-5">
-                                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                    </div>
+                                    <br>
+                                    <br>
+                                    <div>
+                                        <!-- <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#parametros-content" aria-expanded="true" aria-controls="parametros-content"> -->
+                                            <!-- <h2 class="custom-grey-bg mb-0 col-md-6"> -->
+                                        <h2 class="custom-grey-bg">
+                                            Clusterizacion
+                                        </h2>
+                                            <!-- <span class="arrow-icon">▼</span> -->
+                                        <!-- </button> -->
+                                        <div id="parametros-content" class="collapse show">
+                                            <div class="container">
+                                            </div>
+                                            <div class="card-body">
+                                                    <div class="main-checkbox">
+                                                        <div class="form-check">
+                                                            <!-- Autenticación -->
+                                                            <h6 class="gray-bg"> <strong>Escenario a utilizar</strong></h6>
+                                                            <p>En la siguiente seccion se especifica unicamente el escenario a utilizar para realizar la asignacion de horas.</p>
+                                                            <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                                                <div class="offset-md-1">{{ form_escenarios.optimista }}{{ form_escenarios.optimista.label }}</div>
+                                                                <div style="padding-left: 2%;">{{ form_escenarios.media }}{{ form_escenarios.media.label }}</div>
+                                                                <div style="padding-left: 2%;">{{ form_escenarios.pesimista }}{{ form_escenarios.pesimista.label }}</div>
+                                                            </div>
+                                                            <hr>
+                                                        </div>
+                                                    </div>
+                                            </div>
+                                            <div class="text-align-center offset-sm-5">
+                                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                            </div>
+                                            <br>
                                         </div>
                                     </div>
                                 </form>
@@ -284,7 +318,11 @@ Parámetros del sistema
         handleSubCategoryChange(mantenimiento, [limpieza_datos]);
         
         // Error
+        const error = document.querySelector("input[name='categorias-error']");
+        const errores_sistema = document.querySelector("input[name='categorias-errores_sistema']");
         // Main category y Sub Category
+        handleMainCategoryChange(error, [errores_sistema]);
+        handleSubCategoryChange(error, [errores_sistema]);
 
         // Auditoría
         const auditoria = document.querySelector("input[name='categorias-auditoria']");
@@ -309,10 +347,12 @@ Parámetros del sistema
         // Modelo
         const modelo = document.querySelector("input[name='categorias-modelo']");
         const realizacion_clusterizacion = document.querySelector("input[name='categorias-realizacion_clusterizacion']");
+        const asignacion_de_recursos = document.querySelector("input[name='categorias-asignacion_de_recursos']");
+        const inyeccion_a_odoo = document.querySelector("input[name='categorias-inyeccion_a_odoo']");
         
         // Main category y Sub Category
-        handleMainCategoryChange(modelo, [realizacion_clusterizacion]);
-        handleSubCategoryChange(modelo, [realizacion_clusterizacion]);
+        handleMainCategoryChange(modelo, [realizacion_clusterizacion, asignacion_de_recursos, inyeccion_a_odoo]);
+        handleSubCategoryChange(modelo, [realizacion_clusterizacion, asignacion_de_recursos, inyeccion_a_odoo]);
 
         // Frecuencia
         const diario = document.querySelector("input[name='programacion-diario']");
@@ -341,20 +381,43 @@ Parámetros del sistema
 
         // Sub Category
         handleSubCategoryChange(hora, minutos, dia);
+
+        // Escenarios
+        const optimista = document.querySelector("input[name='escenarios-optimista']");
+        const media = document.querySelector("input[name='escenarios-media']");
+        const pesimista = document.querySelector("input[name='escenarios-pesimista']");
+
+        handleSubCategoryChange(optimista, media, pesimista);
     });
 </script>
-<!-- <script>
+<script>
     const checkboxes = document.querySelectorAll('#autenticacion-fields input[type="checkbox"]');
     const diaCheckboxes = document.getElementById('dia-checkboxes');
+    const horaMinutosContainer = document.getElementById('hora-minutos');
+    //const mensualFields = document.getElementById('mensual-fields');
 
-    function updateDiaCheckbox(){
+    function updateDiaCheckbox() {
         // Mostrar u ocultar los días según la opción seleccionada
         if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-semanal"]').checked) {
-            diaCheckboxes.style.display = 'block';
+            diaCheckboxes.style.display = 'block'; // Mostrar días si es semanal
+            //mensualFields.style.display = 'none'; // Ocultar campos de mensual
+            horaMinutosContainer.style.display = 'block'; // Mostrar hora/minutos si no es mensual
         } else {
-            diaCheckboxes.style.display = 'none';
+            diaCheckboxes.style.display = 'none'; // Ocultar días si no es semanal
         }
     }
+
+    // function updateHoraMinutosAndMensualFields() {
+    //     // Mostrar u ocultar el div de mensual y manejar la visibilidad de hora
+    //     if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-mensual"]').checked) {
+    //         mensualFields.style.display = 'block'; // Mostrar campos de mensual
+    //         diaCheckboxes.style.display = 'none'; // Ocultar días si es mensual
+    //         horaMinutosContainer.style.display = 'none'; // Ocultar hora/minutos si es mensual
+    //     } else {
+    //         mensualFields.style.display = 'none'; // Ocultar campos de mensual si no está seleccionado
+    //         horaMinutosContainer.style.display = 'block'; // Mostrar hora/minutos si no es mensual
+    //     }
+    // }
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => {
@@ -362,52 +425,13 @@ Parámetros del sistema
                 if (cb !== checkbox) cb.checked = false;
             });
             updateDiaCheckbox();
+            //updateHoraMinutosAndMensualFields(); // Actualiza también la visibilidad del div de mensual y hora
         });
     });
-    document.addEventListener('DOMContentLoaded', updateDiaCheckbox);
-</script> -->
-<script>
-const checkboxes = document.querySelectorAll('#autenticacion-fields input[type="checkbox"]');
-const diaCheckboxes = document.getElementById('dia-checkboxes');
-const horaMinutosContainer = document.getElementById('hora-minutos');
-//const mensualFields = document.getElementById('mensual-fields');
 
-function updateDiaCheckbox() {
-    // Mostrar u ocultar los días según la opción seleccionada
-    if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-semanal"]').checked) {
-        diaCheckboxes.style.display = 'block'; // Mostrar días si es semanal
-        //mensualFields.style.display = 'none'; // Ocultar campos de mensual
-        horaMinutosContainer.style.display = 'block'; // Mostrar hora/minutos si no es mensual
-    } else {
-        diaCheckboxes.style.display = 'none'; // Ocultar días si no es semanal
-    }
-}
-
-// function updateHoraMinutosAndMensualFields() {
-//     // Mostrar u ocultar el div de mensual y manejar la visibilidad de hora
-//     if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-mensual"]').checked) {
-//         mensualFields.style.display = 'block'; // Mostrar campos de mensual
-//         diaCheckboxes.style.display = 'none'; // Ocultar días si es mensual
-//         horaMinutosContainer.style.display = 'none'; // Ocultar hora/minutos si es mensual
-//     } else {
-//         mensualFields.style.display = 'none'; // Ocultar campos de mensual si no está seleccionado
-//         horaMinutosContainer.style.display = 'block'; // Mostrar hora/minutos si no es mensual
-//     }
-// }
-
-checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-        checkboxes.forEach(cb => {
-            if (cb !== checkbox) cb.checked = false;
-        });
+    document.addEventListener('DOMContentLoaded', () => {
         updateDiaCheckbox();
-        //updateHoraMinutosAndMensualFields(); // Actualiza también la visibilidad del div de mensual y hora
+        //updateHoraMinutosAndMensualFields(); // Llama a la función para establecer el estado inicial
     });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    updateDiaCheckbox();
-    //updateHoraMinutosAndMensualFields(); // Llama a la función para establecer el estado inicial
-});
 </script>
 {% endblock UJS %}

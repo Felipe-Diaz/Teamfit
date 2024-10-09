@@ -163,7 +163,7 @@
                   <p>Asignaciones</p>
                   <span class="caret"></span>
                 </a>
-                <div class="collapse {% if request.path == '/graficar_Datos' or request.path == '/asignaciones/' %}show{% endif %}" id="forms">
+                <div class="collapse {% if request.path == '/graficar_Datos' or request.path == '/asignaciones/' or request.path == '/disponibilidad/' %}show{% endif %}" id="forms">
                   <ul class="nav nav-collapse">
                     <li>
                       <a href="#">
@@ -180,9 +180,14 @@
                         <span class="sub-item">Asignaciones</span>
                       </a>
                     </li>
+                    <li class="{% if request.path == '/disponibilidad/' %}active{% endif %}">
+                      <a href="{% url 'disponibilidad' %}">
+                        <span class="sub-item">Disponibilidad</span>
+                      </a>
+                    </li>
                   </ul>
                 </div>
-              </li>
+              </li> <!-- Asignaciones Junily was here-->
               <li class="nav-item {% if request.path == '/historial' %}active{% endif %}">
                 <a href="{% url 'historial' %}">
                   <i class="fa fa-history" aria-hidden="true"></i>

@@ -9,6 +9,7 @@ from .views import eliminar_historial, consul_api, cluster
 
 from .views import asignaciones_data,eliminar_asignaciones
 from .views import asignaciones_list, ejecutar_asignacion, asignaciones_list
+from .views import disponibilidad
 from .views import (subirProyectos,
     pagina_principal,
     ver_proyectos,
@@ -20,7 +21,8 @@ from .views import (subirProyectos,
     asignaciones_data,
     horas_por_recurso_data,
     horas_por_proyecto_data,
-    generar_excel_recursos)
+    generar_excel_recursos,
+    asignar_recursos)
 #Se indican las distintas URL para el sistema.
 ##A la izquierda es el valor que aparecerá en la URL
 ##En el centro se llama a la función que renderiza la página
@@ -53,6 +55,7 @@ urlpatterns = [
     path('horas_por_proyecto_data/', horas_por_proyecto_data, name='horas_por_proyecto_data'),
 
     # Vistas nuevas para los reportes adicionales
+    path('disponibilidad/', disponibilidad, name='disponibilidad'),
 
     # Acciones sobre las asignaciones y generación de reportes
     path('ejecutar_asignacion/', ejecutar_asignacion, name='ejecutar_asignacion'),

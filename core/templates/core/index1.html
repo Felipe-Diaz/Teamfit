@@ -30,41 +30,85 @@ Inicio
       <div class="row">
         <!-- Tarjeta 1: Proyectos Subidos -->
         <div class="col-md-3">
-          <div class="card text-center">
+          <div class="card card-stats card-round text-center">
             <div class="card-body">
-              <h5 class="card-title">Proyectos Subidos</h5>
-              <p class="card-text"><strong>{{ total_proyectos }}</strong></p>
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-project-diagram"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">Proyectos Subidos</h5>
+                    <p class="card-text"><strong>{{ total_proyectos }}</strong></p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
     
         <!-- Tarjeta 2: Temporada (Mes y Semana) -->
         <div class="col-md-3">
-          <div class="card text-center">
+          <div class="card card-stats card-round text-center">
             <div class="card-body">
-              <h5 class="card-title">Temporada</h5>
-              <p class="card-text">Mes: <strong>{{ current_month }}</strong></p>
-              <p class="card-text">Semana: <strong>{{ current_week }}</strong></p>
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-calendar"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">Temporada</h5>
+                    <p class="card-text">Mes: <strong>{{ current_month }}</strong></p>
+                    <p class="card-text">Semana: <strong>{{ current_week }}</strong></p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
     
         <!-- Tarjeta 3: Semanas Restantes en el Año -->
         <div class="col-md-3">
-          <div class="card text-center">
+          <div class="card card-stats card-round text-center">
             <div class="card-body">
-              <h5 class="card-title">Semanas Restantes del Año</h5>
-              <p class="card-text"><strong>{{ remaining_weeks }}</strong> semanas</p>
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-hourglass"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">Semanas Restantes del Año</h5>
+                    <p class="card-text"><strong>{{ remaining_weeks }}</strong> semanas</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
     
         <!-- Tarjeta 4: Cantidad de Empleados -->
         <div class="col-md-3">
-          <div class="card text-center">
+          <div class="card card-stats card-round text-center">
             <div class="card-body">
-              <h5 class="card-title">Empleados</h5>
-              <p class="card-text"><strong>Ingenieros: {{ ingenieros }} <br> Jefes: {{ jefes }}</strong></p>
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-users"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">Empleados</h5>
+                    <p class="card-text"><strong>Ingenieros: {{ ingenieros }} <br> Jefes: {{ jefes }}</strong></p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

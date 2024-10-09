@@ -304,6 +304,8 @@ CATEGORIAS_MAPPING = {
     'F2': 'actualizacion_permisos',
     'G': 'modelo',
     'G1': 'realizacion_clusterizacion',
+    'G2': 'asignacion_de_recursos',
+    'G3': 'inyeccion_a_odoo',
 }
 
 class CategoriasForm(forms.Form):
@@ -358,6 +360,8 @@ class CategoriasForm(forms.Form):
     # Modelo
     modelo = forms.BooleanField(required=False, label="Modelo", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
     realizacion_clusterizacion = forms.BooleanField(required=False, label="Realización de la clusterización", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    asignacion_de_recursos = forms.BooleanField(required=False, label="Asignación de recursos", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    inyeccion_a_odoo = forms.BooleanField(required=False, label="Inyecciones a Odoo", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
 
     def get_field_by_code(self, code):
         field_name = CATEGORIAS_MAPPING.get(code)
@@ -414,6 +418,23 @@ class ProgramacionForm(forms.Form):
     )
     def get_field_by_code(self, code):
         field_name = PROGRAMACION_MAPPING.get(code)
+        if field_name:
+            return self[field_name]
+        return None
+
+ESCENARIOS_MAPPING = {
+    'A1': 'optimista',
+    'A2': 'media',
+    'A3': 'pesimista'
+}
+
+class EscenariosForm(forms.Form):
+    optimista = forms.BooleanField(required=False, label="Optimista", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    media = forms.BooleanField(required=False, label="Media", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+    pesimista = forms.BooleanField(required=False, label="Pesimista", widget=forms.CheckboxInput(attrs={'class':'form-check-input'}))
+
+    def get_field_by_code(self, code):
+        field_name = ESCENARIOS_MAPPING.get(code)
         if field_name:
             return self[field_name]
         return None

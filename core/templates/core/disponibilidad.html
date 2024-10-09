@@ -1,0 +1,158 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Disponibilidad
+{% endblock titlePage %}
+
+{% block estiloHead %}
+<style>
+.msp{
+    margin-top: 80px;
+    border: 3px solid red;
+}
+.employee-info {
+    margin-bottom: 20px;
+}
+
+.progress {
+    height: 25px;
+}
+
+.progress-bar {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+
+</style>
+
+{% endblock estiloHead %}
+{% block titulo %}
+Disponibilidad Semanal
+{% endblock titulo %}
+{% block content %}
+<body>
+    <section>
+        <div class="container msp">
+
+            <form class="row mt-2">
+                <div class="col-md-2 position-relative">
+                    <label for="year-selector">Selecciona el Año:</label>
+                    <select class="form-select" id="year-selector">
+                        {% for year in years %}
+                            <option value="{{ year }}" {% if year == year_selected %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 position-relative">
+                    <label for="week-selector">Selecciona la Semana:</label>
+                    <select class="form-select" id="week-selector">
+                        {% for week in weeks %}
+                            <option value="{{ week }}" {% if week == week_selected %}selected{% endif %}>{{ week }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 position-relative">
+                    <button class="btn btn-primary mt-3" id="get-availability">Obtener Disponibilidad</button>
+                </div>
+            </form>
+
+            <div class="card mt-3 availability-info">
+
+                <div class="card-body" id="availability-results">
+                    {% if disp %}
+                        {% for empleado in disp.values %}
+                            <div class="employee-info">
+                                <strong>Recurso: {{ empleado.employee }}</strong>
+                                <br>Horas semanales: {{ empleado.horas_semanales }}
+                                <br>Horas utilizadas: {{ empleado.horas_utilizadas }}
+                                <br>Horas disponibles: {{ empleado.horas_disponibles }}
+                
+                                <!-- Barra de progreso -->
+                                 <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="progress my-2">
+                                            <div class="progress-bar 
+                                            {% if empleado.porcentaje_utilizado < 50.0 %}
+                                                bg-success
+                                            {% elif empleado.porcentaje_utilizado < 75.0 %}
+                                                bg-warning
+                                            {% else %}
+                                                bg-secondary
+                                            {% endif %}
+                                            progress-bar-striped" 
+                                            role="progressbar" 
+                                            style="width: {{ empleado.porcentaje_utilizado }}%;"
+                                            aria-valuenow="{{ empleado.porcentaje_utilizado }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                            {{ empleado.porcentaje_utilizado }}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+                                <hr>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No hay disponibilidad registrada.</p>
+                    {% endif %}
+                </div>
+                
+
+            </div>
+            
+        </div><!-- div principal-->
+    </section>
+</body>
+
+{% endblock content %}
+
+
+{% block UJS %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script>
+    document.getElementById('get-availability').addEventListener('click', function() {
+        const week = document.getElementById('week-selector').value;
+        const year = document.getElementById('year-selector').value;
+
+        // Llamada a la API usando fetch
+        fetch(`/disponibilidad/?week=${week}&year=${year}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'  // Asegúrate de que la petición se considere AJAX
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener disponibilidad');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const resultsContainer = document.getElementById('availability-results');
+            resultsContainer.innerHTML = '';  // Limpiar resultados anteriores
+
+            if (data && data.disp && data.disp.length > 0) {
+                for (const empleado of Object.values(data.disp)) {
+                    const employeeDiv = document.createElement('div');
+                    employeeDiv.innerHTML = `
+                        <strong>${empleado.employee}</strong>:
+                        <br>Horas semanales: ${empleado.horas_semanales}
+                        <br>Horas utilizadas: ${empleado.horas_utilizadas}
+                        <br>Horas disponibles: ${empleado.horas_disponibles}
+                        <hr>
+                    `;
+                    resultsContainer.appendChild(employeeDiv);
+                }
+            } else {
+                resultsContainer.innerHTML = '<p>No hay disponibilidad registrada.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al obtener la disponibilidad.');
+        });
+    });
+</script>
+{% endblock UJS %}
