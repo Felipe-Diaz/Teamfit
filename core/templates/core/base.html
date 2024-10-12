@@ -165,16 +165,11 @@
                 </a>
                 <div class="collapse {% if request.path == '/graficar_Datos' or request.path == '/asignaciones/' or request.path == '/disponibilidad/' %}show{% endif %}" id="forms">
                   <ul class="nav nav-collapse">
-                    <li>
-                      <a href="#">
-                        <span class="sub-item">Carga Horas</span>
-                      </a>
-                    </li>
-                    <li class="{% if request.path == '/graficar_Datos' %}active{% endif %}">
+                    <!-- <li class="{% if request.path == '/graficar_Datos' %}active{% endif %}">
                         <a href="{% url 'graficar_Datos' %}">
                           <span class="sub-item">Ver Diagramas</span>
                         </a>
-                    </li>
+                    </li> -->
                     <li class="{% if request.path == '/asignaciones/' %}active{% endif %}">
                       <a href="{% url 'asignaciones_list' %}">
                         <span class="sub-item">Asignaciones</span>
@@ -183,6 +178,11 @@
                     <li class="{% if request.path == '/disponibilidad/' %}active{% endif %}">
                       <a href="{% url 'disponibilidad' %}">
                         <span class="sub-item">Disponibilidad</span>
+                      </a>
+                    </li>
+                    <li class="{% if request.path == '/Carga a Odoo/' %}active{% endif %}">
+                      <a href="{% url 'cargaOdoo' %}">
+                        <span class="sub-item">Carga Odoo</span>
                       </a>
                     </li>
                   </ul>

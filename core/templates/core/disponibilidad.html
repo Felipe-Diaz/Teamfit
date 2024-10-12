@@ -7,23 +7,9 @@ Teamfit - Disponibilidad
 {% block estiloHead %}
 <style>
 .msp{
-    margin-top: 80px;
-    border: 3px solid red;
+    margin-top: 8rem;
+    max-width: 95%;
 }
-.employee-info {
-    margin-bottom: 20px;
-}
-
-.progress {
-    height: 25px;
-}
-
-.progress-bar {
-    font-weight: bold;
-    font-size: 14px;
-}
-
-
 </style>
 
 {% endblock estiloHead %}
@@ -33,76 +19,57 @@ Disponibilidad Semanal
 {% block content %}
 <body>
     <section>
-        <div class="container msp">
+        <div class="container-fluid msp">
 
-            <form class="row mt-2">
-                <div class="col-md-2 position-relative">
-                    <label for="year-selector">Selecciona el Año:</label>
-                    <select class="form-select" id="year-selector">
-                        {% for year in years %}
-                            <option value="{{ year }}" {% if year == year_selected %}selected{% endif %}>{{ year }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2 position-relative">
-                    <label for="week-selector">Selecciona la Semana:</label>
-                    <select class="form-select" id="week-selector">
-                        {% for week in weeks %}
-                            <option value="{{ week }}" {% if week == week_selected %}selected{% endif %}>{{ week }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3 position-relative">
-                    <button class="btn btn-primary mt-3" id="get-availability">Obtener Disponibilidad</button>
-                </div>
-            </form>
-
-            <div class="card mt-3 availability-info">
-
-                <div class="card-body" id="availability-results">
-                    {% if disp %}
-                        {% for empleado in disp.values %}
-                            <div class="employee-info">
-                                <strong>Recurso: {{ empleado.employee }}</strong>
-                                <br>Horas semanales: {{ empleado.horas_semanales }}
-                                <br>Horas utilizadas: {{ empleado.horas_utilizadas }}
-                                <br>Horas disponibles: {{ empleado.horas_disponibles }}
-                
-                                <!-- Barra de progreso -->
-                                 <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="progress my-2">
-                                            <div class="progress-bar 
-                                            {% if empleado.porcentaje_utilizado < 50.0 %}
-                                                bg-success
-                                            {% elif empleado.porcentaje_utilizado < 75.0 %}
-                                                bg-warning
-                                            {% else %}
-                                                bg-secondary
-                                            {% endif %}
-                                            progress-bar-striped" 
-                                            role="progressbar" 
-                                            style="width: {{ empleado.porcentaje_utilizado }}%;"
-                                            aria-valuenow="{{ empleado.porcentaje_utilizado }}" 
-                                            aria-valuemin="0" 
-                                            aria-valuemax="100">
-                                            {{ empleado.porcentaje_utilizado }}%
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div id="table-container" class="table-responsive">
+                        <table class="table table-bordered table-striped" id="semanas-table">
+                            <thead>
+                                <tr class="text-center table-dark">
+                                    <th>Empleado</th>
+                                    <th>Rol</th>
+                                    {% for semana_grupo in data.0.semanas_agrupadas %}
+                                        {% for semana in semana_grupo %}
+                                        <th>Semana {{ semana.semana}}&nbsp;-&nbsp;{{ semana.año}}</th>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in data %}
+                                <tr>
+                                    <td>{{ item.empleado.nombre }}</td>
+                                    <td>{{ item.empleado.rol }}</td>
+                                    {% for semana_grupo in item.semanas_agrupadas %}
+                                        {% for semana in semana_grupo %}
+                                        <td>
+                                            {{ semana.horas_disponibles }}/{{ item.empleado.horas_totales }}hh
+                                            <div class="progress my-2">
+                                                <div class="progress-bar {{ semana.color }}" role="progressbar" style="width: {{ semana.porcentaje_uso }}%;"
+                                                aria-valuenow="{{ semana.porcentaje_uso }}" aria-valuemin="0" aria-valuemax="100">
+                                                    {{ semana.porcentaje_uso }}%
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                 </div>
-                                <hr>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p>No hay disponibilidad registrada.</p>
-                    {% endif %}
-                </div>
-                
-
+                                        </td>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary" id="prev-btn" onclick="navigate(-1)">Anterior</button>
+                        <button class="btn btn-outline-primary" id="next-btn" onclick="navigate(1)">Siguiente</button>
+                    </div>
+                </div><!-- tarjeta bonita-->
             </div>
+                        
+            
             
         </div><!-- div principal-->
+        
     </section>
 </body>
 
@@ -110,49 +77,52 @@ Disponibilidad Semanal
 
 
 {% block UJS %}
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 <script>
-    document.getElementById('get-availability').addEventListener('click', function() {
-        const week = document.getElementById('week-selector').value;
-        const year = document.getElementById('year-selector').value;
+    
+    let currentGroupIndex = 0;
+    const groups = document.querySelectorAll('#semanas-table thead tr th');
+    const rows = document.querySelectorAll('#semanas-table tbody tr');
+    
+    function navigate(direction) {
+        const groupCount = 4; // Número de semanas por grupo (mejor si es multiplo de 4)
+        const totalGroups = Math.ceil((groups.length - 2) / groupCount);
+    
+        currentGroupIndex += direction;
+        if (currentGroupIndex < 0) {
+            currentGroupIndex = 0;
+        } else if (currentGroupIndex >= totalGroups) {
+            currentGroupIndex = totalGroups - 1;
+        }
 
-        // Llamada a la API usando fetch
-        fetch(`/disponibilidad/?week=${week}&year=${year}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'  // Asegúrate de que la petición se considere AJAX
+        for (let i = 2; i < groups.length; i++) {
+            groups[i].style.display = 'none';
+        }
+    
+        for (let i = 0; i < rows.length; i++) {
+            for (let j = 2; j < rows[i].children.length; j++) {
+                rows[i].children[j].style.display = 'none';
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error al obtener disponibilidad');
-            }
-            return response.json();
-        })
-        .then(data => {
-            const resultsContainer = document.getElementById('availability-results');
-            resultsContainer.innerHTML = '';  // Limpiar resultados anteriores
-
-            if (data && data.disp && data.disp.length > 0) {
-                for (const empleado of Object.values(data.disp)) {
-                    const employeeDiv = document.createElement('div');
-                    employeeDiv.innerHTML = `
-                        <strong>${empleado.employee}</strong>:
-                        <br>Horas semanales: ${empleado.horas_semanales}
-                        <br>Horas utilizadas: ${empleado.horas_utilizadas}
-                        <br>Horas disponibles: ${empleado.horas_disponibles}
-                        <hr>
-                    `;
-                    resultsContainer.appendChild(employeeDiv);
+        }
+    
+        for (let i = currentGroupIndex * groupCount + 2; i < (currentGroupIndex + 1) * groupCount + 2; i++) {
+            if (groups[i]) {
+                groups[i].style.display = '';
+                for (let j = 0; j < rows.length; j++) {
+                    if (rows[j].children[i]) {
+                        rows[j].children[i].style.display = '';
+                    }
                 }
-            } else {
-                resultsContainer.innerHTML = '<p>No hay disponibilidad registrada.</p>';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ocurrió un error al obtener la disponibilidad.');
-        });
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        navigate(0);
     });
+    
 </script>
+
 {% endblock UJS %}

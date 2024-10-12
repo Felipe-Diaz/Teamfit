@@ -3,11 +3,13 @@ import pytz
 from datetime import date, datetime, timedelta
 import re
 import ast
+import json
+from .models import Empleado
 
 URL_BASE = 'https://teamfit.openscorp.com/api/'
-API_KEY = 'RerPuUkAjjx7b2CDhw4XwDS30n3e5rH8qOh'
+API_KEY = 'SECRET CODE'
 
-#-para enviar las tareas al Oodo
+#-para enviar las tareas al Oodo 
 def enviar_datos_planning_slots(id, employee_id, allocated_hours, start_datetime, end_datetime, name):
     endpoint = 'planning_slot?'
     
@@ -34,8 +36,11 @@ def enviar_datos_planning_slots(id, employee_id, allocated_hours, start_datetime
                 'done':True,
                 'object':upload
             }
+            print('Se han enviado los datos')
             return respuesta
         else:
+            print(upload.json())
+            print('No se han guardado los datos')
             return False
     except Exception as e:
         print(f'Han ocurrido errores: \n{e}')
@@ -202,7 +207,7 @@ def obtener_trabajo_empleado(page=1, page_size=80, id=1):
 
     except Exception as e:
         print(f'Ha ocurrido un error: \n{e}')
-
+    
 #Junily was here
 def obtener_resource_calendar(page=1,page_size=80):
     """
@@ -247,9 +252,7 @@ def convertir_fecha_a_gmt(fecha_str):
     gmt_tz = pytz.timezone('GMT')
     hora_gmt = fecha.astimezone(gmt_tz)
     
-    print(f'HORA EN GMT: {hora_gmt}')
-
-    #hora_gmt = datetime.strftime(hora_gmt, '%Y-%m-%dT%H:%M:%S')
+    hora_gmt = datetime.strftime(hora_gmt, '%Y-%m-%dT%H:%M:%S')
     
     return hora_gmt
 
@@ -264,7 +267,7 @@ def convertir_fecha_a_chile(fecha_str):
     chile_tz = pytz.timezone('America/Santiago')
     hora_chile = fecha.astimezone(chile_tz)
 
-    print(f'HORA EN CHILE: {hora_chile}')
+    #print(f'HORA EN CHILE: {hora_chile}')
 
     return hora_chile
 
@@ -290,7 +293,31 @@ def obtener_empleados_con_horas():
         }
         empleados_dict[str(empleado['id'])] = empleadoJson
     return empleados_dict
-#    
+#
+def cargar_empleados():
+    empleados = obtener_api_empleados()
+    empleados_dict = {}
+    for empleado in empleados:
+        horas = obtener_horas_recurso(empleado['resource_calendar_id'])
+        rol = obtener_trabajo_empleado(id=empleado['job_id'])
+        
+        if(not rol):
+            continue
+        
+        if(rol != 'Jefe de Proyectos' or rol != 'Ingeniero de Proyectos'):
+            continue
+        
+        Empleado.objects.update_or_create(
+            nombre = empleado['name'],
+            id_recurso = empleado['resource_id'],
+            id_empleado = empleado['id'],
+            defaults={
+                'rol':rol,
+                'horas_totales':horas
+            }
+        )
+    return True
+#
 def obtener_horas_recurso(id=1):
     calendario = obtener_resource_calendar()
     for horario in calendario:
@@ -328,8 +355,8 @@ def convertir_datos_asignacion(semana, año):
 # print(f"Semana Fin: {fecha_resultado['semana_fin']}")
 # print(f"Año: {fecha_resultado['año']}")
 
-
-#Falta agregar años a la formula
+    
+#Funcion para llamar a la api de odoo y obtener los recursos y empleados, apis.py.
 def cal_disponibilidad(semana, anio):
     planning = obtener_planning_slots_por_semana(semana=semana, anio=anio)
     recursos = obtener_api_recursos()
@@ -365,22 +392,19 @@ def cal_disponibilidad(semana, anio):
                 }
         return utilizacion_empleados
     
-##Verificar para evitar tanta demora en cargar datos
-def cal_disponibilidad_varias_semanas(cant_semanas=10):
+#Funcion para llamar a la api de odoo y obtener los recursos, empleados y semanas, apis.py.
+def cal_disponibilidad_varias_semanas(semana_actual, anio_actual, cant_semanas=10):
     recursos = obtener_api_recursos()
     empleados = obtener_api_empleados()
     utilizacion_empleados = {}
     
     hoy = date.today()
     semana_actual = 0
-    anio, semana_actual, _ = hoy.isocalendar()
-    for i in range(cant_semanas+1):
-        semana_actual+=1
-        if(semana_actual > 52):
-            semana_actual = 1
-            anio += 1
-            
+    anio, semana_actual, dia_semana = hoy.isocalendar()
+
+    for i in range(cant_semanas + 1):
         semana_key = f"Sem{semana_actual}"
+
         if semana_key not in utilizacion_empleados:
             utilizacion_empleados[semana_key] = {'sem':semana_actual, 'anio':anio}
             
@@ -389,10 +413,10 @@ def cal_disponibilidad_varias_semanas(cant_semanas=10):
             for empleado in empleados:
                 id_empleado = empleado['id']
                 id_recurso = empleado['resource_calendar_id']
-                calendario = obtener_horas_recurso(empleado['resource_calendar_id'])
+                calendario = obtener_horas_recurso(id_recurso)
                 cant_horas = 0
                 planes = []
-                planning = obtener_planning_slots_por_semana(semana_actual)
+                planning = obtener_planning_slots_por_semana(semana=semana_actual, anio=anio)
                 
                 if(planning):
                     for plan in planning:
@@ -402,6 +426,7 @@ def cal_disponibilidad_varias_semanas(cant_semanas=10):
                             planes.append(plan['id'])
                     
                 horas_disponibles = calendario - cant_horas
+                porcentaje_utilizado = round((cant_horas / calendario) * 100, 2) if calendario > 0 else 0
 
                 utilizacion_empleados[semana_key][str(id_empleado)] = {
                         'resource_id' : id_recurso,
@@ -411,6 +436,12 @@ def cal_disponibilidad_varias_semanas(cant_semanas=10):
                         'horas_semanales' : calendario,
                         'horas_utilizadas' : cant_horas,
                         'horas_disponibles' : horas_disponibles,
+                        'porcentaje_utilizado' : porcentaje_utilizado,
                     }
+        
+        siguiente_semana = hoy + timedelta(weeks= i + 1)
+        semana_actual = siguiente_semana.isocalendar()[1]  # Solo el número de semana
+        anio_actual = siguiente_semana.isocalendar()[0]    # Año correspondiente
+        
     return utilizacion_empleados
     

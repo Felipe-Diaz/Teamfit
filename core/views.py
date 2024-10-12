@@ -1,8 +1,8 @@
 from django.shortcuts import redirect, render, get_object_or_404, redirect
 from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
 from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User 
-from .models import Proyecto, Recurso, Disponibilidad, Asignacion, AsignacionControl, HorasPredecidas 
-from .models import proyectosSemanas
+from .models import Disponibilidad, Asignacion, AsignacionControl, HorasPredecidas 
+from .models import proyectosSemanas, Empleado
 from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from .forms import proyectosForm, CategoriasForm , UsuarioForm, ProgramacionForm, EscenariosForm
 from .forms import CATEGORIAS_MAPPING, PROGRAMACION_MAPPING, ESCENARIOS_MAPPING
@@ -43,9 +43,13 @@ from django.core.paginator import Paginator
 from io import BytesIO
 from .apis import obtener_api_empleados, obtener_planning_slots, obtener_resource_calendar, enviar_datos_planning_slots
 from .apis import obtener_api_recursos, convertir_fecha_a_chile, convertir_fecha_a_gmt, convertir_fecha_a_string
-from .apis import cal_disponibilidad, obtener_empleados_con_horas, convertir_datos_asignacion, obtener_horas_recurso
+from .apis import obtener_empleados_con_horas, convertir_datos_asignacion, obtener_horas_recurso, cal_disponibilidad
 from .apis import obtener_planning_slots_por_semana, obtener_departamento_empleado, cal_disponibilidad_varias_semanas
-
+from .apis import cargar_empleados
+#import collections defaultdict, itertools import islice para disponibilidad x2
+from collections import defaultdict
+from itertools import islice
+from decimal import Decimal
 
 
 # Create your views here.
@@ -87,9 +91,9 @@ def subirProyectos(request, upload='Sh'):
             )
             cont += 1
             proyecto.save()
+        request.session.pop('df_proyectos')
         cat = {'Cat':'E','Sub':'1'}
         almacenado = almacenarHistorial(cat, request.user)
-        request.session.pop('df_proyectos')
         clusterizacion = realizar_clusterizacion()
         return redirect(ver_proyectos)
     
@@ -178,7 +182,7 @@ def cambiarFormatoAlmacenarDb(df):
     df['cierre'] = df['cierre'].fillna(df['createDate'])
     df['cliente'] = df['cliente'].astype(int)
     df['usoAgencia'] = df['usoAgencia'].fillna(0)
-    df['usoAgencia'] = df['usoAgencia'].replace({'Sí': 1, 'no': 0}).astype(bool)
+    df['usoAgencia'] = df['usoAgencia'].replace({'Sí': 1, 'Si': 1, 'si': 1 , 'sí': 1, 'no': 0, 'No': 0}).astype(bool)
     df['egresosNoHHCLP'] = df['egresosNoHHCLP'].fillna(0)
     df['montoOfertaCLP'] = df['montoOfertaCLP'].astype(int)
     df['ocupacionInicio'] = df['ocupacionInicio'].astype(float) 
@@ -201,7 +205,7 @@ def verificarDf(df):
     if df[columns_to_check].isnull().values.any():
         ids_nulos = df.loc[df[columns_to_check].isnull().any(axis=1), 'id'].tolist()
         ids_nulos = sorted(ids_nulos)
-        if(len(ids_nulos) > 5):
+        if(len(ids_nulos) > 0):
             mesg = ("Valores nulos en los siguientes registros: <br> <strong>" + str(ids_nulos[:5]) + "</strong> entre otros. <br>"
                     "Por favor, verifique los registros indicados. <br>"
                     '<i class="fa fa-info-circle" data-toggle="tooltip" data-html="true" title="<div>'
@@ -542,18 +546,11 @@ def pagina_principal(request):
     
     # data = {'bar':bar_chart, 'line':line_chart}
     
-    # 10 semanas -> 2 Inicial - 3-7 Intermedia - 8-10 Final
-    # 
-    
-    #obj = cal_disponibilidad(40, 2025)
-    #print(obj)
-    #print(obtener_trabajo_empleado(id=1))
-    #select_related
-
-    #print(cal_disponibilidad_varias_semanas())
+    #cargar_empleados()
 
     #Cargar Dashboard
     proyectos = proyectosSemanas.objects.select_related('proyecto', 'horas').all()
+    subir_empleados_db()
 
     total_proyectos = proyectos.count()
     
@@ -887,7 +884,7 @@ def ajuste_parametros(request):
         form_programacion = ProgramacionForm(request.POST, prefix='programacion')
         form_escenarios = EscenariosForm(request.POST, prefix='escenarios')
 
-        if form_categorias.is_valid() and form_programacion.is_valid():
+        if form_categorias.is_valid() and form_programacion.is_valid() and form_escenarios.is_valid():
             try:
                 to_keep_categorias = obtener_campos_secundarios(form=form_categorias, tipo='Cat')
                 to_keep_programacion = obtener_campos_secundarios(form=form_programacion, tipo='Cron')
@@ -901,17 +898,23 @@ def ajuste_parametros(request):
                 tiempo = {'hora':hora, 'minutos':minutos, 'dias': dias}
                 print(tiempo)
                 
-                
+                ##Guarda los valores del historial
                 valor_parametro = {
                     'valores_a_mantener': to_keep_categorias,
                     'valores_programacion': to_keep_programacion,
-                    'tiempo':tiempo,
-                    'valores_escenarios': to_keep_escenarios
+                    'tiempo':tiempo
                 }
-
                 parametro, created = Parametro.objects.update_or_create(
                     nombre_parametro='historial.mantener',
                     defaults={'valor': valor_parametro},
+                )
+                ##Guarda los valores del escenario
+                valores_escenario = {
+                    'valores_escenarios': to_keep_escenarios
+                }
+                parametro, created = Parametro.objects.update_or_create(
+                    nombre_parametro='asignacion.tipo',
+                    defaults={'valor':valores_escenario}
                 )
                     
                 cambiar_scheduler(hora=hora, minutos=minutos, id='borrar_historial')
@@ -933,14 +936,14 @@ def ajuste_parametros(request):
                 print("Errores en form_categorias:", form_categorias.errors)
             if form_programacion.errors:
                 print("Errores en form_programacion:", form_programacion.errors)
-            if form_programacion.errors:
+            if form_escenarios.errors:
                 print("Errores en form_programacion:", form_escenarios.errors)
             mesg = 'Ha ocurrido un error. Por favor, verifique los campos correctamente o intentelo de nuevo más tarde.'
             merror.append(mesg)
             
     form_categorias = obtener_valores_formulario_parametro(CategoriasForm(prefix='categorias'))
     form_programacion = obtener_valores_formulario_parametro_programacion(ProgramacionForm(prefix='programacion'))
-    form_escenarios = obtener_valores_formulario_parametro_escenarios(ProgramacionForm(prefix='escenarios'))
+    form_escenarios = obtener_valores_formulario_parametro_escenarios(EscenariosForm(prefix='escenarios'))
 
     data['form_categorias'] = form_categorias
     data['form_programacion'] = form_programacion
@@ -1061,7 +1064,7 @@ def marcar_programacion_principal_parametros(initial_data):
 
 def obtener_valores_formulario_parametro_escenarios(form):
     try:
-        parametro = Parametro.objects.get(nombre_parametro='historial.mantener')
+        parametro = Parametro.objects.get(nombre_parametro='asignacion.tipo')
         valor_parametro = parametro.valor
         valores_escenarios = valor_parametro.get('valores_escenarios', [])
     except:
@@ -1216,6 +1219,9 @@ def cluster(request):
         clusterizacion = realizar_clusterizacion()
         if(clusterizacion):
             data['mesg'] = 'Se ha realizado la clusterización'
+            user = request.user
+            cat = {'Cat':'G', 'Sub':'1'}
+            almacenado = almacenarHistorial(cat, user)
         else:
             data['mesg'] = 'No se ha realizado la clusterización'
         
@@ -1242,6 +1248,90 @@ def eliminar_historial_automatico():
             print('La lista de valores a mantener está vacía. No se eliminaron datos.')
     else:
         print('Parámetro no encontrado.')
+
+def carga_Odoo(request):
+    ###enviar_datos_planning_slot
+    ###tabla asignacion
+    ###obtienes la semana por convertir_datos_asignacion
+    ###id_empleado, id_recurso, horas_asignadas, fecha_inicio, fecha_fin, nombre_proyecto-semana
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
+    # Obtiene todas las asignaciones y sus empleados
+    asignaciones = Asignacion.objects.select_related('empleado').all()
+    
+    # Inicializa un diccionario para almacenar fechas por empleado
+    fechas_por_empleado = {}
+
+    # Agrupa las asignaciones por empleado
+    for asignacion in asignaciones:
+        empleado_id = asignacion.empleado.id
+        semana = asignacion.semana
+        anio = asignacion.anio
+        
+        # Calcula las fechas usando la función proporcionada
+        fecha = convertir_datos_asignacion(semana, anio)
+        fecha_inicio = fecha['semana_inicio']
+        fecha_fin = fecha['semana_fin']
+        anio = fecha['año']
+        
+        # Si el empleado no está en el diccionario, inicializa su entrada
+        if empleado_id not in fechas_por_empleado:
+            fechas_por_empleado[empleado_id] = {
+                'empleado': asignacion.empleado,
+                'asignaciones': []
+            }
+        
+        # Añade la asignación con fechas calculadas a la lista del empleado
+        fechas_por_empleado[empleado_id]['asignaciones'].append({
+            'id_empleado': asignacion.empleado.id_empleado,
+            'id_recurso': asignacion.empleado.id_recurso,
+            'horas_asignadas': asignacion.horas_asignadas,
+            'semana': asignacion.semana,
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin,
+            'nombre_proyecto': f"{asignacion.proyecto} - {asignacion.semana}",
+            'año': anio
+        })
+
+    # Convierte el diccionario en una lista para pasar a la plantilla
+    fechas_totales = list(fechas_por_empleado.values())
+    
+    # Ordena la lista por año y semana
+    fechas_totales.sort(key=lambda x: (x['asignaciones'][0]['año'], x['asignaciones'][0]['semana']))
+
+
+    # Prepara los datos para la plantilla
+    data = {
+        'asignaciones': asignaciones,
+        'fechas_totales': fechas_totales,
+    }
+
+    if request.method == 'POST':
+        cont = 0
+        for empleado_data in fechas_totales:
+            for asignacion in empleado_data['asignaciones']:
+                cont += 1
+                id = asignacion['id_recurso']
+                employee = asignacion['id_empleado']
+                hours = asignacion['horas_asignadas']
+                start = asignacion['fecha_inicio']
+                end = asignacion['fecha_fin']
+                name = asignacion['nombre_proyecto']
+
+                respuesta = enviar_datos_planning_slots(id, employee, hours, start, end, name)
+                if respuesta and respuesta['done']:
+                    messages.error(request, "Datos enviados correctamente")
+                else:
+                    messages.error(request, "Error al enviar los datos")
+                if(cont == 4):
+                    break
+            if(cont == 4):
+                break
+            
+        return redirect(carga_Odoo)
+
+    return render(request, "core/cargaOdoo.html", data)
     
 ##Funciones Grupo 2
 ##  Acá deben escribir las funciones exclusivas del grupo 2
@@ -1262,8 +1352,8 @@ def eliminar_historial_automatico():
 def generar_excel_proyectos(request):
     # Obtener los datos de la tabla horas por recurso
     proyectos = Asignacion.objects.values(
-        'recurso__nombre',  # Nombre del recurso
-        'recurso__rol',     # Rol del recurso
+        'empleado__nombre',  # Nombre del recurso
+        'empleado__rol',     # Rol del recurso
         'semana',           # Semana
     ).annotate(
         total_horas_rol=Sum('horas_asignadas')  # Total de horas asignadas
@@ -1274,7 +1364,7 @@ def generar_excel_proyectos(request):
 
     # Crear un nuevo DataFrame pivotado
     df_pivot = df.pivot_table(
-        index=['recurso__nombre', 'recurso__rol'],  # Agrupar por nombre y rol del recurso
+        index=['empleado__nombre', 'empleado__rol'],  # Agrupar por nombre y rol del recurso
         columns='semana',                           # Semanas se convierten en columnas
         values='total_horas_rol',                   # Valores que se colocan en la tabla
         fill_value=0                                # Rellenar con 0 donde no hay horas asignadas
@@ -1286,8 +1376,8 @@ def generar_excel_proyectos(request):
 
     # Calcular el total de horas por recurso y añadirlo como una nueva fila por rol
     total_row = df_pivot.iloc[:, 2:].sum().to_frame().T  # Sumar las horas, omitiendo las dos primeras columnas (nombre y rol)
-    total_row['recurso__nombre'] = 'Total'  # Asignar el nombre de la fila total
-    total_row['recurso__rol'] = ''  # Dejar vacío el campo de rol en la fila total
+    total_row['empleado__nombre'] = 'Total'  # Asignar el nombre de la fila total
+    total_row['empleado__rol'] = ''  # Dejar vacío el campo de rol en la fila total
     df_pivot = pd.concat([df_pivot, total_row], ignore_index=True)
 
     output = BytesIO()
@@ -1308,7 +1398,7 @@ def generar_excel_proyectos(request):
 def generar_excel_recursos(request):
     # Obtener los datos de asignaciones de la tabla actualizada
     asignaciones = Asignacion.objects.values(
-        'proyecto__nombre',  # Nombre del proyecto
+        'proyecto__proyecto',  # Nombre del proyecto
         'semana',            # Semana
     ).annotate(
         total_horas_proyecto=Sum('horas_asignadas')  # Total de horas asignadas por proyecto
@@ -1319,7 +1409,7 @@ def generar_excel_recursos(request):
 
     # Crear un nuevo DataFrame pivotado
     df_pivot = df.pivot_table(
-        index='proyecto__nombre',  # Agrupar por nombre del proyecto
+        index='proyecto__proyecto',  # Agrupar por nombre del proyecto
         columns='semana',          # Semanas se convierten en columnas
         values='total_horas_proyecto',  # Valores que se colocan en la tabla
         fill_value=0               # Rellenar con 0 donde no hay horas asignadas
@@ -1331,7 +1421,7 @@ def generar_excel_recursos(request):
 
     # Calcular el total de horas por proyecto y añadirlo como una nueva fila
     total_row = df_pivot.iloc[:, 1:].sum().to_frame().T  # Sumar las horas, omitiendo la primera columna que es el proyecto
-    total_row['proyecto__nombre'] = 'Total'  # Asignar el nombre de la fila total
+    total_row['proyecto__proyecto'] = 'Total'  # Asignar el nombre de la fila total
     df_pivot = pd.concat([df_pivot, total_row], ignore_index=True)
 
     output = BytesIO()
@@ -1360,9 +1450,9 @@ def generar_excel_asignacion(request):
 
     # Obtener los datos de las asignaciones
     asignaciones = Asignacion.objects.all().values(
-        'proyecto__nombre',  # Accediendo al nombre del proyecto
-        'recurso__nombre',   # Accediendo al nombre del recurso
-        'recurso__rol',      # Accediendo al rol del recurso
+        'proyecto__proyecto',  # Accediendo al nombre del proyecto
+        'empleado__nombre',   # Accediendo al nombre del recurso
+        'empleado__rol',      # Accediendo al rol del recurso
         'semana',
         'año',
         'horas_asignadas'
@@ -1375,7 +1465,7 @@ def generar_excel_asignacion(request):
 
         # Crear un nuevo DataFrame pivotado
         df_pivot = df.pivot_table(
-            index=['proyecto__nombre', 'recurso__nombre', 'recurso__rol'],  # Mantener estas columnas como índices
+            index=['proyecto__proyecto', 'empleado__nombre', 'empleado__rol'],  # Mantener estas columnas como índices
             columns=['semana'],  # Las semanas se convierten en columnas
             values='horas_asignadas',  # Valores que se colocan en la tabla
             fill_value=0  # Rellenar con 0 donde no hay horas asignadas
@@ -1383,14 +1473,14 @@ def generar_excel_asignacion(request):
 
         # Renombrar las columnas para mayor claridad
         df_pivot.columns.name = None  # Eliminar el nombre de la columna
-        df_pivot.columns = [f'Semana {col}' if col not in ['proyecto__nombre', 'recurso__nombre', 'recurso__rol'] else col for col in df_pivot.columns]
+        df_pivot.columns = [f'Semana {col}' if col not in ['proyecto__proyecto', 'empleado__nombre', 'empleado__rol'] else col for col in df_pivot.columns]
 
         # Calcular el total de horas por semana
         total_horas = df_pivot.loc[:, df_pivot.columns.str.startswith('Semana ')]
         total_horas_sum = total_horas.sum().to_frame().T  # Transponer para que sea una fila
-        total_horas_sum['proyecto__nombre'] = ''
-        total_horas_sum['recurso__nombre'] = ''
-        total_horas_sum['recurso__rol'] = 'Total Horas'  # Etiqueta para la fila de totales
+        total_horas_sum['proyecto__proyecto'] = ''
+        total_horas_sum['empleado__nombre'] = ''
+        total_horas_sum['empleado__rol'] = 'Total Horas'  # Etiqueta para la fila de totales
 
         # Concatenar los datos pivotados con los totales
         df_final = pd.concat([df_pivot, total_horas_sum], ignore_index=True)
@@ -1440,7 +1530,7 @@ def horas_por_recurso_data(request):
     order_dir = request.GET.get('order[0][dir]', 'asc')
 
     # Definición de las columnas para ordenar
-    columns = ['recurso__nombre','recurso__rol', 'semana', 'total_horas_rol']
+    columns = ['empleado__nombre','empleado__rol', 'semana', 'total_horas_rol']
     order_field = columns[int(order_column)]
 
     # Búsqueda por valor
@@ -1448,14 +1538,14 @@ def horas_por_recurso_data(request):
 
     # Agrupar por semana y rol requerido
     proyectos = Asignacion.objects.values(
-        'recurso__nombre',
-        'recurso__rol',
+        'empleado__nombre',
+        'empleado__rol',
         'semana',
     ).annotate(
         total_horas_rol=Sum('horas_asignadas'),
         
     ).filter(
-        Q(recurso__rol__icontains=search_value) |
+        Q(empleado__rol__icontains=search_value) |
         Q(semana__icontains=search_value)
     ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
 
@@ -1480,19 +1570,19 @@ def horas_por_proyecto_data(request):
     order_dir = request.GET.get('order[0][dir]', 'asc')
 
     # Definición de las columnas para ordenar
-    columns = ['proyecto__nombre', 'semana', 'total_horas_proyecto']
+    columns = ['proyecto__proyecto', 'semana', 'total_horas_proyecto']
     order_field = columns[int(order_column)]
 
     search_value = request.GET.get('search[value]', '')
 
     # Agrupar por semana y nombre del proyecto
     asignaciones = Asignacion.objects.values(
-        'proyecto__nombre',
+        'proyecto__proyecto',
         'semana'
     ).annotate(
         total_horas_proyecto=Sum('horas_asignadas')
     ).filter(
-        Q(proyecto__nombre__icontains=search_value) |
+        Q(proyecto__proyecto__icontains=search_value) |
         Q(semana__icontains=search_value)
     ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
 
@@ -1599,7 +1689,7 @@ def asignaciones_data(request):
     order_dir = request.GET.get('order[0][dir]', 'asc')
 
     # Definir las columnas para ordenar
-    columns = ['recurso__rol', 'semana', 'total_horas']
+    columns = ['empleado__rol', 'semana', 'total_horas']
     order_field = columns[int(order_column)]
 
     # Obtener el valor de búsqueda del DataTable
@@ -1607,12 +1697,12 @@ def asignaciones_data(request):
 
     # Agrupar las horas asignadas por rol y semana
     asignaciones_agrupadas = Asignacion.objects.values(
-        'recurso__rol',  # Agrupar por rol
+        'empleado__rol',  # Agrupar por rol
         'semana'         # Agrupar por semana
     ).annotate(
         total_horas=Sum('horas_asignadas')  # Sumar todas las horas asignadas en cada semana para el rol
     ).filter(
-        Q(recurso__rol__icontains=search_value) |
+        Q(empleado__rol__icontains=search_value) |
         Q(semana__icontains=search_value)
     ).order_by(f'{order_field if order_dir == "asc" else "-" + order_field}')
 
@@ -1679,8 +1769,9 @@ def ejecutar_asignacion(request):
                     return HttpResponse("La asignación ya ha sido ejecutada hoy.", status=400)
 
             # Ejecutar la asignación de recursos y capturar el mensaje de retorno
+            
             mensaje_asignacion = asignar_recursos()
-
+            
             # Si la asignación fue exitosa o parcial, actualiza el registro de control
             if "éxito" in mensaje_asignacion or "ya existen" in mensaje_asignacion:
                 control.ejecuciones_exitosas += 1
@@ -1689,7 +1780,6 @@ def ejecutar_asignacion(request):
                 user = request.user
                 cat = {'Cat':'G', 'Sub':'2'}
                 almacenado = almacenarHistorial(cat, user)
-
             mensaje = mensaje_asignacion
 
         except IntegrityError as e:
@@ -1743,8 +1833,6 @@ def eliminar_asignaciones(request):
     return HttpResponse(status=405)  # Devuelve un error si no es un POST
 
 
-
-
 # def proyectos_a_asignar(request):
 #     # Filtrar proyectos que necesitan asignación para mostrar
 #     proyectos_necesitan_asignacion = proyectos.objects.filter(
@@ -1785,119 +1873,181 @@ def asignar_recursos():
     asignacion_realizada = False  # Para verificar si se realizó alguna asignación
 
     # Iteramos sobre cada proyecto para asignar recursos según su duración
-    proyectos = proyectosAAgrupar.objects.all().order_by('tipo', 'proyecto')
-
+    proyectos = proyectosAAgrupar.objects.all().order_by('-fechaFin')
+    hoy = date.today()
+    try:
+        parametro = Parametro.objects.get(nombre_parametro='asignacion.tipo')
+        #print(parametro)
+        tipo_horas = parametro.valor['valores_escenarios'][0]
+    except Exception as e:
+        tipo_horas = 'A2'
+    
     for proyecto in proyectos:
+        #Verifica que el proyecto no inicie in fin de semana.
+        fecha_fin = proyecto.fechaFin
+        print(fecha_fin)
+        
+        if(fecha_fin < hoy):
+            break
+            
+        dia_semana = proyecto.fechaInicio.weekday()
+        if(dia_semana >= 5):
+            proyecto.fechaInicio += timedelta(days=2)
+        
         # Obtener la semana de inicio y la duración del proyecto
-        semana_inicio = proyecto.fechaInicio
-        duracion_semanas = (proyecto.fechaFin-proyecto.fechaInicio)/7
+        anio, semana_inicio, dia_semana = proyecto.fechaInicio.isocalendar()
+        duracion_proyecto = (proyecto.fechaFin - proyecto.fechaInicio)
+        semanas = duracion_proyecto.days // 7
+        print(f"Procesando proyecto '{proyecto.proyecto}' con duración de {semanas} semanas, comenzando en la semana {semana_inicio}...")
         
-        print(f"Procesando proyecto '{proyecto.proyecto}' con duración de {duracion_semanas} semanas, comenzando en la semana {semana_inicio}...")
-
+        horas_predecidas = HorasPredecidas.objects.filter(linea_negocio = proyecto.lineaNegocio, tipo = proyecto.tipo)
+        _, semana_final, dia_semana = proyecto.fechaFin.isocalendar()
+        
         # Iteramos sobre las semanas que abarca el proyecto
-        
-        horas = HorasPredecidas.filter(linea_negocio = proyecto.lineaNegocio)
-        for i in range(duracion_semanas):
+        for i in range(semanas):
             #BLOQUE IF PARA CALCULAR EL % DE SEMANA Y ROL
             # Calcular la semana de asignación considerando el ciclo de 52 semanas
             semana_asignacion = (semana_inicio + i - 1) % 52 + 1  # Reiniciar el conteo al llegar a la semana 53
-            print(f"Asignando en la semana {semana_asignacion}...")
+            if(semana_asignacion == 1):
+                anio += 1
+            #print(f"Asignando en la semana {semana_asignacion}...")
 
-            # Obtener los recursos disponibles para el rol requerido
-            rol_requerido = proyecto.rol_requerido  
-            recursos_disponibles = Recurso.objects.filter(rol=rol_requerido).order_by('-prioridad', 'nombre')
-
-            if not recursos_disponibles.exists():
-                print(f"No hay recursos disponibles para el rol '{rol_requerido}' del proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
-                continue
-
-            horas_demandadas = proyecto.horas_demandadas
+            #Obtener el porcentaje de semana actual
+            porcentaje = ((i + 1) / semanas) * 100
             
-            for recurso in recursos_disponibles:
-                # Usar API para obtener la disponibilidad del recurso
-                disponibilidad = cal_disponibilidad(semana_asignacion, proyecto.anio)
-                
-                if not disponibilidad or disponibilidad[recurso.id]['horas_disponibles'] <= 0:
-                    print(f"Recurso '{recurso.nombre}' no tiene horas disponibles en la semana {semana_asignacion}.")
-                    continue
-
-                # Comprobar si ya hay una asignación existente
-                asignacion_existente = Asignacion.objects.filter(proyecto=proyecto, recurso=recurso, semana=semana_asignacion).first()
-
-                if asignacion_existente:
-                    print(f"Asignación previa ya detectada para el recurso '{recurso.nombre}' en el proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
-                    continue
-
-                # Obtener las horas semanales del recurso a través de la API
-                horas_semanales = obtener_horas_recurso(recurso.id)
-                horas_disponibles = disponibilidad[recurso.id]['horas_disponibles']
-
-                # Verificar todos los proyectos a los que el recurso está asignado en esta semana
-                proyectos_con_recurso = Proyecto.objects.filter(asignacion__recurso=recurso, asignacion__semana=semana_asignacion)
-
-                if proyectos_con_recurso.exists():
-                    # Si el recurso está asignado a varios proyectos, dividir las horas entre todos ellos
-                    demanda_total = sum(proj.horas_demandadas for proj in proyectos_con_recurso)
-                    proporcion = horas_demandadas / demanda_total if demanda_total > 0 else 1
-                    horas_a_asignar = min(horas_disponibles * proporcion, horas_demandadas)
+            if(porcentaje < 25):
+                tipo_semana = 'Inicial'
+            elif(porcentaje >= 25 and porcentaje <=75):
+                tipo_semana = 'Intermedia'
+            elif(porcentaje > 75):
+                tipo_semana = 'Final'
+            # Obtener los recursos disponibles para el rol requerido - Buscar todos los roles
+            horas_tipo_semana = horas_predecidas.filter(tipo_semana=tipo_semana)
+            
+            #Agregar obtener las horas
+            for horas in horas_tipo_semana:
+                if(tipo_horas == 'A1'):
+                    cant_horas = horas.hh_min
+                elif(tipo_horas == 'A3'):
+                    cant_horas = horas.hh_max
                 else:
-                    # Si solo está en un proyecto, asignar todas las horas posibles
-                    horas_a_asignar = min(horas_demandadas, horas_disponibles)
-
-                print(f"Asignando {horas_a_asignar} horas del recurso '{recurso.nombre}' al proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
-
-                # Realizar la asignación
-                Asignacion.objects.create(
-                    proyecto=proyecto,
-                    recurso=recurso,
-                    semana=semana_asignacion,
-                    horas_asignadas=horas_a_asignar
+                    cant_horas = horas.hh_prom
+                empleado = obtener_empleado(proyecto.id, horas.rol, semana_asignacion, anio, cant_horas)
+                Asignacion.objects.update_or_create(
+                    proyecto = proyecto,
+                    empleado = empleado,
+                    semana = semana_asignacion,
+                    anio = anio,
+                    defaults={'horas_asignadas': cant_horas}
                 )
-
-                # Actualizar la disponibilidad del recurso
-                disponibilidad[recurso.id]['horas_disponibles'] -= horas_a_asignar
-
-                # Reducir la demanda del proyecto
-                horas_demandadas -= horas_a_asignar
-                asignacion_realizada = True  # Marcamos que se ha realizado una asignación
-
-                # Si se asignaron todas las horas demandadas, salir del bucle
-                if horas_demandadas <= 0:
-                    print(f"Se completaron todas las horas demandadas para el proyecto '{proyecto.nombre}' en la semana {semana_asignacion}.")
-                    break
-
-            # Si quedan horas no asignadas, las guardamos para la siguiente semana
-            if horas_demandadas > 0:
-                print(f"Quedan {horas_demandadas} horas no asignadas para el proyecto '{proyecto.nombre}' después de la semana {semana_asignacion}.")
-                proyecto.horas_demandadas = horas_demandadas
-                proyecto.save()
-
+        break
+                
     # Mensaje final de depuración
     if asignacion_realizada:
         return "Asignación de recursos realizada con éxito."
     else:
         return "No se pudo realizar la asignación. Verifique la disponibilidad de recursos y la demanda de horas."
 
-##Junily Disponibilidad al final porque si, falta conectar las semanas y el año con la api.
+def subir_empleados_db():
+    cargar_empleados()
+    
+def obtener_empleado(proyecto_id, rol, semana, anio, cant_horas):
+    """
+    Obtiene un empleado que esté disponible. Primero intenta utilizar al empleado asignado anteriormente, en caso de no
+    tener un asignado a un empleado anteriormente o que este no esté disponible, buscará un empleado disponible dentro de la 
+    DB.
+    """
+    asignaciones = Asignacion.objects.select_related('empleado').filter(proyecto=proyecto_id,empleado__rol=rol)
+    asignado = False
+    if(asignaciones):
+        asignacion = asignaciones.first()
+        empleado = asignacion.empleado
+        disponible = verificar_disponibilidad(empleado, semana, anio, cant_horas)
+        if(disponible):
+            asignado = True
+            return empleado
+        
+    if(not asignado):
+        empleados = Empleado.objects.filter(rol=rol)
+        for idx, empleado in enumerate(empleados):
+            disponible = verificar_disponibilidad(empleado, semana, anio, cant_horas)
+            if(disponible):
+                asignado = True
+                return empleado
+
+def verificar_disponibilidad(id_emp, semana, anio, cant_horas):
+    asignaciones = Asignacion.objects.filter(empleado=id_emp, semana=semana, anio=anio).values('semana','anio').annotate(
+        total_horas=Sum('horas_asignadas')
+    ).order_by('semana')
+    if(asignaciones):
+        horas = asignaciones.first()['total_horas']
+        horas_maximas = id_emp.horas_totales
+        horas_totales_utilizadas = Decimal(horas) + Decimal(cant_horas)
+        if(horas_totales_utilizadas <= horas_maximas):
+            return True
+        else:
+            return False
+    else:
+        return True
+
+
+##Junily Disponibilidad views.py.
 def disponibilidad(request):
-    week = request.GET.get('week', 41)  # Por defecto, semana 41
-    year = request.GET.get('year', 2024)  # Por defecto, año 2024
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+
+    asignaciones = Asignacion.objects.select_related('empleado').order_by('anio','semana').all()
+    data = defaultdict(lambda: defaultdict(list)) #Agrupacion por semanas
     
-    # Llama a la función cal_disponibilidad
-    data = cal_disponibilidad(int(week), int(year))
+    Asignacion.objects.update_or_create(
+        proyecto = proyectosAAgrupar.objects.get(id=459),
+        empleado = Empleado.objects.get(id=3),
+        semana = 24, #Cualquiera
+        anio = 2025, #Cualquiera
+        defaults={'horas_asignadas': 18}
+    )
 
-    for empleado in data.values():
-        horas_semanales = empleado.get('horas_semanales', 1)
-        horas_utilizadas = empleado.get('horas_utilizadas', 0)
-        porcentaje_utilizado = round((horas_utilizadas / horas_semanales) * 100, 2)
-        empleado['porcentaje_utilizado'] = f"{porcentaje_utilizado:.2f}"
+    for asignacion in asignaciones:
+        empleado = asignacion.empleado
+        horas_asignadas = Asignacion.objects.filter(empleado=empleado, semana=asignacion.semana, anio=asignacion.anio).aggregate(Sum('horas_asignadas'))['horas_asignadas__sum'] or 0
+        horas_disponibles = empleado.horas_totales - horas_asignadas
+        porcentaje_uso = round((horas_asignadas / empleado.horas_totales * 100)) if empleado.horas_totales > 0 else 0
 
-    years = list(range(2024, 2030))
-    weeks = list(range(1, 53))
+        if porcentaje_uso <= 50.0:
+            color = "bg-success"
+        elif porcentaje_uso <= 75.0:
+            color = "bg-warning"
+        else:
+            color = "bg-danger"
 
-    # Comprobamos si la solicitud es AJAX
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'disp': data})  # Asegúrate de que los datos se envían en una clave "disp"
+
+
+        data[empleado]['nombre'] = empleado.nombre
+        data[empleado]['rol'] = empleado.rol
+        data[empleado]['color'] = color
+        data[empleado]['horas_totales'] = empleado.horas_totales
+        data[empleado]['asignaciones'].append({
+            'semana': asignacion.semana,
+            'año': asignacion.anio,
+            'horas_disponibles': horas_disponibles,
+            'porcentaje_uso': porcentaje_uso,
+            'color': color
+        })
+
+    def agrupacion(iterable, n):
+        it = iter(iterable)
+        while True:
+            chunk = list(islice(it, n))
+            if not chunk:
+                break
+            yield chunk
     
-    # Si no es AJAX, renderizamos la plantilla con los datos
-    return render(request, 'core/disponibilidad.html', {'disp': data, 'years': years, 'week': week, 'year': year ,'weeks':weeks})
+    for empleado, values in data.items():
+        semanas = values['asignaciones']
+        semanas_agrupadas = list(agrupacion(semanas, 4))
+        data[empleado]['semanas_agrupadas'] = semanas_agrupadas
+
+    data_list = [{'empleado': empleado, **values} for empleado, values in data.items()]
+        
+    return render(request, 'core/disponibilidad.html', {'data': data_list})
+

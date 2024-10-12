@@ -90,11 +90,14 @@ Historial del Sistema
     <script>
       $(document).ready(function () {
         // Configuración básica de la tabla
-        $("#basic-datatables").DataTable({});
+        $("#basic-datatables").DataTable({
+          order: [[2, 'desc']]
+        });
 
         // Configuración de la tabla con filtros múltiples
         $("#multi-filter-select").DataTable({
           pageLength: 10,
+          order: [[2, 'desc']],
           initComplete: function () {
             this.api()
               .columns()
@@ -133,6 +136,7 @@ Historial del Sistema
         // Configuración de la tabla para agregar filas
         $("#add-row").DataTable({
           pageLength: 10,
+          order: [[2, 'desc']],
         });
 
         // Acción para agregar una fila

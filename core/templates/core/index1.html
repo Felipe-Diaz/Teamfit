@@ -5,6 +5,10 @@ Inicio
 {% endblock titulo %}
 {% block estiloHead %}
 <style>
+
+	body {
+		overflow: hidden;
+	}
   .container .card .card-header {
     background-color: rgb(245, 245, 245);
     font-size: 1.5rem;
@@ -13,20 +17,25 @@ Inicio
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     letter-spacing: 1px;
   }
-  .table-responsive {
-    overflow-x: auto;
+  .card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
-  @media (max-width: 992px) {
-    .col-md-6 {
-      width: 100%;
-      margin-bottom: 10px;}
-    }
+  .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+  }
 </style>
 {% endblock estiloHead %}
 {% block content %}
-  <body>
+<body>
     <!-- Tajetas de informacion Junily  -->
-    <div class="container-fluid" style=" margin-top: 100px;">
+    <div class="container-fluid" style=" margin-top: 80px;">
       <div class="row">
         <!-- Tarjeta 1: Proyectos Subidos -->
         <div class="col-md-3">
@@ -41,7 +50,7 @@ Inicio
                 <div class="col col-stats ms-3 ms-sm-0">
                   <div class="numbers">
                     <h5 class="card-title">Proyectos Subidos</h5>
-                    <p class="card-text"><strong>{{ total_proyectos }}</strong></p>
+                    <p class="card-text"><strong>{{ total_proyectos }} proyectos</strong></p>
                   </div>
                 </div>
               </div>
@@ -61,9 +70,8 @@ Inicio
                 </div>
                 <div class="col col-stats ms-3 ms-sm-0">
                   <div class="numbers">
-                    <h5 class="card-title">Temporada</h5>
-                    <p class="card-text">Mes: <strong>{{ current_month }}</strong></p>
-                    <p class="card-text">Semana: <strong>{{ current_week }}</strong></p>
+                    <h5 class="card-title">{{ current_month }}</h5>
+                    <p class="card-text"><strong>{{ current_year }} semana {{ current_week }}</strong></p>
                   </div>
                 </div>
               </div>
@@ -83,7 +91,7 @@ Inicio
                 </div>
                 <div class="col col-stats ms-3 ms-sm-0">
                   <div class="numbers">
-                    <h5 class="card-title">Semanas Restantes del Año</h5>
+                    <h5 class="card-title">Semanas Restantes</h5>
                     <p class="card-text"><strong>{{ remaining_weeks }}</strong> semanas</p>
                   </div>
                 </div>
@@ -115,119 +123,92 @@ Inicio
       </div>
     </div>
     
-    <!-- Historial y Proyectos -->
-    <div class="container">
-      <div class="row" >
-          <!-- New Customers section -->
-          <div class="col-md-6">
-              <div class="card">
-                  <div class="card-header">
-                      Historial
-                  </div>
-                  <div class="table-responsive">
-                    <table class="table">
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Fecha</th>
-                          <th>Categoria</th>
-                          <th>Sub-Categoria</th>
-                          <th>Usuario</th>
-                        </tr>
-                        <tbody>
-                          {% for val in hist %}
-                          <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
-                          <tr class="project-row">
-                              <td>{{ val.idHist }}</td>
-                              <td>{{ val.fecha }}</td>
-                              <td>{{ val.categoria }}</td>
-                              {% if val.prioridad == 3 %}
-                              <td style="color: red;">{{ val.subcategoria }}</td>
-                              {% else %}
-                              <td>{{ val.subcategoria }}</td>
-                              {% endif %}
-                              
-                              <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>
-                          </tr>
-                          {% empty %}
-                          <tr>
-                              <td colspan="15">No se han encontrado datos en el historial</td>
-                          </tr>   
-                          {% endfor %}
-                        </tbody>
-                      </thead>
-                    </table>
-                  </div>
-              </div>
-          </div>
+	<section class="mt-4">
+		<!-- Historial y Proyectos -->
+		<div class="container">
+			<div class="row" >
+			  	<!-- New Customers section -->
+			  	<div class="col-6">
+					<div class="card">
+					  <div class="card-header">
+						  Historial
+					  </div>
+						<div class="table-responsive">
+						  <table class="table">
+							  <thead>
+								  <tr>
+									  <th>ID</th>
+									  <th>Fecha</th>
+									  <th>Categoria</th>
+									  <th>Sub-Categoria</th>
+									  <th>Usuario</th>
+								  </tr>
+								  <tbody>
+								  {% for val in hist %}
+								  <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+								  <tr class="project-row">
+									  <td>{{ val.idHist }}</td>
+									  <td>{{ val.fecha }}</td>
+									  <td>{{ val.categoria }}</td>
+									  {% if val.prioridad == 3 %}
+									  <td style="color: red;">{{ val.subcategoria }}</td>
+									  {% else %}
+									  <td>{{ val.subcategoria }}</td>
+									  {% endif %}
+									  
+									  <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>
+								  </tr>
+								  {% empty %}
+								  <tr>
+									  <td colspan="15">No se han encontrado datos en el historial</td>
+								  </tr>   
+								  {% endfor %}
+								  </tbody>
+							  </thead>
+						  </table>
+						</div>
+				</div>
+				</div>
+  
+				<div class="col-6">
+			  <div class="card">
+				  <div class="card-header">
+					  Últimos Proyectos
+				  </div>
+				  <div class="table-responsive">
+					<table class="table">
+					  <thead>
+					  <tr>
+						  <th>Id</th>
+						  <th>Proyecto</th>
+						  <th>Linea Negocio</th>
+						  <th>Tipo Proyecto</th>
+					  </tr>
+					  </thead>
+					  <tbody>
+						{% for val in proyectos %}
+						<!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+						<tr class="project-row">
+							<td>{{ val.id }}</td>
+							<td>{{ val.proyecto }}</td>
+							<td>{{ val.lineaNegocio }}</td>
+							<td>{{ val.tipo }}</td>
+						</tr>
+						{% empty %}
+						<tr>
+							<td colspan="15">No se han encontrado proyectos</td>
+						</tr>   
+						{% endfor %}
+					  </tbody>
+				  </table>
+				  </div>
+			  </div>
+		  		</div>
+			</div>
+	  	</div>
+	</section>
+</body>
+{% endblock content %}
+{% block UJS %}
 
-          <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    Últimos Proyectos
-                </div>
-                <div class="table-responsive">
-                  <table class="table">
-                    <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Proyecto</th>
-                        <th>Linea Negocio</th>
-                        <th>Tipo Proyecto</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                      {% for val in proyectos %}
-                      <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
-                      <tr class="project-row">
-                          <td>{{ val.id }}</td>
-                          <td>{{ val.proyecto }}</td>
-                          <td>{{ val.lineaNegocio }}</td>
-                          <td>{{ val.tipo }}</td>
-                      </tr>
-                      {% empty %}
-                      <tr>
-                          <td colspan="15">No se han encontrado proyectos</td>
-                      </tr>   
-                      {% endfor %}
-                    </tbody>
-                </table>
-                </div>
-            </div>
-        </div>
-          
-          <!-- <div class="col-md-6">
-              <div class="card">
-                  <div class="card-header">
-                      ????????
-                  </div>
-                  <div class="table-responsive">
-                    <table class="table">
-                      <thead>
-                      <tr>
-                          {% for val in peng %}
-                          <th>Penguin</th>
-                          <th>Penguin</th>
-                          <th>Penguin</th>
-                          <th>Penguin</th>
-                          {%endfor%}
-                      </tr>
-                      </thead>
-                      <tbody>
-                      <tr>
-                          {% for val in peng %}
-                          <td><img style="width: 100%;" src="https://i.imgur.com/nw24QJU.png"></td>
-                          <td><img style="width: 100%;" src="https://i.imgur.com/nw24QJU.png"></td>
-                          <td><img style="width: 100%;" src="https://i.imgur.com/nw24QJU.png"></td>
-                          <td><img style="width: 100%;" src="https://i.imgur.com/nw24QJU.png"></td>
-                          {% endfor %}
-                      </tr>
-                      </tbody>
-                  </table>
-                  </div>
-              </div>
-          </div> -->
-      </div>
-    </div>
-  </body>
-  {% endblock content %}
+{% endblock UJS %}

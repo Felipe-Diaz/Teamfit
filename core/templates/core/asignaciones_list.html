@@ -10,7 +10,7 @@ Teamfit - Proyectos a Asignar Recursos
     <h1 class="text-center mb-5" style="margin-top: 70px;">Asignaciones de Recursos</h1>
 
     <!-- Spinner para mostrar mientras se procesan solicitudes -->
-    <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px;">
+    <div id="loading-spinner" style="display: no    ne; text-align: center; margin-top: 20px;">
         <img src="{% static 'img/spinner.gif' %}" alt="Cargando..." style="width: 50px;">
     </div>
 
@@ -27,7 +27,7 @@ Teamfit - Proyectos a Asignar Recursos
                 </tr>
             </thead>
         </table>
-        <!-- Botones de descarga -->
+
         <div class="d-flex justify-content-end mt-2" style="margin-bottom: 70px;">
             <a href="{% url 'generar_reporte' %}?formato=excel" class="btn btn-outline-success">Descargar Excel</a>
         </div>
@@ -45,7 +45,6 @@ Teamfit - Proyectos a Asignar Recursos
                 </tr>
             </thead>
         </table>
-        <!-- Botones de descarga -->
         <div class="d-flex justify-content-end mt-3">
             <a href="{% url 'generar_excel_recursos' %}" class="btn btn-primary">Descargar Excel</a>
 
@@ -64,11 +63,13 @@ Teamfit - Proyectos a Asignar Recursos
                 </tr>
             </thead>
         </table>
-        <!-- Botones de descarga -->
         <div class="d-flex justify-content-end mt-3">
             <a href="{% url 'generar_reporte2' %}?formato=excel" class="btn btn-outline-success">Descargar Excel</a>
         </div>
     </div>
+
+    <!-- Contenedor para mensajes -->
+    <div id="mensaje" class="alert text-center" style="display: none;"></div>
 
     <!-- Contenedor para botones -->
     <div class="d-flex justify-content-center mb-5 gap-3">
@@ -85,8 +86,7 @@ Teamfit - Proyectos a Asignar Recursos
         </form>
     </div>
 
-    <!-- Contenedor para mensajes -->
-    <div id="mensaje" class="alert text-center" style="display: none;"></div>
+
 </div>
 
 <!-- jQuery y DataTables JS -->
@@ -108,8 +108,8 @@ Teamfit - Proyectos a Asignar Recursos
                 "type": "GET"
             },
             "columns": [
-                { "data": "recurso__nombre" },
-                { "data": "recurso__rol" },
+                { "data": "empleado__nombre" },
+                { "data": "empleado__rol" },
                 { "data": "semana" },
                 { "data": "total_horas_rol" }
             ],
@@ -128,7 +128,7 @@ Teamfit - Proyectos a Asignar Recursos
                 "type": "GET"
             },
             "columns": [
-                { "data": "proyecto__nombre" },
+                { "data": "proyecto__proyecto" },
                 { "data": "semana" },
                 { "data": "total_horas_proyecto" }
             ],
@@ -147,7 +147,7 @@ Teamfit - Proyectos a Asignar Recursos
                 "type": "GET"
             },
             "columns": [
-                { "data": "recurso__rol" },
+                { "data": "empleado__rol" },
                 { "data": "semana" },
                 { "data": "total_horas" }
             ],
@@ -211,7 +211,7 @@ Teamfit - Proyectos a Asignar Recursos
         // Ocultar el mensaje automáticamente después de unos segundos
         setTimeout(function() {
             $('#mensaje').fadeOut('slow');
-        }, 5000); // Oculta después de 5 segundos
+        }, 15000); // Oculta después de 5 segundos
     });
 </script>
 {% endblock content %}

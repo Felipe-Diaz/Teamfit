@@ -200,24 +200,40 @@ class Proyecto(models.Model):
     def __str__(self):
         return self.nombre
 
-# Modelo Asignacion
-class Asignacion(models.Model):
-    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
-    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
-    semana = models.IntegerField()
-    horas_asignadas = models.IntegerField()
-    año = models.IntegerField(default=2024) 
+# Modelo Recurso
+class Empleado(models.Model):
+    nombre = models.CharField(max_length=255)
+    rol = models.CharField(max_length=100) 
+    horas_totales = models.IntegerField(default=40) 
+    id_recurso = models.IntegerField(unique=True)
+    id_empleado = models.IntegerField(unique=True)
 
     class Meta:
-        db_table = "Asignacion"
+        db_table = "EMPLEADO"
+
     def __str__(self):
-        return f'{self.proyecto.nombre} - {self.recurso.nombre} - Semana {self.semana} - {self.horas_asignadas} horas'
+        return f'{self.nombre} - {self.rol}'
+
+
+# Modelo Asignacion
+class Asignacion(models.Model):
+    proyecto = models.ForeignKey(proyectosAAgrupar, on_delete=models.CASCADE) 
+    empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE) 
+    semana = models.IntegerField() 
+    horas_asignadas = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False, verbose_name="Horas Asignadas") 
+    anio = models.IntegerField(default=2024) 
+
+    class Meta:
+        db_table = "ASIGNACION"
+    def __str__(self):
+        return f'{self.proyecto.proyecto} - {self.empleado.nombre} - Semana {self.semana} - {self.horas_asignadas} horas'
 
 
 
 class AsignacionControl(models.Model):
     fecha_ultimo_ejecucion = models.DateField(null=True, blank=True)
     ejecuciones_exitosas = models.IntegerField(default=0)  # Agregar este campo
+    ejecuciones_fallidas = models.IntegerField(default=0)
 
     def puede_ejecutar(self):
         if not self.fecha_ultimo_ejecucion:
