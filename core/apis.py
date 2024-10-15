@@ -7,7 +7,16 @@ import json
 from .models import Empleado
 
 URL_BASE = 'https://teamfit.openscorp.com/api/'
-API_KEY = 'SECRET CODE'
+API_KEY = 'AGREGADO POR SEPARADO'
+
+"""
+**DESCRIPCIÓN INICIAL**\n
+COMO FUNCIONA LA FUNCIÓN ALGO MÁS ESPECíFICO \n
+**Parametros**\n
+    parametros_necesario (tipo_dato): lore ipsum \n
+**Return**\n
+    VariableReturn (tipo_dato): lore ipsum
+"""
 
 #-para enviar las tareas al Oodo 
 def enviar_datos_planning_slots(id, employee_id, allocated_hours, start_datetime, end_datetime, name):
@@ -297,6 +306,7 @@ def obtener_empleados_con_horas():
 def cargar_empleados():
     empleados = obtener_api_empleados()
     empleados_dict = {}
+    roles_necesario = ['Jefe de Proyectos', 'Ingeniero de Proyecto']
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
         rol = obtener_trabajo_empleado(id=empleado['job_id'])
@@ -304,7 +314,7 @@ def cargar_empleados():
         if(not rol):
             continue
         
-        if(rol != 'Jefe de Proyectos' or rol != 'Ingeniero de Proyectos'):
+        if(rol not in roles_necesario):
             continue
         
         Empleado.objects.update_or_create(

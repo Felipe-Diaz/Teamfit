@@ -2,7 +2,8 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
-from .views import eliminar_historial_automatico  # Asegúrate de importar tu tarea
+from .apis import cargar_empleados
+from .utils import eliminar_historial_automatico  # Asegúrate de importar tu tarea
 from .models import Parametro
 from .forms import PROGRAMACION_MAPPING
 
@@ -29,7 +30,15 @@ def start_scheduler():
     #     scheduler.add_job(eliminar_historial_automatico, 'cron', id='borrar_historial', hour=hora ,minute=minuto, replace_existing=True)
     #     print(f"Tarea programada para eliminar logs a las {hora}:{minuto}")
     #     scheduler.start()
-    
+
+def schedule_carga_empleados():
+    hora = 2
+    minuto = 30
+    try:
+        scheduler.add_job(cargar_empleados, 'cron', id='daily_carga_emp', hour=hora, minute=minuto, replace_existing=True)
+        print(f'Carga empleados programada a diario a las {hora}:{minuto}')
+    except:
+        print(f'Error al programar carga empleados')
     
 def obtener_tiempo_eliminacion():
     parametro = Parametro.objects.filter(nombre_parametro='historial.mantener').first()

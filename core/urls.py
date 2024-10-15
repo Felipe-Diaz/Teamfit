@@ -2,31 +2,11 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 
-from .views import development_Buttons, llenar_DB, iniciar_sesion, crear_usuarios, graficar_Datos 
-from .views import pagina_principal, cerrar_sesion, subirProyectos, ver_proyectos, verHistorial
-from .views import ver_usuarios, editar_usuario, eliminarUsuarios, ajuste_parametros
-from .views import eliminar_historial, consul_api, cluster, carga_Odoo
-
-from .views import asignaciones_data,eliminar_asignaciones
-from .views import asignaciones_list, ejecutar_asignacion, asignaciones_list
-from .views import disponibilidad
-from .views import (subirProyectos,
-    pagina_principal,
-    ver_proyectos,
-    asignaciones_list,
-    ejecutar_asignacion,
-    generar_excel_proyectos,
-    generar_excel_asignacion,
-    eliminar_asignaciones,
-    asignaciones_data,
-    horas_por_recurso_data,
-    horas_por_proyecto_data,
-    generar_excel_recursos,
-    asignar_recursos)
-#Se indican las distintas URL para el sistema.
-##A la izquierda es el valor que aparecerá en la URL
-##En el centro se llama a la función que renderiza la página
-##A la derecha se indica el nombre para llamar dentro el código
+from .views import development_Buttons, llenar_DB, iniciar_sesion, crear_usuarios, graficar_Datos, eliminar_historial
+from .views import pagina_principal, cerrar_sesion, subirProyectos, ver_proyectos, verHistorial, consul_api
+from .views import ver_usuarios, editar_usuario, eliminarUsuarios, ajuste_parametros, cluster, carga_Odoo, disponibilidad
+from .views import asignaciones_data,eliminar_asignaciones, horas_por_proyecto_data, generar_excel_recursos
+from .views import asignaciones_list, ejecutar_asignacion, generar_excel_asignacion, horas_por_recurso_data, generar_excel_proyectos
 
 urlpatterns = [ 
     path('subirProyectos/',subirProyectos, name="subirProyectos"),

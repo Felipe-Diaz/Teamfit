@@ -14,6 +14,12 @@ Teamfit - Parametros
         background-color: rgb(245, 245, 245);
     }
 
+    .form-check-input{
+        width: 1.2em;
+        height: 1.2em;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
     .checkbox-container {
         display: flex;
         gap: 15px;
@@ -222,7 +228,7 @@ Parámetros del sistema
                     <div>
                         <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#cluster-content" aria-expanded="true" aria-controls="cluster-content">
                         <h2 class="custom-grey-bg mb-0 col-md-6"><strong>
-                            Clusterizacion
+                            Clusterización
                         </strong></h2>
                         <span class="arrow-icon">▼</span>
                         </button>
@@ -231,10 +237,10 @@ Parámetros del sistema
                             </div>
                             <div class="card-body">
                                 <div class="main-checkbox">
-                                    <div class="form-check">
+                                    <div class="form-check" id="escenarios-container">
                                         <!-- Autenticación -->
                                         <h6 class="gray-bg"> <strong>Escenario a utilizar</strong></h6>
-                                        <p>En la siguiente seccion se especifica unicamente el escenario a utilizar para realizar la asignacion de horas.</p>
+                                        <p>En la siguiente sección se especifica unicamente el escenario a utilizar para realizar la asignación de horas.</p>
                                         <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
                                             <div class="offset-md-1">{{ form_escenarios.optimista }}  {{ form_escenarios.optimista.label }}</div>
                                             <div style="padding-left: 2%;">{{ form_escenarios.media }}  {{ form_escenarios.media.label }}</div>
@@ -416,17 +422,18 @@ Parámetros del sistema
     //     }
     // }
 
-    document.querySelectorAll('.form-check input[type="checkbox"]').forEach((checkbox) => {
-        checkbox.addEventListener('change', function() {
-            if (this.checked) {
-                document.querySelectorAll('.form-check input[type="checkbox"]').forEach((otherCheckbox) => {
-                    if (otherCheckbox !== this) {
-                        otherCheckbox.checked = false;
-                    }
-                });
-            }
-        });
+    document.querySelectorAll('#escenarios-container input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+            document.querySelectorAll('#escenarios-container input[type="checkbox"]').forEach((otherCheckbox) => {
+                if (otherCheckbox !== this) {
+                    otherCheckbox.checked = false;
+                }
+            });
+        }
     });
+});
+
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => {

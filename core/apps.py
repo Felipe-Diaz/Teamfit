@@ -7,6 +7,7 @@ class CoreConfig(AppConfig):
     
     def ready(self):
         print('scheduler ready')
-        from .scheduler import start_scheduler
+        from .scheduler import start_scheduler, schedule_carga_empleados
         start_scheduler()
+        schedule_carga_empleados()
     

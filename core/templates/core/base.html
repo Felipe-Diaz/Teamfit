@@ -15,7 +15,7 @@
     />
     <link
       rel="icon"
-      href="{% static 'core/img/kaiadmin/favicon.ico' %}"
+      href="{% static 'core/img/favicon.ico' %}"
       type="image/x-icon"
     />
 
@@ -163,13 +163,8 @@
                   <p>Asignaciones</p>
                   <span class="caret"></span>
                 </a>
-                <div class="collapse {% if request.path == '/graficar_Datos' or request.path == '/asignaciones/' or request.path == '/disponibilidad/' %}show{% endif %}" id="forms">
+                <div class="collapse {% if request.path == '/cargaOdoo' or request.path == '/asignaciones/' or request.path == '/disponibilidad/' %}show{% endif %}" id="forms">
                   <ul class="nav nav-collapse">
-                    <!-- <li class="{% if request.path == '/graficar_Datos' %}active{% endif %}">
-                        <a href="{% url 'graficar_Datos' %}">
-                          <span class="sub-item">Ver Diagramas</span>
-                        </a>
-                    </li> -->
                     <li class="{% if request.path == '/asignaciones/' %}active{% endif %}">
                       <a href="{% url 'asignaciones_list' %}">
                         <span class="sub-item">Asignaciones</span>
@@ -180,7 +175,7 @@
                         <span class="sub-item">Disponibilidad</span>
                       </a>
                     </li>
-                    <li class="{% if request.path == '/Carga a Odoo/' %}active{% endif %}">
+                    <li class="{% if request.path == '/cargaOdoo' %}active{% endif %}">
                       <a href="{% url 'cargaOdoo' %}">
                         <span class="sub-item">Carga Odoo</span>
                       </a>

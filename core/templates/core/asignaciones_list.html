@@ -9,8 +9,20 @@ Teamfit - Proyectos a Asignar Recursos
 
     <h1 class="text-center mb-5" style="margin-top: 70px;">Asignaciones de Recursos</h1>
 
+    <div>
+        <div class="alert alert-primary alert-dismissible fade show" role="alert" style="font-size: 15px;">
+            <i class="fa fa-info-circle"></i>
+            <strong>!AVISO!</strong> En la siguiente tabla se presentan las tareas a cargar por cada empleado en la aplicación de Odoo, para más información visite las siguientes páginas. 
+            <ul>
+                <li>Para ver la disponibilidad por usuario visite <a href="{% url 'disponibilidad' %}"><strong>“Disponibilidad”</strong></a></strong>.</li> 
+                <li>Para ver horas totales por proyecto o trabajador visite <a href="{% url 'asignaciones_list' %}"><strong>“Asignaciones”</strong></a>.</li> 
+            </ul>
+            <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
+        </div>
+    </div>
+
     <!-- Spinner para mostrar mientras se procesan solicitudes -->
-    <div id="loading-spinner" style="display: no    ne; text-align: center; margin-top: 20px;">
+    <div id="loading-spinner" style="display: none; text-align: center; margin-top: 20px;">
         <img src="{% static 'img/spinner.gif' %}" alt="Cargando..." style="width: 50px;">
     </div>
 
@@ -20,10 +32,10 @@ Teamfit - Proyectos a Asignar Recursos
         <table id="proyectosTable" class="table table-striped table-bordered display nowrap" style="width:100%">
             <thead class="table-header">
                 <tr>
-                    <th>Nombre</th>
-                    <th>Rol</th>
-                    <th>Semana</th>
-                    <th>Total Horas</th>
+                    <th>Nombre <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Nombre del empleado al que se le asignaron las horas"></i></button></th>
+                    <th>Rol <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Rol del empleado asignado"></i></button></th>
+                    <th>Semana <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Semana del año en la que se asignaron horas. Semana 1 corresponde a semana del 1/enero"></i></button></th>
+                    <th>Total Horas <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cantidad de horas totales asignadas en esa semana"></i></button></th>
                 </tr>
             </thead>
         </table>
@@ -39,27 +51,27 @@ Teamfit - Proyectos a Asignar Recursos
         <table id="totalesTable" class="table table-striped table-bordered display nowrap" style="width:100%">
             <thead class="table-header">
                 <tr>
-                    <th>Proyecto</th>
-                    <th>Semana</th>
-                    <th>Total Horas</th>
+                    <th>Proyecto <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Proyecto al que se le han asignado horas"></i></button></th>
+                    <th>Semana <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Semana del año en la que se asignaron horas. Semana 1 corresponde a semana del 1/enero"></i></button></th>
+                    <th>Total Horas <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cantidad de horas asignadas en esa semana para todos los roles del proyecto"></i></button></th>
                 </tr>
             </thead>
         </table>
         <div class="d-flex justify-content-end mt-3">
-            <a href="{% url 'generar_excel_recursos' %}" class="btn btn-primary">Descargar Excel</a>
+            <a href="{% url 'generar_excel_recursos' %}" class="btn btn-outline-success">Descargar Excel</a>
 
         </div>
     </div>
 
     <!-- Reporte de recursos (mantener sin cambios) -->
     <div class="table-container mb-5">
-        <h2 class="table-title text-center mb-3">Asignaciones</h2>
+        <h2 class="table-title text-center mb-3">Asignaciones por Rol de Empleado</h2>
         <table id="asignacionesTable" class="table table-striped table-bordered display nowrap" style="width:100%">
             <thead class="table-header">
                 <tr>
-                    <th>Rol</th>
-                    <th>Semana</th>
-                    <th>Total</th>
+                    <th>Rol <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Rol al que se le han asignado las horas"></i></button></th>
+                    <th>Semana <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Semana del año en la que se asignaron horas. Semana 1 corresponde a semana del 1/enero"></i></button></th>
+                    <th>Total <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cantidad total de horas asignadas por rol para semana indicada"></i></button></th>
                 </tr>
             </thead>
         </table>

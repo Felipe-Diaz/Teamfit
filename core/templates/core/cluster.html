@@ -29,12 +29,6 @@ Cluster
         <div class="card">
             <div class="card-body">
                 <div class="col-md-2">
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">Realizar clusterizacion</button>
-                        </div>
-                    </form>
                 </div>
                 <div class="text-center">
                     <h3><strong>{{mesg}}</strong></h3>
@@ -43,15 +37,15 @@ Cluster
                 <table id="multi-filter-select" class="display table table-striped table-hover">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Proyecto</th>
-                            <th>Linea de trabajo</th>
-                            <th>Tipo</th>
-                            <th>Tipo de semana</th>
-                            <th>Rol</th>
-                            <th>HH Min</th>
-                            <th>HH Max</th>
-                            <th>HH Prom</th>
+                            <th>ID <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="ID del proyecto"></i></button></th>
+                            <th>Proyecto <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Proyecto al que pertenecen las horas"></i></button></th>
+                            <th>Linea de trabajo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Línea de negocio a la que pertenece el proyecto"></i></button></th>
+                            <th>Tipo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Tipo de proyecto"></i></button></th>
+                            <th>Tipo de semana <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Tipo de semana a la que pertenecen las horas, puede ser Semana de Inicio, Semana Intermedia o Semana Final"></i></button></th>
+                            <th>Rol <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Rol solicitado por el proyecto, puede ser Ingeniero de proyectos o Jefe de proyectos"></i></button></th>
+                            <th>HH Min <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Horas en escenario optimista para el tipo de semana indicado y para el rol"></i></button></th>
+                            <th>HH Max <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Horas en escenario pesimista para el tipo de semana indicado y para el rol"></i></button></th>
+                            <th>HH Prom <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Horas en escenario medio para el tipo de semana indicado y para el rol"></i></button></th>
                         </tr>
                     </thead>
                         <tbody>
@@ -73,6 +67,12 @@ Cluster
                 </div>
             </div>
         </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Realizar clusterización</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock content %}

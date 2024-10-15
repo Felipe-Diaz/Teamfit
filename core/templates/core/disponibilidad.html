@@ -7,8 +7,39 @@ Teamfit - Disponibilidad
 {% block estiloHead %}
 <style>
 .msp{
-    margin-top: 8rem;
+    margin-top: 8em;
     max-width: 95%;
+}
+.btn-fix{
+    border-color: darkgray;
+    color: grey;
+}
+.btn-fix:hover{
+    border-color: darkgray;
+}
+.btn-fix:focus{
+    border-color: black;
+}
+.btn-fix:active{
+    border-color: black;
+    color: black;
+    background-color: gray;
+
+}
+.badge-new {
+    background-color: red;
+    color: white;
+    cursor: pointer; /* Indicador de clickeable */
+}
+.change-notification {
+    background-color: red;
+    color: white;
+    padding: 0.2em 0.5em;
+    border-radius: 0.25em;
+    font-size: 0.75em;
+    display: inline-block;
+    margin-left: 0.5em;
+    cursor: pointer; /* Indicador de clickeable */
 }
 </style>
 
@@ -20,18 +51,29 @@ Disponibilidad Semanal
 <body>
     <section>
         <div class="container-fluid msp">
-
+            <div class="alert alert-primary alert-dismissible fade show" role="alert" style="font-size: 15px;">
+                <i class="fa fa-info-circle"></i>
+                <strong>!AVISO!</strong> En la siguiente tabla se presentan las tareas a cargar por cada empleado en la aplicación de Odoo, para más información visite las siguientes páginas. 
+                <ul>
+                    <li>Para ver la disponibilidad por usuario visite <a href="{% url 'disponibilidad' %}"><strong>“Disponibilidad”</strong></a></strong>.</li> 
+                    <li>Para ver horas totales por proyecto o trabajador visite <a href="{% url 'asignaciones_list' %}"><strong>“Asignaciones”</strong></a>.</li> 
+                </ul>
+            </div>
             <div class="card mt-3">
                 <div class="card-body">
                     <div id="table-container" class="table-responsive">
                         <table class="table table-bordered table-striped" id="semanas-table">
                             <thead>
-                                <tr class="text-center table-dark">
-                                    <th>Empleado</th>
+                                <tr class="text-center">
+                                    <th>Empleado  <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Rol al que se le han asignado las horas"></i></button></th>
                                     <th>Rol</th>
                                     {% for semana_grupo in data.0.semanas_agrupadas %}
                                         {% for semana in semana_grupo %}
-                                        <th>Semana {{ semana.semana}}&nbsp;-&nbsp;{{ semana.año}}</th>
+                                        <th>Semana {{ semana.semana}}&nbsp;-&nbsp;{{ semana.año}}
+                                            {% if semana.nueva %}
+                                            <span class="badge bg-primary">N</span>
+                                            {% endif %}
+                                        </th>
                                         {% endfor %}
                                     {% endfor %}
                                 </tr>
@@ -45,11 +87,17 @@ Disponibilidad Semanal
                                         {% for semana in semana_grupo %}
                                         <td>
                                             {{ semana.horas_disponibles }}/{{ item.empleado.horas_totales }}hh
+                                            {% if semana.cambio %}
+                                            <span id="noti" class="badge bg-danger p-2 border border-light rounded-circle">
+                                                <span class="visually-hidden">New alerts</span>
+                                            </span>
+                                            {% endif %}
                                             <div class="progress my-2">
                                                 <div class="progress-bar {{ semana.color }}" role="progressbar" style="width: {{ semana.porcentaje_uso }}%;"
                                                 aria-valuenow="{{ semana.porcentaje_uso }}" aria-valuemin="0" aria-valuemax="100">
                                                     {{ semana.porcentaje_uso }}%
                                                 </div>
+                                                
                                             </div>
                                         </td>
                                         {% endfor %}
@@ -59,9 +107,9 @@ Disponibilidad Semanal
                             </tbody>
                         </table>
                     </div>
-                    <div>
-                        <button class="btn btn-outline-primary" id="prev-btn" onclick="navigate(-1)">Anterior</button>
-                        <button class="btn btn-outline-primary" id="next-btn" onclick="navigate(1)">Siguiente</button>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button class="btn btn-rounded btn-fix btn-outline-primary" id="prev-btn" onclick="navigate(-1)">Anterior</button>
+                        <button class="btn btn-rounded btn-fix btn-outline-primary" id="next-btn" onclick="navigate(1)">Siguiente</button>
                     </div>
                 </div><!-- tarjeta bonita-->
             </div>
@@ -81,15 +129,14 @@ Disponibilidad Semanal
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
 integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 <script>
-    
     let currentGroupIndex = 0;
     const groups = document.querySelectorAll('#semanas-table thead tr th');
     const rows = document.querySelectorAll('#semanas-table tbody tr');
-    
+
     function navigate(direction) {
-        const groupCount = 4; // Número de semanas por grupo (mejor si es multiplo de 4)
+        const groupCount = 4; // Número de semanas por grupo (mejor si es múltiplo de 4)
         const totalGroups = Math.ceil((groups.length - 2) / groupCount);
-    
+
         currentGroupIndex += direction;
         if (currentGroupIndex < 0) {
             currentGroupIndex = 0;
@@ -100,13 +147,13 @@ integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxV
         for (let i = 2; i < groups.length; i++) {
             groups[i].style.display = 'none';
         }
-    
+
         for (let i = 0; i < rows.length; i++) {
             for (let j = 2; j < rows[i].children.length; j++) {
                 rows[i].children[j].style.display = 'none';
             }
         }
-    
+
         for (let i = currentGroupIndex * groupCount + 2; i < (currentGroupIndex + 1) * groupCount + 2; i++) {
             if (groups[i]) {
                 groups[i].style.display = '';
@@ -118,11 +165,22 @@ integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxV
             }
         }
     }
-    
+
     document.addEventListener('DOMContentLoaded', () => {
         navigate(0);
-    });
-    
+    });    
 </script>
+<script>
+$(document).ready(function() {
 
+    
+    // Bucle para manejar todas las badges de "NEW"
+    $(".badge").each(function() {
+        $(this).on("click", function() {
+            $(this).hide();
+        });
+    });
+});
+
+</script>
 {% endblock UJS %}
