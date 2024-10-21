@@ -1,0 +1,199 @@
+<!-- Carga de bloque base -->
+{% extends 'core/base.html' %}
+<!-- Carga de estilos -->
+{% load static %}
+ <!-- Título del document -->
+{% block titlePage %}
+Teamfit - Carga Odoo
+{% endblock titlePage %}
+<!-- Titulo de navegador -->
+{% block titulo %}
+Carga Odoo
+{% endblock titulo %}
+
+
+<!-- Head -->
+{% block estiloHead %}
+<style>
+	/* .advertencia {
+		width: 500px;
+		height: 200px;
+		border-width: 2px;
+		border-style: dashed; 
+		border-color: black;
+		background-color: #fff3cd;
+		padding: 10px;
+		display: flex;
+	}
+	.icono {
+		margin-right: 10px;
+		width: 500px;
+		height: 200px;
+
+	} */
+	body{
+		overflow: none;
+	}
+	p {
+		margin: 0;
+		padding: 0;
+		font-size: 15px;
+	}
+	ul {
+            padding-left: 50px;
+            margin: 0; 
+        }
+</style>
+{% endblock estiloHead %}
+
+<!-- Body -->
+{% block content %} 
+<div class="row">
+	<div class="col-md-12">
+		<br>
+		<br>
+		<br>
+		<br>
+        <div>
+			<div class="alert alert-primary alert-dismissible fade show text-center" role="alert" style="font-size: 15px;">
+				<i class="fa fa-info-circle"></i>
+				<strong>¡AVISO!</strong> En la siguiente tabla se presentan las tareas a cargar por cada empleado en la aplicación de Odoo, para más información visite las siguientes páginas. 
+				<ul>
+					<li>Para ver la disponibilidad por usuario visite <a href="{% url 'disponibilidad' %}"><strong>“Disponibilidad”</strong></a></strong>.</li> 
+					<li>Para ver horas totales por proyecto o trabajador visite <a href="{% url 'asignaciones_list' %}"><strong>“Asignaciones”</strong></a>.</li> 
+				</ul>
+				<!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
+			</div>
+			{% if messages %}
+			{% for mesg in messages %}
+				<div class="alert alert-{% if mesg.tags == 'error' %}danger{%elif mesg.tags == 'success'%}success{% endif %} container" role="alert">
+					{{ mesg|safe }}
+				</div>
+			{% endfor %}
+			{% endif %}
+			{% if merror %}
+			{% for mesg in merror %}
+				<div class="alert alert-danger container" role="alert">
+					{{ mesg }}
+				</div>
+			{% endfor %}
+			{% endif %}	
+        </div>
+		<div class="card">
+			<div class="card-body">
+				<div class="table-responsive">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <table id="multi-filter-select" class="display table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID Empleado <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="ID Empleado"></i></button></th>
+									<th>Nombre Empleado <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Nombre Empleado"></i></button></th>
+                                    <!-- <th>ID Recurso</th> -->
+                                    <th>Horas Asignadas <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Horas Asignadas"></i></button></th>
+                                    <!-- <th>semana</th> -->
+                                    <th>Fecha Inicio<button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Fecha Inicio"></i></button></th>
+                                    <th>Fecha Fin <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Fecha Fin"></i></button></th>
+                                    <th>Nombre Proyecto <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Detalle del Proyecto"></i></button></th>
+                                </tr>
+                            </thead>
+                                <tbody>
+                                    {% for empleado in fechas_totales %}
+                                    {% for asignacion in empleado.asignaciones %}
+                                    <tr class="project-row">
+                                        <td>{{ asignacion.id_empleado }}</td>
+										<td>{{ asignacion.nombre }}</td>
+                                        <!-- <td>{{ asignacion.id_recurso }}</td> -->
+                                        <td>{{ asignacion.horas_asignadas }}</td>
+                                        <!-- <td>{{ asignacion.semana }}</td> -->
+                                        <td>{{ asignacion.fecha_inicio }}</td>
+                                        <td>{{ asignacion.fecha_fin }}</td>
+                                        <td>{{ asignacion.nombre_proyecto }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                        </table>
+				</div>
+			</div>
+		</div>
+					<div class="text-align-center offset-sm-5">
+						<button class="btn btn-primary" type="submit">Enviar Datos</button>
+					</div>
+					</form>
+	</div>
+</div>
+{% endblock content %}
+
+<!-- Javascript -->
+{% block UJS %}
+<script>
+	$(document).ready(function () {
+// Configuración básica de la tabla
+$("#basic-datatables").DataTable({
+    order: [[4, 'desc'], [5, 'desc']]
+});
+
+// Configuración de la tabla con filtros múltiples
+$("#multi-filter-select").DataTable({
+	pageLength: 10,
+    order: [[4, 'asc'], [5, 'asc']],
+	initComplete: function () {
+	this.api()
+		.columns()
+		.every(function () {
+		var column = this;
+		// Filtra solo las columnas relevantes
+		if (column.index() >= 2 && column.index() <= 4) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)
+			var select = $(
+			'<select class="form-select"><option value=""></option></select>'
+			)
+			.appendTo($(column.footer()).empty())
+			.on("change", function () {
+				var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+				column
+				.search(val ? "^" + val + "$" : "", true, false)
+				.draw();
+			});
+
+			column
+			.data()
+			.unique()
+			.sort()
+			.each(function (d, j) {
+				select.append(
+				'<option value="' + d + '">' + d + "</option>"
+				);
+			});
+		} else {
+			$(column.footer()).empty(); // Limpiar pie de columna no relevante
+		}
+		});
+	},
+});
+
+// Configuración de la tabla para agregar filas
+$("#add-row").DataTable({
+	pageLength: 10,
+    order: [[4, 'asc'], [5, 'asc']],
+});
+
+// Acción para agregar una fila
+var action =
+	'<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+$("#addRowButton").click(function () {
+	$("#add-row")
+	.dataTable()
+	.fnAddData([
+		$("#addName").val(),
+		$("#addPosition").val(),
+		$("#addOffice").val(),
+		action,
+	]);
+	$("#addRowModal").pmodal("hide");
+});
+});
+</script>
+{% endblock UJS %}

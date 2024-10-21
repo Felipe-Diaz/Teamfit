@@ -1,0 +1,165 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Ver Usuarios
+{% endblock titlePage %}
+{% block titulo %}
+Usuarios Registrados
+{% endblock titulo %}
+{% block content %}
+<body>
+<div class="row">
+    <div class="col-md-12">
+        <br>
+        <br> 
+        <br>
+        <br> 
+        <div class="card">
+            <div class="container">
+            {% if messages %}
+            {% for mesg in messages %}
+                <div class="alert alert-success container" role="alert">
+                    {{ mesg|safe }}
+                </div>
+            {% endfor %}
+            {% endif %}
+            {% if merror %}
+                {% for mesg in merror %}
+                    <div class="alert alert-danger container" role="alert">
+                        {{ mesg }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="multi-filter-select" class="display table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Nombre del empleado"></i></button></th>
+                                        <th>Email <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Email del empleado utilizado"></i></button></th>
+                                        <th>Cargo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cargo asignado al empleado"></i></button></th>
+                                        <th>Usuario Activo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Representa si el usuario puede iniciar sesión o no"></i></button></th>
+                                        {% if request.user.is_staff %}
+                                        <th style="width: 10%">Acciones <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Acciones a realizar con el usuario, editar o desactivar"></i></button></th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <!-- Aqui deben ir los usuarios -->
+                                <tbody>
+                                  {% for user in usuarios %}
+                                    <tr class="project-row">
+                                        <td>{{user.user__first_name}} {{user.user__last_name}}</td>
+                                        <td>{{user.user__email}}</td>
+                                        <td>{{user.cargo}}</td>
+                                        {% if user.user__is_active == True %}
+                                          <td>Activo </td>
+                                        {% else %}
+                                          <td>Desactivado</td>
+                                        {% endif %}
+                                        {% if request.user.is_staff %}
+                                        <td>
+                                            <div class="form-button-action">
+                                                <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task">
+                                                  <a href="{% url 'editarUsuario' user.user %}" style="color: inherit; text-decoration: none">
+                                                    <i class="fa fa-edit"></i>
+                                                  </a>
+                                                </button>
+                                                <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove">
+                                                  <a href="{% url 'eliminarUsuario' user.user %}" style="color: inherit; text-decoration: none;">
+                                                    <i class="fa fa-times"></i>
+                                                  </a>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                  {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                  <tr>
+                                      <th></th>
+                                      <th></th>
+                                      <th></th>
+                                      <th></th>
+                                      {% if request.user.is_staff %}
+                                      <th></th>
+                                      {% endif %}
+                                  </tr>
+                                  </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+{% endblock content %}
+{% block UJS %}
+<script>
+  $(document).ready(function () {
+    // Configuración básica de la tabla
+    $("#basic-datatables").DataTable({});
+
+    // Configuración de la tabla con filtros múltiples
+    $("#multi-filter-select").DataTable({
+      pageLength: 10,
+      initComplete: function () {
+        this.api()
+          .columns()
+          .every(function () {
+            var column = this;
+            // Filtra solo las columnas relevantes
+            if (column.index() >= 2 && column.index() <= 3 ) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)(en caso de querer saltar una columna especifica "&& column.index() !== 1")
+              var select = $(
+                '<select class="form-select"><option value=""></option></select>'
+              )
+                .appendTo($(column.footer()).empty())
+                .on("change", function () {
+                  var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                  column
+                    .search(val ? "^" + val + "$" : "", true, false)
+                    .draw();
+                });
+
+              column
+                .data()
+                .unique()
+                .sort()
+                .each(function (d, j) {
+                  select.append(
+                    '<option value="' + d + '">' + d + "</option>"
+                  );
+                });
+            } else {
+              $(column.footer()).empty(); // Limpiar pie de columna no relevante
+            }
+          });
+      },
+    });
+
+    // Configuración de la tabla para agregar filas
+    $("#add-row").DataTable({
+      pageLength: 10,
+    });
+
+    // Acción para agregar una fila
+    var action =
+      '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+    $("#addRowButton").click(function () {
+      $("#add-row")
+        .dataTable()
+        .fnAddData([
+          $("#addName").val(),
+          $("#addPosition").val(),
+          $("#addOffice").val(),
+          action,
+        ]);
+      $("#addRowModal").modal("hide");
+    });
+  });
+</script>
+{% endblock UJS %}
+</html>

@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Editar Usuarios
+{% endblock titlePage %}
+{% block titulo %}
+Editar usuario {{ usuario_editado.first_name }} 
+{% endblock titulo %}
+{% block content %}
+<body>
+    <div class="container card">
+        <div class="row justify-content-center">
+            <div class="col-md-6 mt-5">
+                {% if merror %}
+                    {% for message in merror %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <form method="POST">
+                        {% csrf_token %}
+                        {% for field in form %}
+                    <div class="form-group row align-items-center">
+                        <label for="{{ field.id_for_label }}" class="col-sm-3 offset-sm-1 col-form-label ">{{ field.label }}</label>
+                        <div class="col-sm-4">
+                          {{ field }}
+                        </div>
+                        {% if field.help_text %}
+                          <div class="col-sm-4 offset-sm-4">
+                            <small id="{{ field.id_for_label }}_help" class="form-text text-muted">{{ field.help_text }}</small>
+                          </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="text-align-center offset-sm-4 mt-3">
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <a href="{% url 'verUsuarios' %}" class="btn btn-danger">Cancelar</a>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock content %}
+{% block UJS %}
+{% endblock UJS %}
+</html>

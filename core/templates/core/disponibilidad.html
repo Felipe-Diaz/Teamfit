@@ -1,0 +1,249 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}Teamfit - Disponibilidad{% endblock titlePage %}
+{% block estiloHead %}
+<style>
+.msp {
+    margin-top: 8em;
+    max-width: 95%;
+}
+.btn-fix{
+    border-color: darkgray;
+    color: grey;
+}
+.btn-fix:hover{
+    border-color: darkgray;
+}
+.btn-fix:focus{
+    border-color: black;
+}
+.btn-fix:active{
+    border-color: black;
+    color: black;
+    background-color: gray;
+
+}
+.page-link {
+    border-color: darkgray;
+    color: grey;
+    cursor: pointer;
+}
+.page-link:hover {
+    border-color: darkgray;
+}
+.page-link:focus,
+.page-link:active {
+    border-color: black;
+    color: black;
+    background-color: gray;
+}
+#pagination-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Espacio entre botones */
+}
+</style>
+{% endblock estiloHead %}
+{% block titulo %}Disponibilidad Semanal{% endblock titulo %}
+{% block content %}
+<body>
+    <section>
+        <div class="container-fluid msp">
+            {% if messages %}
+                {% for mesg in messages %}
+                    <div class="alert alert-{% if mesg.tags == 'error' %}danger{%elif mesg.tags == 'success'%}success{% endif %} container" role="alert">
+                        {{ mesg|safe }}
+                    </div>
+                {% endfor %}
+			{% endif %}
+            <div class="alert alert-primary alert-dismissible fade show" role="alert" style="font-size: 15px;">
+                <i class="fa fa-info-circle"></i>
+                <strong>!AVISO!</strong> La siguiente tabla presenta datos precargados que se actualizan a las 2:30 AM todos los días.
+                <ul>
+                    Para recargar estos datos de forma manual, puede presionar el botón encontrado al fondo de esta página.
+                </ul>
+            </div>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div id="table-container" class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover" id="semanas-table">
+                            <thead>
+                                <tr class="text-center">
+                                    <th>Empleado</th>
+                                    <th>Rol</th>
+                                    {% for semana_grupo in data.0.semanas_agrupadas %}
+                                        {% for semana in semana_grupo %}
+                                        <th>Semana {{ semana.semana}}&nbsp;-&nbsp;{{ semana.año}}
+                                            {% if semana.nueva %}
+                                            <!-- <span class="badge badge-new bg-primary">N</span> -->
+                                            {% endif %}
+                                        </th>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in data %}
+                                <tr>
+                                    <td>{{ item.empleado.nombre }}</td>
+                                    <td>{{ item.empleado.rol }}</td>
+                                    {% for semana_grupo in item.semanas_agrupadas %}
+                                        {% for semana in semana_grupo %}
+                                        <td>
+                                            {{ semana.horas_disponibles }}/{{ item.empleado.horas_totales }}hh
+                                            {% if semana.cambio %}
+                                            <!-- <span class="badge change-notification bg-danger p-2 border border-light rounded-circle">
+                                                <span class="visually-hidden">New alerts</span>
+                                            </span> -->
+                                            {% endif %}
+                                            <div class="progress my-2">
+                                                <div class="progress-bar {{ semana.color }}" role="progressbar" style="width: {{semana.porcentaje_uso}}%;"
+                                                aria-valuenow="{{ semana.porcentaje_uso }}" aria-valuemin="0" aria-valuemax="100">
+                                                    {{ semana.porcentaje_uso }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="d-grid gap-2 d-md-flex col-lg-6">
+                            <form action="{% url 'cargar_empleados' %}" method="post">
+                                {% csrf_token %}
+                                <button style="cursor: pointer;" class="btn btn-primary" type="submit">Recargar Empleados</button>
+                            </form>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex col-lg-6 justify-content-md-end">
+                            
+                            <button style="cursor: pointer;" class="btn btn-rounded btn-fix btn-outline-primary" id="prev-btn" onclick="navigate(-1)">Anterior</button>
+                            <div id="pagination-container"></div>
+                            <button style="cursor: pointer;" class="btn btn-rounded btn-fix btn-outline-primary" id="next-btn" onclick="navigate(1)">Siguiente</button>
+                        </div>
+                    </div>
+
+                </div><!-- tarjeta bonita-->
+            </div>
+        </div><!-- div principal-->
+    </section>
+</body>
+{% endblock content %}
+{% block UJS %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script>
+    let currentGroupIndex = 0;
+    const groups = document.querySelectorAll('#semanas-table thead tr th');
+    const rows = document.querySelectorAll('#semanas-table tbody tr');
+
+    function navigate(direction) {
+    const groupCount = 4; // Número de semanas por grupo
+    const totalGroups = Math.ceil((groups.length - 2) / groupCount);
+
+    currentGroupIndex += direction;
+    if (currentGroupIndex < 0) {
+        currentGroupIndex = 0;
+    } else if (currentGroupIndex >= totalGroups) {
+        currentGroupIndex = totalGroups - 1;
+    }
+
+    for (let i = 2; i < groups.length; i++) {
+        groups[i].style.display = 'none';
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+        for (let j = 2; j < rows[i].children.length; j++) {
+            rows[i].children[j].style.display = 'none';
+        }
+    }
+
+    for (let i = currentGroupIndex * groupCount + 2; i < (currentGroupIndex + 1) * groupCount + 2; i++) {
+        if (groups[i]) {
+            groups[i].style.display = '';
+            for (let j = 0; j < rows.length; j++) {
+                if (rows[j].children[i]) {
+                    rows[j].children[i].style.display = '';
+                }
+            }
+        }
+    }
+
+    updatePagination(totalGroups);
+
+    // Desactivar los botones "Anterior" y "Siguiente" según corresponda
+    document.getElementById('prev-btn').disabled = (currentGroupIndex === 0);
+    document.getElementById('next-btn').disabled = (currentGroupIndex === totalGroups - 1);
+
+    }
+
+
+    function updatePagination(totalGroups) {
+    const paginationContainer = document.getElementById('pagination-container');
+    paginationContainer.innerHTML = ''; // Limpiar el contenedor de paginación
+
+    const maxButtons = 3; // Número máximo de botones a mostrar
+
+    // Calcular los índices de las páginas a mostrar
+    let start = Math.max(0, currentGroupIndex - 2);
+    let end = Math.min(totalGroups, start + maxButtons);
+    if (end - start < maxButtons) {
+        start = Math.max(0, end - maxButtons);
+    }
+
+    if (start > 0) {
+        paginationContainer.appendChild(createPageButton(1, 0));
+        if (start > 1) {
+            paginationContainer.appendChild(createEllipsis());
+        }
+    }
+
+    for (let i = start; i < end; i++) {
+        paginationContainer.appendChild(createPageButton(i + 1, i));
+    }
+
+    if (end < totalGroups) {
+        if (end < totalGroups - 1) {
+            paginationContainer.appendChild(createEllipsis());
+        }
+        paginationContainer.appendChild(createPageButton(totalGroups, totalGroups - 1));
+    }
+
+
+    }
+
+function createPageButton(label, pageIndex) {
+    const pageButton = document.createElement('button');
+    pageButton.className = 'btn btn-rounded btn-fix btn-outline-primary';
+    pageButton.innerText = label;
+    pageButton.onclick = () => navigateToPage(pageIndex);
+    if (currentGroupIndex === pageIndex) {
+        pageButton.classList.add('active');
+    }
+    return pageButton;
+}
+
+function createEllipsis() {
+    const ellipsis = document.createElement('button');
+    ellipsis.className = 'btn btn-rounded btn-fix btn-outline-primary';
+    ellipsis.innerText = '...';
+    return ellipsis;
+}
+
+
+    function navigateToPage(pageIndex) {
+        currentGroupIndex = pageIndex;
+        navigate(0);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        navigate(0);
+
+        // Bucle para manejar todas las badges de "NEW" y las notificaciones de cambio
+        $(".badge-new, .change-notification").on("click", function() {
+            $(this).hide();
+        });
+    });
+</script>
+{% endblock UJS %}

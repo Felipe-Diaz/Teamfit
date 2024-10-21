@@ -1,0 +1,330 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Subir Proyectos
+{% endblock titlePage %}
+{% block titulo %}
+Subir Proyectos
+{% endblock titulo %}
+{% block estiloHead %}
+
+<style>
+	:root {
+		--junily-black: #f0f0f0;
+		--junily-white: #8d6d9f;
+	}
+
+	.container_a {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+	}
+
+	.form-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 600px;
+		margin-bottom: 20px;
+	}
+
+	.box {
+		width: 80%;
+		height: 20%;
+		border: 3px dashed var(--junily-white); /* Línea punteada */
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		position: relative;
+		background-color: var(--junily-black); /* Color de fondo similar al de la imagen */
+	}
+
+	.custom-button {
+		color: #fff;
+		border: 1px solid var(--junily-white);
+		padding: 10px 20px;
+		border-radius: 5px;
+		font-size: 16px;
+		cursor: pointer;
+	}
+
+	.custom-button:hover {
+	  	background-color: #0056b3;
+	}
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock estiloHead %}
+
+<!-- Contenido -->
+{% block content %}
+<div class="container position-absolute top-50 start-50 translate-middle">
+  	<p class="text-center">
+    Agregue los proyectos de forma manual, para predecir la carga de horas de<br>
+    su equipo profesional en base a la estimación de ventas.
+  	</p>
+  	<div class="container_a">
+    {% if not showTableOdoo %}
+		<div class="box">
+	  		<div class="text-center mb-4"><br>
+				<span><img src="{% static 'core/img/upload.png' %}" alt=""></span>
+				
+				<form class="mt-4" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				{{ form.file }}
+				<label for="{{ form.file.id_for_label }}"><br>
+					<h5>Arraste y suelte el archivo</h5>
+					<p>Puede cargar un archivo manualmente desde su computador</p>
+					<p style="color: #3858c3;">Solo se pueden cargar archivos en formato CSV o XLSX.</p>
+				</label>
+				
+				<br><br>
+				<button type="submit" class="btn btn-primary" data-bs-toggle="tooltip"
+				data-bs-placement="left" title="Solo se permiten archivos CSV y XLSX">Subir archivo</button>
+				</form>
+
+				{% if merror %}
+		  		{% for mesg in merror %}
+				<hr style="opacity: 100%;">
+				<p>{{ mesg|safe }}</p>
+		  		{% endfor %}
+				{% endif %}
+			</div>
+    	</div>
+    <!-- {% else %}
+		<div>
+			<a href="{% url 'subirProyectos' %}">Para subir un proyecto a del sistema. Por favor, regrese a la página anterior</a>
+		</div>
+    {% endif %}
+		<section class="justify-content-center"><br>
+			<div class="text-center hb">
+				<span><img style="width: 100px;" src="{% static 'core/img/odoo.png' %}" alt=""></span>
+				<p class="text-center">Solicitar proyectos de Odoo</p>
+				<a id="#dataTable" class="btn btn-primary" href="{% url 'consul_api' %}">Consultar proyectos</a>
+			</div>
+		</section> -->
+	</div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade bd-example-modal-lg" id="dataModal" tabindex="-1" role="dialog" aria-labelledby="dataModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="dataModalLabel">Proyectos a Subir</h5>
+			</div>
+			<br>
+			<div class="container">
+			  	{% if messages %}
+			  	{% for mesg in messages %}
+				  	<div class="alert alert-success container" role="alert">
+					  	{{ mesg|safe }}
+				  </div>
+			  	{% endfor %}
+			  	{% endif %}
+			  	{% if merror %}
+				  	{% for mesg in merror %}
+					  	<div class="alert alert-danger container text-center" role="alert">
+						  	{{ mesg|safe }}
+					  	</div>
+				  	{% endfor %}
+			  	{% endif %}
+			</div>
+			<div class="modal-body">
+				{% if showTable %}
+				<div class="table-responsive">
+					<table id="basic-datatables" class="display table table-striped table-hover">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Proyecto</th>
+								<th>Tipo</th>
+								<th>Linea de trabajo</th>
+								<th>Agencia</th>
+								<th>Ocupación</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for proyectos in proyectos %}
+							<tr>
+								<td>{{ proyectos.id }}</td>
+								<td>{{ proyectos.proyecto }}</td>
+								<td>{{ proyectos.tipo }}</td>
+								<td>{{ proyectos.lineaNegocio }}</td>
+								<td>{{ proyectos.usoAgencia}}</td>
+								<td>{{ proyectos.ocupacionInicio }}</td>
+							</tr>
+							{% empty %}
+							<tr>
+								<td colspan="6">No hay productos disponibles</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% endif %}
+			</div>
+			<div class="modal-footer d-flex justify-content-center">
+				<a href="{% url 'decidirSubida' 'Can' %}">
+					<button type="button" class="btn btn-danger">Volver</button>
+				</a>
+				{% if validado %}
+				<a href="{% url 'decidirSubida' 'Up' %}">
+					<button type="button" class="btn btn-success">Subir Proyectos</button>
+				</a>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+<!-- End modal -->
+
+<!-- Futuro Modal de los proyectos de Odoo-->
+<div class="modal fade bd-example-modal-lg" id="dataTable" tabindex="-1" role="dialog" aria-labelledby="dataModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content" style="width: 120%; height: 120%">
+			<div class="modal-header">
+				<h5 class="modal-title" id="dataModalLabel">Proyectos de Odoo</h5>
+			</div>
+			<div class="modal-body">
+        {% if showTableOdoo %}
+        <div class="table-responsive">
+          <table id="basic-datatables" class="display table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Proyecto</th>
+                <th>Tipo</th>
+                <th>Linea de trabajo</th>
+                <th>Cliente</th>
+                <th>Fecha Creacion</th>
+                <th>Monto Oferta</th>
+                <th>Agencia</th>
+              </tr>
+            </thead>
+            <tbody>
+                {% for item in datos %}
+              <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.business_unit }}</td>
+                <td>{{ item.business_type }}</td>                            
+                <td>{{ item.customer }}</td>
+                <td>{{ item.create_date }}</td>
+                <td>{{ item.amount }}</td>
+                <td>{{ item.wa|yesno:"Sí,No" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+      	<div class="modal-footer d-flex justify-content-center">
+			<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Volver</button>
+			<form method="post" action="{% url 'consul_api' %}">
+			{% csrf_token %}
+				<button type="submit" name="action" value="add" class="btn btn-success">Subir Proyectos</button>
+			</form>
+		</div>
+    </div>
+  </div>
+</div>
+<!-- End modal -->
+
+<!-- Scripts to trigger the modal -->
+{% if showTable %}
+<script>
+  $(document).ready(function() {
+	$('#dataModal').modal('show');
+  });
+</script>
+{% endif %}
+
+{% if showTableOdoo %}
+<script>
+  $(document).ready(function() {
+	$('#dataTable').modal('show');
+  });
+</script>
+{% endif %}
+
+<script>
+function closeModal() {
+  document.getElementById('dataModal').style.display = 'none';
+}
+</script>
+{% endblock content %}
+
+{% block UJS %}
+<script src="{% static 'core/js/plugin/datatables/datatables.min.js' %}"></script>
+<script>
+$(document).ready(function () {
+  $("#basic-datatables").DataTable({});
+
+  $("#multi-filter-select").DataTable({
+	pageLength: 10,
+	initComplete: function () {
+	  this.api()
+		.columns()
+		.every(function () {
+		  var column = this;
+		  var select = $(
+			'<select class="form-select"><option value=""></option></select>'
+		  )
+			.appendTo($(column.footer()).empty())
+			.on("change", function () {
+			  var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+			  column
+				.search(val ? "^" + val + "$" : "", true, false)
+				.draw();
+			});
+
+		  column
+			.data()
+			.unique()
+			.sort()
+			.each(function (d, j) {
+			  select.append(
+				'<option value="' + d + '">' + d + "</option>"
+			  );
+			});
+		});
+	},
+  });
+
+  // Add Row
+  $("#add-row").DataTable({
+	pageLength: 5,
+  });
+
+
+  var action =
+	'<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="Selecciona un archivo csv o xlsx" class="btn btn-secondary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+  $("#addRowButton").click(function () {
+	$("#add-row")
+	  .dataTable()
+	  .fnAddData([
+		$("#addName").val(),
+		$("#addPosition").val(),
+		$("#addOffice").val(),
+		action,
+	  ]);
+	$("#addRowModal").modal("hide");
+  });
+});
+</script>
+
+
+<script>
+	$(document).ready(function(){
+	  $('[data-toggle="tooltip"]').tooltip({
+		html: true
+	  });
+	});
+</script>
+{% endblock UJS %}

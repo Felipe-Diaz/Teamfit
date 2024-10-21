@@ -1,0 +1,505 @@
+{% load static %}
+{% block head %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>
+      {% block titlePage %}
+      Teamfit - Home
+      {% endblock titlePage %}
+    </title>
+    <meta
+      content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+      name="viewport"
+    />
+    <link
+      rel="icon"
+      href="{% static 'core/img/favicon.ico' %}"
+      type="image/x-icon"
+    />
+
+    <!-- Fonts and icons -->
+    <script src="{% static 'core/js/plugin/webfont/webfont.min.js' %}"></script>
+    <script>
+      WebFont.load({
+        google: { families: ["Public Sans:300,400,500,600,700"] },
+        custom: {
+          families: [
+            "Font Awesome 5 Solid",
+            "Font Awesome 5 Regular",
+            "Font Awesome 5 Brands",
+            "simple-line-icons",
+          ],
+          urls: ["{% static 'core/css/fonts.min.css' %}"],
+        },
+        active: function () {
+          sessionStorage.fonts = true;
+        },
+      });
+    </script>
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'core/css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'core/css/plugins.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'core/css/kaiadmin.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'core/css/estilo.css' %}" />
+
+    {% block estiloHead %}
+    {% endblock estiloHead %}
+  </head>
+  {% endblock head %}
+<body>
+    {% block SideBar %}
+    <!-- Modal HTML/ Mensaje emergente antes de cerrar sesion automaticamente -->
+    <div id="inactivityModal" class="modal" tabindex="-1" role="dialog" style="z-index:999999; background-color:rgba(0,0,0,0.5);">>
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Tiempo de desconexión automatico</h5>
+          </div>
+          <div class="modal-body">
+            <p class="justified-text">Por motivos de seguridad, su sesión expirará automáticamente en <span id="countdown">60</span>&nbsp;segundos.
+              Seleccione "Entendido" para mantener su sesión activa, o "Cerrar sesión" si desea salir ahora.</p>
+          </div>
+          <div class="modal-footer d-flex justify-content-center">
+            <button id="stayBtn" type="button" class="btn btn-primary">Entendido</button>
+            <button id="logoutBtn" type="button" class="btn btn-danger">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+      <!-- Sidebar -->
+      <div class="sidebar" data-background-color="dark">
+        <div class="sidebar-logo">
+          <!-- Logo Header -->
+          <div class="logo-header" data-background-color="dark">
+            <a href="{% url 'index' %}" class="logo">
+              <img
+                src="{% static 'core/img/teamfit-logo.png' %}"
+                alt="navbar brand"
+                class="navbar-brand"
+                height="40"
+        
+              />
+            </a>
+            <div class="nav-toggle">
+              <button class="btn btn-toggle toggle-sidebar">
+                <i class="gg-menu-right"></i>
+              </button>
+              <button class="btn btn-toggle sidenav-toggler">
+                <i class="gg-menu-left"></i>
+              </button>
+            </div>
+            <button class="topbar-toggler more">
+              <i class="gg-more-vertical-alt"></i>
+            </button>
+          </div>
+          <!-- End Logo Header -->
+        </div>
+        <div class="sidebar-wrapper scrollbar scrollbar-inner">
+          <div class="sidebar-content">
+            <ul class="nav nav-secondary">
+              <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+                <a
+                  class="collapsed"
+                  aria-expanded="false"
+                  href="{% url 'index' %}"
+                >
+                  <i class="fas fa-home"></i>
+                  <p>Inicio</p>
+                </a>
+              </li>
+              <li class="nav-section">
+                <span class="sidebar-mini-icon">
+                  <i class="fa fa-ellipsis-h"></i>
+                </span>
+              </li>
+              <li class="nav-item {% if request.path == '/subirProyectos/' or request.path == '/verProyectos/' %}active{% endif %}">
+                <a data-bs-toggle="collapse" href="#base">
+                  <i class="fas fa-layer-group"></i>
+                  <p>Proyectos</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse {% if request.path == '/subirProyectos/' or request.path == '/verProyectos/' %}show{% endif %}" id="base">
+                  <ul class="nav nav-collapse">
+                    <li class="{% if request.path == '/subirProyectos/' %}active{% endif %}">
+                      <a href="{% url 'subirProyectos' %}">
+                        <span class="sub-item">Subir Proyectos</span>
+                      </a>
+                    </li>
+                    <li class="{% if request.path == '/verProyectos/' %}active{% endif %}">
+                      <a href="{% url 'verProyectos' %}">
+                        <span class="sub-item">Ver Proyectos</span>
+                      </a>
+                    </li>
+                </div>
+              </li>
+              <li class="nav-item {% if request.path == '/crearUsuarios' or request.path == '/verUsuarios' %}active{% endif %}">
+                <a data-bs-toggle="collapse" href="#sidebarLayouts">
+                  <i class="fa fa-users" aria-hidden="true"></i>
+                  <p>Administrar Usuarios</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse {% if request.path == '/crearUsuarios' or request.path == '/verUsuarios' %}show{% endif %}" id="sidebarLayouts">
+                  <ul class="nav nav-collapse">
+                    {% if request.user.is_staff %}
+                    <li class="{% if request.path == '/crearUsuarios' %}active{% endif %}">
+                      <a href="{% url 'crearUsuarios' %}">
+                        <span class="sub-item">Crear Usuario</span>
+                      </a>
+                    </li>
+                    {% endif %}
+                    <li class="{% if request.path == '/verUsuarios' %}active{% endif %}">
+                      <a href="{% url 'verUsuarios' %}">
+                        <span class="sub-item">Ver Usuarios</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item {% if request.path == '/graficar_Datos' or request.path == '/asignaciones/' %}active{% endif %}">
+                <a data-bs-toggle="collapse" href="#forms">
+                  <i class="fa fa-folder-open" aria-hidden="true"></i>
+                  <p>Asignaciones</p>
+                  <span class="caret"></span>
+                </a>
+                <div class="collapse {% if request.path == '/cargaOdoo' or request.path == '/asignaciones/' or request.path == '/disponibilidad/' %}show{% endif %}" id="forms">
+                  <ul class="nav nav-collapse">
+                    <li class="{% if request.path == '/asignaciones/' %}active{% endif %}">
+                      <a href="{% url 'asignaciones_list' %}">
+                        <span class="sub-item">Asignaciones</span>
+                      </a>
+                    </li>
+                    <li class="{% if request.path == '/disponibilidad/' %}active{% endif %}">
+                      <a href="{% url 'disponibilidad' %}">
+                        <span class="sub-item">Disponibilidad</span>
+                      </a>
+                    </li>
+                    <li class="{% if request.path == '/cargaOdoo' %}active{% endif %}">
+                      <a href="{% url 'cargaOdoo' %}">
+                        <span class="sub-item">Carga Odoo</span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li> <!-- Asignaciones Junily was here-->
+              <li class="nav-item {% if request.path == '/historial' %}active{% endif %}">
+                <a href="{% url 'historial' %}">
+                  <i class="fa fa-history" aria-hidden="true"></i>
+                  <p>Historial</p>
+                </a>
+              </li>
+              <li class="nav-item {% if request.path == '/cluster' %}active{% endif %}">
+                <a href="{% url 'cluster'%}">
+                    <i class="fa fa-chart-bar" aria-hidden="true"></i>
+                    <p>Cluster</p>
+                </a>
+              </li>
+              {% if request.user.is_staff %}
+              <li class="nav-item {% if request.path == '/parametros' %}active{% endif %}">
+                  <a href="{% url 'parametros'%}">
+                      <i class="fa fa-cog" aria-hidden="true"></i>
+                      <p>Parametros</p>
+                  </a>
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- End Sidebar -->  
+    {% endblock SideBar %}
+    {% block NavBar %}
+    <div class="main-panel">
+        <div class="main-header">
+          <div class="main-header-logo">
+            <!-- Logo Header -->
+            <div class="logo-header" data-background-color="dark">
+              <a href="index.html" class="logo">
+                <img
+                  src="{% static 'core/img/kaiadmin/logo_light.svg' %}"
+                  alt="navbar brand"
+                  class="navbar-brand"
+                  height="20"
+                />
+              </a>
+              <div class="nav-toggle">
+                <button class="btn btn-toggle toggle-sidebar">
+                  <i class="gg-menu-right"></i>
+                </button>
+                <button class="btn btn-toggle sidenav-toggler">
+                  <i class="gg-menu-left"></i>
+                </button>
+              </div>
+              <button class="topbar-toggler more">
+                <i class="gg-more-vertical-alt"></i>
+              </button>
+            </div>
+            <!-- End Logo Header -->
+          </div>
+          <!-- Navbar Header -->
+          <nav
+            class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
+            <div class="container-fluid">
+              <h2>
+                {% block titulo %}
+                {% endblock titulo %}
+              </h2>
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <img src="{% static 'core/img/roda-logo.png' %}" alt="Logo-Teamfit" style="width: 10%">
+              </div>
+              <div class="dropdown">
+                <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                  <li class="nav-item topbar-user dropdown">
+                    <a
+                      class="dropdown-toggle profile-pic"
+                      data-bs-toggle="dropdown"
+                      href="#"
+                      aria-expanded="false"
+                    >
+                      <div class="avatar-sm">
+                        <img
+                          src="{% static 'core/img/user-image.png' %}"
+                          alt="..."
+                          class="avatar-img rounded-circle"
+                        />
+                      </div>
+                      <span class="profile-username">
+                        {% if user.perfilusuario %}
+                          {% if user.perfilusuario.cargo == '1' %}
+                          <div>Administrador</div>
+                          {% elif user.perfilusuario.cargo == '2' %}
+                          <div>Jefe de Proyecto</div>
+                          {% elif user.perfilusuario.cargo == '3' %}
+                          <div>Ingeniero de Proyecto</div>
+                          {% endif %}
+                        <!-- <div>{{ user.perfilusuario.cargo }}</div> -->
+                        {% else %}
+                        <div>Cargo no disponible</div>
+                        {% endif %}
+                        <span class="fw-bold">{{ user.first_name}} {{ user.last_name}}</span>
+                      </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user animated fadeIn">
+                      <div class="dropdown-user-scroll scrollbar-outer">
+                        <li>
+                          <div class="user-box">
+                            <div class="avatar-lg">
+                              <img
+                                src="{% static 'core/img/Template/profile.jpg'%}"
+                                alt="image profile"
+                                class="avatar-img rounded"
+                              />
+                            </div>
+                            <div class="u-text">
+                              <h4>{{ user.first_name}} {{user.last_name}}</h4>
+                              <p class="text-muted">{{user.email}}</p>
+                              {% if user.is_authenticated %}
+                              <a
+                                class="btn btn-xs btn-secondary" btn-sm href="{% url 'logout' %}"
+                                >Cerrar sesión</a>
+                                {% endif %}
+                            </div>
+                          </div>
+                        </li>
+                      </div>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </nav>
+        </div>
+      
+    {% endblock NavBar%}
+
+{% block content %}
+{% endblock content %}
+
+{% block EJS%}
+<script src="{% static 'core/js/core/jquery-3.7.1.min.js' %}"></script>
+<script src="{% static 'core/js/core/popper.min.js' %}"></script>
+<script src="{% static 'core/js/core/bootstrap.min.js' %}"></script>
+
+<!-- jQuery Scrollbar -->
+<script src="{% static 'core/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js' %}"></script>
+
+<!-- Chart JS -->
+<script src="{% static 'core/js/plugin/chart.js/chart.min.js' %}"></script>
+
+<!-- jQuery Sparkline -->
+<script src="{% static 'core/js/plugin/jquery.sparkline/jquery.sparkline.min.js' %}"></script>
+
+<!-- Chart Circle -->
+<script src="{% static 'core/js/plugin/chart-circle/circles.min.js' %}"></script>
+
+<!-- Datatables -->
+<script src="{% static 'core/js/plugin/datatables/datatables.min.js' %}"></script>
+
+<!-- Bootstrap Notify -->
+<script src="{% static 'core/js/plugin/bootstrap-notify/bootstrap-notify.min.js' %}"></script>
+
+<!-- jQuery Vector Maps -->
+<script src="{% static 'core/js/plugin/jsvectormap/jsvectormap.min.js' %}"></script>
+<script src="{% static 'core/js/plugin/jsvectormap/world.js' %}"></script>
+
+<!-- Sweet Alert -->
+<script src="{% static 'core/js/plugin/sweetalert/sweetalert.min.js' %}"></script>
+
+<!-- Kaiadmin JS -->
+<script src="{% static 'core/js/kaiadmin.min.js' %}"></script>
+
+<!-- <script>
+// Datos para los gráficos
+const dataHH = {
+    labels: ['A', 'B', 'C'],
+    datasets: [{
+        label: 'Horas',
+        data: [10, 20, 30],
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+    }]
+};
+
+const dataUtilizacion = {
+    labels: ['X', 'Y', 'Z'],
+    datasets: [{
+        label: 'Utilizacion',
+        data: [40, 50, 60],
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+    }]
+};
+
+let ctx = document.getElementById('myChart').getContext('2d');
+let myChart = new Chart(ctx, {
+    type: 'bar',
+    data: dataHH, // Inicialmente muestra el gráfico de HH
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return tooltipItem.dataset.label + ': ' + tooltipItem.raw;
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Función para cambiar el gráfico
+function changeChartData(newData) {
+    myChart.data = newData;
+    myChart.update();
+}
+
+// Eventos para los botones
+document.getElementById('btn-hh').addEventListener('click', function(e) {
+    e.preventDefault();
+    changeChartData(dataHH);
+});
+
+document.getElementById('btn-utilizacion').addEventListener('click', function(e) {
+    e.preventDefault();
+    changeChartData(dataUtilizacion);
+});
+</script> -->
+
+<!-- Scrip utilizado para la expiracion del token de login, el conteo del tiempo y el mensaje emergente -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      let inactivityTime = function () {
+          let time;
+          let warningTime;
+          let modalTimeout;
+          let countdownInterval;
+          let countdownTime = 60;  // Tiempo para el contador (en segundos)
+
+          // Restablece el contador cuando el usuario interactúa
+          resetTimer();
+          document.onmousemove = resetTimer;
+          document.onkeypress = resetTimer;
+
+          function logout() {
+              // Redirige a la URL de logout si el usuario no responde
+              window.location.href = "{% url 'logout' %}";
+          }
+
+          function showModal() {
+              // Muestra el modal
+              document.getElementById("inactivityModal").style.display = "block";
+              
+              // Inicializa el contador
+              countdownTime = 60;
+              document.getElementById("countdown").textContent = countdownTime;
+              
+              // Actualiza el contador cada segundo
+              countdownInterval = setInterval(function() {
+                  countdownTime--;
+                  document.getElementById("countdown").textContent = countdownTime;
+                  
+                  // Si el contador llega a 0, cierra la sesión
+                  if (countdownTime <= 0) {
+                      clearInterval(countdownInterval);  // Detiene el intervalo
+                      logout();  // Cierra sesión
+                  }
+              }, 1000);
+
+              // Si el usuario no responde al modal en 60 segundos, cierra sesión
+              modalTimeout = setTimeout(logout, 60000);  // 60 segundos
+          }
+
+          function hideModal() {
+              // Oculta el modal y limpia el temporizador del modal
+              document.getElementById("inactivityModal").style.display = "none";
+              clearTimeout(modalTimeout);
+              clearInterval(countdownInterval);  // Detiene el contador
+              resetTimer();  // Reinicia el contador de inactividad
+          }
+
+          function resetTimer() {
+              clearTimeout(time);  // Elimina el temporizador de inactividad
+              clearTimeout(warningTime);  // Elimina el temporizador de advertencia
+              clearTimeout(modalTimeout);  // Elimina el temporizador del modal si existía
+              clearInterval(countdownInterval);  // Elimina el intervalo del contador
+
+              // Cada minuto equivale a 60000
+              // Tiempo en milisegundos antes de mostrar el modal (ej. 4 minutos) [mostrar modal]
+              warningTime = setTimeout(showModal, 840000);  // 14 minutos
+
+              // Tiempo total de inactividad (modal más tiempo de espera para logout)
+              time = setTimeout(logout, 900000);  // 15 minutos
+          }
+
+          // Evento cuando el usuario hace clic en "Entendido"
+          document.getElementById("stayBtn").onclick = function() {
+              hideModal();
+          };
+
+          // Evento cuando el usuario hace clic en "Cerrar sesión"
+          document.getElementById("logoutBtn").onclick = function() {
+              logout();  // Cierra sesión inmediatamente
+          };
+      };
+
+      inactivityTime();  // Inicia el script de inactividad
+  });
+</script>
+
+
+{% endblock EJS%}
+
+{% block UJS %}
+{% endblock UJS %}
+</body>
