@@ -9,12 +9,11 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 #Importaciones de models
-from .models import Ventas, Perfil_hh_Detalle_Semanal, Disponibilidad, Hh_Estimado_Detalle_Semanal
 from .models import Graficos, historialCambios, proyectosAAgrupar, PerfilUsuario, Parametro, User 
-from .models import Disponibilidad, Asignacion, AsignacionControl, HorasPredecidas 
-from .models import proyectosSemanas, Empleado
+from .models import Asignacion, AsignacionControl, HorasPredecidas, proyectosSemanas, Empleado
+
 #Importaciones de forms
-from .forms import VentasForm, DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
+from .forms import DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from .forms import CategoriasForm , UsuarioForm, ProgramacionForm, EscenariosForm
 from .forms import CATEGORIAS_MAPPING, PROGRAMACION_MAPPING, ESCENARIOS_MAPPING
 #Importaciones de apis
