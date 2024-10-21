@@ -40,8 +40,6 @@ def obtener_empleado(proyecto_id, rol, semana, anio, cant_horas):
                 distinct=True
             ))\
             .order_by('cantidad_proyectos')
-        print(empleados)
-        print('-------------------------------')
         for idx, empleado in enumerate(empleados):
             disponible = verificar_disponibilidad(empleado, semana, anio, cant_horas)
             if(disponible):

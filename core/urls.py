@@ -2,7 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 
-from .views import development_Buttons, llenar_DB, iniciar_sesion, crear_usuarios, graficar_Datos, eliminar_historial
+from .views import iniciar_sesion, crear_usuarios, graficar_Datos, eliminar_historial
 from .views import pagina_principal, cerrar_sesion, subirProyectos, ver_proyectos, verHistorial, consul_api
 from .views import ver_usuarios, editar_usuario, eliminarUsuarios, ajuste_parametros, cluster, carga_Odoo, disponibilidad
 from .views import asignaciones_data,eliminar_asignaciones, horas_por_proyecto_data, generar_excel_recursos
@@ -11,8 +11,6 @@ from .views import asignaciones_list, ejecutar_asignacion, generar_excel_asignac
 urlpatterns = [ 
     path('subirProyectos/',subirProyectos, name="subirProyectos"),
     path('subirProyectos/<upload>/',subirProyectos, name="decidirSubida"),
-    path('b',development_Buttons, name="b"),
-    path('llenar_db', llenar_DB, name='llenar_db'),
     path('login', iniciar_sesion, name="login"),
     path("historial", verHistorial, name="historial"),
     path("crearUsuarios", crear_usuarios, name="crearUsuarios"),

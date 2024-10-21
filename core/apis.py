@@ -7,7 +7,7 @@ import json
 from .models import Empleado
 
 URL_BASE = 'https://teamfit.openscorp.com/api/'
-API_KEY = 'TEAMFIT CODE'
+API_KEY = 'KEY TEAMFIT'
 
 """
 **DESCRIPCIÓN INICIAL**\n

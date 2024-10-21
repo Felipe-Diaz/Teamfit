@@ -228,129 +228,6 @@ def graficar_Datos(request):
     
     return render(request, 'core/dashboard.html', data)   
 
-def development_Buttons(request):
-    if not request.user.is_authenticated:
-        return redirect(iniciar_sesion)
-    
-    forms = [VentasForm() for _ in range(5)]
-    data = {"VentasForms":forms, "DispForm":DispForm}
-    
-    data = {}
-    data['form'] = UploadFileForm()
-    data["datosDB"] = Ventas.objects.all()
-    
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file = request.FILES['file']
-            if not file.name.endswith(('.csv', '.xlsx')):
-                # Mostrar un mensaje de error
-                return render(request, 'boton.html', {'form': form, 'error_message': 'Archivo no compatible. Por favor, selecciona un archivo CSV o XLSX.'})
-
-            df = pd.read_excel(file) if file.name.endswith('.xlsx') else pd.read_csv(file)
-            required_columns = ['idTipoProyecto', 'fecha']
-            if not all(col in df.columns for col in required_columns):
-                return render(request, 'core/boton.html', {'form': form, 'error_message': 'El archivo no contiene las columnas requeridas (idTipoProyecto, fecha). Por favor, sube un archivo con estas columnas.'})
-            
-           # Convertir el DataFrame a una lista de diccionarios
-            datos_formularios = df.to_dict(orient='records')
-            
-            # Crear formularios VentasForm con datos iniciales
-            forms = []
-            for datos in datos_formularios:
-                fecha=str(datos['fecha'])
-                fecha = fecha[:10]
-                
-                initial_data = {
-                    'idTipoProyecto': datos['idTipoProyecto'],
-                    'fecha': fecha
-                }
-                form = VentasForm(initial=initial_data)
-                forms.append(form)
-            data['VentasForms'] = forms
-            return render(request, 'core/boton.html', data)
-
-        else:
-            data["mesg"] = "El formulario en inválido"
-            return render(request, 'core/boton.html', data)
-    else:
-        form = UploadFileForm()
-        data["form"] = form
-    return render(request, 'core/boton.html', data)
-
-def llenar_DB(request):
-    
-    usuario = get_object_or_404(User, id=33)
-    usuario.set_password('Contra12$%')
-    usuario.save()
-    
-    return redirect(pagina_principal)
-
-#Casi Funcional
-def newCreateJoinDB():
-    # Obtener todas las ventas
-    ventas = Ventas.objects.all()
-
-    for venta in ventas:
-        # Buscar el correspondiente Perfil_hh_Detalle_Semanal por idTipoProyecto
-        perfiles_hh = Perfil_hh_Detalle_Semanal.objects.filter(idTipoProyecto=venta.idTipoProyecto)
-        fechaInicial = venta.fecha
-        semanaInicial = fechaInicial.isocalendar()[1]
-        print(str(venta.id) + ": \n")
-        if perfiles_hh:
-            for i, perfil in enumerate(perfiles_hh):
-                fecha = venta.fecha + timedelta(days=(i*7))
-                semanaPredecir = fecha.isocalendar()[1]
-                semanaProyecto = (semanaPredecir - semanaInicial) + 1
-                perfil_HH = Perfil_hh_Detalle_Semanal.objects.filter(idTipoProyecto=venta.idTipoProyecto, numSemana=semanaProyecto)
-                horasHombre = perfil_HH[0].hh
-                anio = fecha.year
-                
-                # print("Fecha: " + str(fecha) + " - ID perfilHH: " + str(perfil_HH[0].id) + " - Ventas: " + str(venta.id) + 
-                #       " - Año: " + str(anio) + " - Semana del Año: " +  str(semanaPredecir) + " - Horas: " + str(horasHombre) +
-                #       "  - Semana Proyecto: " + str(semanaProyecto))
-                
-                hhDetalleSemana = Hh_Estimado_Detalle_Semanal(fecha=fecha, anio=anio, semana=semanaPredecir, idVentas=venta, 
-                                                             idPerfilHhDetalleSemanal=perfil_HH[0], hh=horasHombre)
-                checkData = Hh_Estimado_Detalle_Semanal.objects.filter(semana=semanaPredecir, idVentas=venta, anio=anio)
-                checkData = list(checkData.values())
-                checkData = len(checkData)
-                    
-                if(checkData == 0):
-                    print("Datos Guardados")
-                    hhDetalleSemana.save()
-                else:
-                    print("Datos NO guardados")
-                    continue
-    return True
-
-def create_additional_table():
-    Graficos.objects.all().delete()
-    data = Hh_Estimado_Detalle_Semanal.objects.all()
-    data_list = list(data.values())
-    df = pd.DataFrame(data_list)
-    
-    disp = Disponibilidad.objects.all()
-    dispList = list(disp.values())
-    dfDisp = pd.DataFrame(dispList)
-    dfDisp.rename(columns={'hh': 'hh_disp'}, inplace=True)
-    
-    weekly_data = df.groupby('semana')['hh'].sum().reset_index()
-    weekly_data.rename(columns={'hh': 'hh_req'}, inplace=True)
-    weekly_data = pd.merge(dfDisp, weekly_data, on='semana', how='outer')
-    weekly_data['utilizacion'] = round((weekly_data['hh_req'] / weekly_data['hh_disp']) * 100, 1)
-    weekly_data = weekly_data.dropna()
-    
-    for idx, row in weekly_data.iterrows():
-        grafico = Graficos(
-            semana=row['semana'],
-            hhDisponible=row['hh_disp'],
-            hhRequerido=row['hh_req'],
-            utilizacion=row['utilizacion']
-        )
-        grafico.save()
-    
-    return True
 
 def iniciar_sesion(request):
     if request.user.is_authenticated:
@@ -1456,9 +1333,9 @@ def asignar_recursos():
 
     #Obtener todos los proyectos que no se hayan asignado anteriormente
     proyectos = obtener_proyectos_sin_asignar()
-    print(proyectos)
     
     hoy = date.today()
+    anio_actual, semana_actual, _ = hoy.isocalendar()
     try:
         parametro = Parametro.objects.get(nombre_parametro='asignacion.tipo')
         tipo_horas = parametro.valor['valores_escenarios'][0]
@@ -1469,12 +1346,13 @@ def asignar_recursos():
     if proyectos:
         for proyecto in proyectos:
             desfase_semanas = 0
-            #Verifica que el proyecto no inicie in fin de semana.
+            
             fecha_fin = proyecto.fechaFin
             
             if(fecha_fin < hoy):
                 break
-                
+            
+            #Verifica que el proyecto no inicie un fin de semana.
             dia_semana = proyecto.fechaInicio.weekday()
             if(dia_semana >= 5):
                 proyecto.fechaInicio += timedelta(days=2)
@@ -1495,7 +1373,11 @@ def asignar_recursos():
                 semana_asignacion = ((semana_inicio + desfase_semanas) + i - 1) % 52 + 1  # Reiniciar el conteo al llegar a la semana 53
                 if(semana_asignacion == 1):
                     anio += 1
-                #print(f"Asignando en la semana {semana_asignacion}...")
+                
+                if(semana_asignacion < semana_actual and anio <= anio_actual):
+                    print(f'Semana saltada: {semana_asignacion} del año {anio} \nDebido a estar antes del {semana_actual}/{anio_actual}')
+                    continue
+                
 
                 #Obtener el porcentaje de semana actual
                 porcentaje = ((i + 1) / semanas) * 100
@@ -1526,7 +1408,6 @@ def asignar_recursos():
                                 semana_asignacion = 1
                                 anio += 1
                             empleado = obtener_empleado(proyecto.id, horas.rol, semana_asignacion, anio, cant_horas)
-                            print(empleado)
                             if empleado:
                                 break
                     Asignacion.objects.update_or_create(
