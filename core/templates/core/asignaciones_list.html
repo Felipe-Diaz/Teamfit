@@ -4,20 +4,19 @@
 Teamfit - Proyectos a Asignar Recursos
 {% endblock titlePage %}
 {% block content %}
-
+{% block estiloHead %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+{% endblock estiloHead %}
+{% block titulo %}
+Asignaciones de Recursos
+{% endblock titulo %}
+<br><br>
 <div class="container mt-5">
-
-    <h1 class="text-center mb-5" style="margin-top: 70px;">Asignaciones de Recursos</h1>
-
     <div>
-        <div class="alert alert-primary alert-dismissible fade show" role="alert" style="font-size: 15px;">
+        <div class="alert alert-primary alert-dismissible fade show text-center" role="alert" style="font-size: 15px;">
             <i class="fa fa-info-circle"></i>
-            <strong>!AVISO!</strong> En la siguiente tabla se presentan las tareas a cargar por cada empleado en la aplicación de Odoo, para más información visite las siguientes páginas. 
-            <ul>
-                <li>Para ver la disponibilidad por usuario visite <a href="{% url 'disponibilidad' %}"><strong>“Disponibilidad”</strong></a></strong>.</li> 
-                <li>Para ver horas totales por proyecto o trabajador visite <a href="{% url 'asignaciones_list' %}"><strong>“Asignaciones”</strong></a>.</li> 
-            </ul>
-            <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
+            <strong>!AVISO!</strong> Actualmente el sistema está utilizando <strong>{{tipo_horas}}</strong> para realizar la asignación <br>
+            En caso de ser necesario, puede cambiar el tipo de horas utilizadas en la <a href="{% url 'parametros' %}">página de parámetros</a> 
         </div>
     </div>
 
@@ -65,11 +64,12 @@ Teamfit - Proyectos a Asignar Recursos
 
     <!-- Reporte de recursos (mantener sin cambios) -->
     <div class="table-container mb-5">
-        <h2 class="table-title text-center mb-3">Asignaciones por Rol de Empleado</h2>
+        <h2 class="table-title text-center mb-3">Horas Totales por Rol</h2>
         <table id="asignacionesTable" class="table table-striped table-bordered display nowrap" style="width:100%">
             <thead class="table-header">
                 <tr>
                     <th>Rol <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Rol al que se le han asignado las horas"></i></button></th>
+                    <th>Nombre <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Rol al que se le han asignado las horas"></i></button></th>
                     <th>Semana <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Semana del año en la que se asignaron horas. Semana 1 corresponde a semana del 1/enero"></i></button></th>
                     <th>Total <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cantidad total de horas asignadas por rol para semana indicada"></i></button></th>
                 </tr>
@@ -94,8 +94,8 @@ Teamfit - Proyectos a Asignar Recursos
         <!-- Botón para eliminar asignaciones -->
         <form id="eliminarAsignacionesForm" method="post" action="{% url 'eliminar_asignaciones' %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Eliminar Asignaciones Actuales</button>
-        </form>
+            <button type="button" class="btn btn-danger" id="openModal">Eliminar Asignaciones Actuales</button>
+        </form>      
     </div>
 
 
@@ -106,7 +106,30 @@ Teamfit - Proyectos a Asignar Recursos
 <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script type="text/javascript">
+    document.getElementById('openModal').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevenir el envío del formulario
+        
+            Swal.fire({
+                title: 'Confirmar Eliminación',
+                html: `Está a punto de eliminar toda la asignación de recursos. <strong>Esta acción no se puede 
+                        deshacer</strong>. <br> Se recomienda realizar esta acción <strong>ANTES</strong> de 
+                        cargar a Odoo, ya que no se eliminarán de esta plataforma. <br> 
+                        ¿Está seguro de que desea eliminar las asignaciones?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('eliminarAsignacionesForm').submit(); // Enviar el formulario si el usuario confirma
+                }
+            });
+    });
+</script>
 <!-- Inicialización de DataTables con AJAX -->
 <script>
     $(document).ready(function() {
@@ -160,6 +183,7 @@ Teamfit - Proyectos a Asignar Recursos
             },
             "columns": [
                 { "data": "empleado__rol" },
+                {"data": "empleado__nombre"},
                 { "data": "semana" },
                 { "data": "total_horas" }
             ],
@@ -218,6 +242,7 @@ Teamfit - Proyectos a Asignar Recursos
                     $('#mensaje').removeClass().addClass('alert alert-danger').html('Error al eliminar las asignaciones: ' + xhr.responseText).show();
                 }
             });
+            
         });
 
         // Ocultar el mensaje automáticamente después de unos segundos

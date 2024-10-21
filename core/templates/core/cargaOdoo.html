@@ -55,7 +55,7 @@ Carga Odoo
 		<br>
 		<br>
         <div>
-			<div class="alert alert-primary alert-dismissible fade show" role="alert" style="font-size: 15px;">
+			<div class="alert alert-primary alert-dismissible fade show text-center" role="alert" style="font-size: 15px;">
 				<i class="fa fa-info-circle"></i>
 				<strong>¡AVISO!</strong> En la siguiente tabla se presentan las tareas a cargar por cada empleado en la aplicación de Odoo, para más información visite las siguientes páginas. 
 				<ul>
@@ -64,6 +64,20 @@ Carga Odoo
 				</ul>
 				<!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
 			</div>
+			{% if messages %}
+			{% for mesg in messages %}
+				<div class="alert alert-{% if mesg.tags == 'error' %}danger{%elif mesg.tags == 'success'%}success{% endif %} container" role="alert">
+					{{ mesg|safe }}
+				</div>
+			{% endfor %}
+			{% endif %}
+			{% if merror %}
+			{% for mesg in merror %}
+				<div class="alert alert-danger container" role="alert">
+					{{ mesg }}
+				</div>
+			{% endfor %}
+			{% endif %}	
         </div>
 		<div class="card">
 			<div class="card-body">

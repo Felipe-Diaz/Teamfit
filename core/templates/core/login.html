@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="stylesheet" href="{% static 'core/css/bootstrap.min.css' %}" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,15 +42,15 @@
         }
         .login-container button {
             padding: 10px 35%;
-            background-color: #ff0090;
+            /* background-color: #ff0090; */
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        .login-container button:hover {
+        /* .login-container button:hover {
             background-color: #e60082;
-        }
+        } */
         .login-container .error {
             color: red;
             margin-top: 30px;
@@ -63,16 +64,22 @@
 <body>
     <div class="login-container">
         <div class="text-center">
-            <img src="{% static 'core/img/roda-logo.png' %}" alt="Logo">
+            <!-- <div class="col-lg-12">
+                <img src="{% static 'core/img/roda-logo.png' %}" alt="Logo-Teamfit">
+            </div> -->
+            <div class="col-lg-12">
+                <img src="{% static 'core/img/teamfit-logo.png' %}" alt="Logo-Roda">
+            </div>
             <form method="post">
                 {% csrf_token %}
                 <input type="text" name="username" placeholder="Usuario" required>
                 <input type="password" name="password" placeholder="Contraseña" required>
-                <button type="submit">Iniciar&nbsp;Sesión</button>
+                <button type="submit" class="btn btn-primary">Iniciar&nbsp;Sesión</button>
             </form>
             {% if mesg %}
                 <div class="error">{{ mesg }}</div>
             {% endif %}
+            
         </div>
     </div>
 </body>

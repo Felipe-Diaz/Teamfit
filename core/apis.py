@@ -7,11 +7,10 @@ import json
 from .models import Empleado
 
 URL_BASE = 'https://teamfit.openscorp.com/api/'
-API_KEY = 'AGREGADO POR SEPARADO'
+API_KEY = 'TEAMFIT CODE'
 
 """
 **DESCRIPCIÓN INICIAL**\n
-COMO FUNCIONA LA FUNCIÓN ALGO MÁS ESPECíFICO \n
 **Parametros**\n
     parametros_necesario (tipo_dato): lore ipsum \n
 **Return**\n
@@ -20,6 +19,19 @@ COMO FUNCIONA LA FUNCIÓN ALGO MÁS ESPECíFICO \n
 
 #-para enviar las tareas al Oodo 
 def enviar_datos_planning_slots(id, employee_id, allocated_hours, start_datetime, end_datetime, name):
+    """
+    **Envía los datos a Odoo utilizando la API**\n
+    **Parametros**\n
+        id (int): ID del recurso \n
+        employee_id (int): ID del empleado \n
+        allocated_hours (int): Cantidad de horas a asignar \n
+        start_datetime (int): Fecha de inicio de la actividad (Día lunes de una semana) \n
+        end_datetime (int): Fecha de fin de la actividad (Día viernes de una semana) \n
+        name (int): Nombre de la actividad que se verá en Odoo. \n
+    **Return**\n
+        respuesta (Json): Objeto json que almacena la respuesta de la API. El formato es: \n
+            {done:True, object: response.json}. En caso de fallar devolverá False
+    """
     endpoint = 'planning_slot?'
     
     fecha_inicio = convertir_fecha_a_gmt(start_datetime)
@@ -57,7 +69,12 @@ def enviar_datos_planning_slots(id, employee_id, allocated_hours, start_datetime
    
 def obtener_api_recursos(page=1,page_size=80):
     """
-    
+    **Obtiene todos los recursos del sistema**\n
+    **Parametros**\n
+        page (int): Página a buscar \n
+        page_size (int): Tamaño de la página a solicitada (Cuantos recursos vienen) \n
+    **Return**\n
+        recursos (Json): Json de la APi que contiene todos los recursos utilizados.
     """
     endpoint = 'resource'
     page = f'page={page}'
@@ -83,9 +100,14 @@ def obtener_api_recursos(page=1,page_size=80):
         print(f'Han ocurrido errores: \n{e}')
         return False
     
-def obtener_api_empleados(page=1,page_size=80):
+def obtener_api_empleados(page=1,page_size=120):
     """
-    
+    **Obtiene los empleados de la API**\n
+    **Parametros**\n
+        page (int): número de página a visualizar en la API. \n
+        page_size (int) : Tamaño de la página a visualizar en la API \n
+    **Return**\n
+        empleados (Json): Json que contiene todos los empleados de Odoo.
     """
     endpoint = 'employees'
     page = f'page={page}'
@@ -112,6 +134,14 @@ def obtener_api_empleados(page=1,page_size=80):
         return False
     
 def obtener_planning_slots(page=1, page_size=80):
+    """
+    **Obtiene los planning slots existentes en el sistema**\n
+    **Parametros**\n
+        page (int): número de página a visualizar en la API. \n
+        page_size (int) : Tamaño de la página a visualizar en la API \n
+    **Return**\n
+        slots (json): Json con todos los planing slots obtenidos.
+    """
     endpoint = 'planning_slot'
     page = f'page={page}'
     page_size = f'page_size{page_size}'
@@ -135,6 +165,16 @@ def obtener_planning_slots(page=1, page_size=80):
         return False
     
 def obtener_planning_slots_por_semana(page=1, page_size=80, semana=1, anio=2025):
+    """
+    **Obtiene todos los planing slots relacionados a una semana.**\n
+    **Parametros**\n
+        page (int): número de página a visualizar en la API. \n
+        page_size (int): Tamaño de la página a visualizar en la API \n
+        semana (int): Semana en la ue se buscan atividades \n
+        anio (int): Año en el que se buscarán las actividades. \n
+    **Return**\n
+        slots (Json): Json con todos los slots en la semana seleccionada.
+    """
     endpoint = 'planning_slot'
     page = f'page={page}'
     page_size = f'page_size{page_size}'
@@ -166,6 +206,15 @@ def obtener_planning_slots_por_semana(page=1, page_size=80, semana=1, anio=2025)
         return False
 
 def obtener_departamento_empleado(page=1, page_size=80, id=1):
+    """
+    **Obtiene el departamento de un empleado**\n
+    **Parametros**\n
+        page (int): número de página a visualizar en la API. \n
+        page_size (int) : Tamaño de la página a visualizar en la API \n
+        id (int): ID del departamento a buscar
+    **Return**\n
+        departamento (string): Departamento solicitado.
+    """
     endpoint = 'departments'
     page = f'page={page}'
     page_size = f'page_size{page_size}'
@@ -192,6 +241,16 @@ def obtener_departamento_empleado(page=1, page_size=80, id=1):
         print(f'Ha ocurrido un error: \n{e}')
         
 def obtener_trabajo_empleado(page=1, page_size=80, id=1):
+    """
+    **DESCRIPCIÓN INICIAL**\n
+    COMO FUNCIONA LA FUNCIÓN ALGO MÁS ESPECíFICO \n
+    **Parametros**\n
+        page (int): número de página a visualizar en la API. \n
+        page_size (int): Tamaño de la página a visualizar en la API \n
+        id (int): ID del trabajo buscado \n
+    **Return**\n
+        trabajo (string): Cadena de texto conteniendo el trabajo buscado
+    """
     endpoint = 'jobs'
     page = f'page={page}'
     page_size = f'page_size{page_size}'
@@ -220,7 +279,13 @@ def obtener_trabajo_empleado(page=1, page_size=80, id=1):
 #Junily was here
 def obtener_resource_calendar(page=1,page_size=80):
     """
-    Función para obtener la información de la API del calendario de recursos.
+    **DESCRIPCIÓN INICIAL**\n
+    COMO FUNCIONA LA FUNCIÓN ALGO MÁS ESPECíFICO \n
+    **Parametros**\n
+        page (int): número de página a visualizar en la API. \n
+        page_size (int) : Tamaño de la página a visualizar en la API \n
+    **Return**\n
+        calendars (Json): Json con todos los calendarios del sistema.
     """
 
     endpoint = 'resource_calendar'
@@ -239,10 +304,8 @@ def obtener_resource_calendar(page=1,page_size=80):
                 calendars = data['items']
                 return calendars
             else:
-                print('No se avanzó 1')
                 return False
         else:
-            print('No se avanzó 2')
             return False
 
     except Exception as e:
@@ -252,6 +315,13 @@ def obtener_resource_calendar(page=1,page_size=80):
 
 ##Funciones de Útil para el sistema. 
 def convertir_fecha_a_gmt(fecha_str):
+    """
+    **Convierte la fecha al formato UTC 0**\n
+    **Parametros**\n
+        fecha_str (str): Solicita una fecha en formato String \n
+    **Return**\n
+        hora_gmt (string): Hora UTC 0 en formato string.
+    """
     fecha = datetime.strptime(fecha_str, '%Y-%m-%dT%H:%M:%S')
     chile_tz = pytz.timezone('America/Santiago')
     
@@ -267,6 +337,13 @@ def convertir_fecha_a_gmt(fecha_str):
 
 
 def convertir_fecha_a_chile(fecha_str):
+    """
+    **Convierte la hora UTC 0 a hora de Chile UTC-3**\n
+    **Parametros**\n
+        fecha_str (str): String con la fecha a convertir \n
+    **Return**\n
+        hora_chile (str): String de la fecha en formato Chile.
+    """
     fecha = datetime.strptime(fecha_str, '%Y-%m-%dT%H:%M:%S')
     gmt_tz = pytz.timezone('GMT')
     
@@ -275,17 +352,30 @@ def convertir_fecha_a_chile(fecha_str):
 
     chile_tz = pytz.timezone('America/Santiago')
     hora_chile = fecha.astimezone(chile_tz)
-
-    #print(f'HORA EN CHILE: {hora_chile}')
+    hora_chile = datetime.strftime(hora_chile, '%Y-%m-%dT%H:%M:%S')
 
     return hora_chile
 
 def convertir_fecha_a_string(fecha):
+    """
+    **Convierte la fecha entregada a String en el formato para Odoo**\n
+    **Parametros**\n
+        fecha (Datetime): Fecha a convertir en string \n
+    **Return**\n
+        fecha (string): Fecha transformada en string.
+    """
     formato = '%Y-%m-%dT%H:%M:%S'
     fecha = datetime.strftime(fecha, formato)
     return fecha
 #
 def obtener_empleados_con_horas():
+    """
+    **Obtiene un empleado con las horas**\n    
+    **Parametros**\n
+        Ninguno \n
+    **Return**\n
+        empleados_dict (Dict): Diccionario con los datos de todos los empleados.
+    """
     empleados = obtener_api_empleados()
     empleados_dict = {}
     for empleado in empleados:
@@ -304,9 +394,17 @@ def obtener_empleados_con_horas():
     return empleados_dict
 #
 def cargar_empleados():
+    """
+    **Carga los empleados a la DB**\n
+    **Parametros**\n
+        Ninguno \n
+    **Return**\n
+        Boolean. True si logró realizarlo, False si no fue capaz.
+    """
     empleados = obtener_api_empleados()
-    empleados_dict = {}
     roles_necesario = ['Jefe de Proyectos', 'Ingeniero de Proyecto']
+    Empleado.objects.all().update(activo=False)
+    
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
         rol = obtener_trabajo_empleado(id=empleado['job_id'])
@@ -323,12 +421,20 @@ def cargar_empleados():
             id_empleado = empleado['id'],
             defaults={
                 'rol':rol,
-                'horas_totales':horas
+                'horas_totales':horas,
+                'activo':True,
             }
         )
     return True
 #
 def obtener_horas_recurso(id=1):
+    """
+    **Obtienes las horas de un recurso**\n
+    **Parametros**\n
+        id (int): ID del horario solicitado \n
+    **Return**\n
+        horas_semanales (int): Cantidad de horas obtenidas
+    """
     calendario = obtener_resource_calendar()
     for horario in calendario:
         if(horario['id'] == id):
@@ -343,11 +449,17 @@ def obtener_horas_recurso(id=1):
 #
 def convertir_datos_asignacion(semana, año):
     """
-    Convierte el número de semana y año a un rango de fechas con el formato que requiere Odoo.
+    **Convierte el número de semana y año a un rango de fechas con el formato que requiere Odoo.**\n
+    **Parametros**\n
+        semana (int): Semana a buscar \n
+        año (int): Año en que se realizará la búsqueda \n
+    **Return**\n
+        fecha (Dict): Diccionario con las fechas de inicio de semana, el fin de la semana y el año \n
+        formato: {"semana_inicio":SemanaInicio, "semana_fin":SemanaFin, "año":Año}
     """
     primer_dia_del_año = date(año, 1, 1)
     inicio_semana = primer_dia_del_año + timedelta(days=(semana - 1) * 7 - primer_dia_del_año.isoweekday() + 1)
-    fin_semana = inicio_semana + timedelta(days=6)
+    fin_semana = inicio_semana + timedelta(days=4)
     
     formato_odoo = "%Y-%m-%dT08:30:00"
     
@@ -358,16 +470,17 @@ def convertir_datos_asignacion(semana, año):
     }
     #Resultado: Inicio: 2024-10-07T08:30:00 - Fin: 2024-10-13T08:30:00
     return fecha
-    
-#Testing Junily convertir_datos_asignación semana y año
-# fecha_resultado = convertir_datos_asignacion(39, 2024)
-# print(f"Semana Inicio: {fecha_resultado['semana_inicio']}")
-# print(f"Semana Fin: {fecha_resultado['semana_fin']}")
-# print(f"Año: {fecha_resultado['año']}")
 
-    
 #Funcion para llamar a la api de odoo y obtener los recursos y empleados, apis.py.
 def cal_disponibilidad(semana, anio):
+    """
+    **Obtiene la disponibilidad en base al Planing Slots**\n
+    **Parametros**\n
+        semana (int): Semana en que se puede \n
+        anio (int): Año en que se busca la disponibilidad \n
+    **Return**\n
+        utilizacion_empleados (Dict): Diccionario con los empleados y semanas utilizadas en Planing Slots.
+    """
     planning = obtener_planning_slots_por_semana(semana=semana, anio=anio)
     recursos = obtener_api_recursos()
     empleados = obtener_api_empleados()
@@ -404,6 +517,15 @@ def cal_disponibilidad(semana, anio):
     
 #Funcion para llamar a la api de odoo y obtener los recursos, empleados y semanas, apis.py.
 def cal_disponibilidad_varias_semanas(semana_actual, anio_actual, cant_semanas=10):
+    """
+    **Obtiene la disponibilidad en una semana específica**\n
+    **Parametros**\n
+        semana_actual (int): Semana en que se buscará la disponibilidad \n
+        anio_actual (int): Año en que se buscará la disponibilidad \n
+        cant_semana (int): cantidad de semanas a buscar \n
+    **Return** \n 
+        utilizacion_empleados (Dict): Diccionario con la disponibilidad solicitada
+    """
     recursos = obtener_api_recursos()
     empleados = obtener_api_empleados()
     utilizacion_empleados = {}

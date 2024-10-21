@@ -23,9 +23,9 @@ Historial del Sistema
               {% endif %}
 
 
-              <form action="{% url 'eliminar_historial' %}" method="post" class="col-md-3 offset-md-10">
+              <form id="eliminarHistorialForm" action="{% url 'eliminar_historial' %}" method="post" class="col-md-3 offset-md-10">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger">Eliminar Datos</button>
+                <button type="submit" id="eliminarhistorial" class="btn btn-danger">Eliminar Datos</button>
                 
               </form>
             </div>
@@ -36,8 +36,23 @@ Historial del Sistema
                         <tr>
                             <th>ID <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="ID única del evento"></i></button></th>
                             <th>Fecha <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cuando ocurrió el evento"></i></button></th>
-                            <th>Categoria <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Que categoría es el evento:"></i></button></th>
-                            <th>Sub-Categoria <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Subcategoría a la que pertenece el evento:"></i></button></th>
+                            <th>Categoría <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Que categoría es el evento, puede ser Autentificación, Configuración, Mantenimiento, Error, Auditoría, Seguridad, Modelo"></i></button></th>
+                            <th>Sub-Categoría <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Subcategoría a la que pertenece el evento:
+                              A1: Login,
+                              A2: Logout,
+                              B1: Cambio de parametros,
+                              B2: Cambio de configuraciones en la base de datos,
+                              C1: Limpieza de datos,
+                              D1: Errores,
+                              E1: Agregó Proyectos,
+                              E2: Agregó usuario,
+                              E3: Desactivo usuario,
+                              E4: Activo usuario,
+                              F1: Cambio un cargo,
+                              F2: Actualizó permisos,
+                              G1: Realizó la clusterización,
+                              G2: Asignó los recursos,
+                              G3: Subió datos a Odoo"></i></button></th>
                             <th>Usuario <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Quién ha gatillado el evento"></i></button></th>
                         </tr>
                     </thead>
@@ -94,41 +109,51 @@ Historial del Sistema
           order: [[2, 'desc']]
         });
 
-        // Configuración de la tabla con filtros múltiples
         $("#multi-filter-select").DataTable({
           pageLength: 10,
           order: [[2, 'desc']],
+          columnDefs: [
+            {
+              targets: [3], // Aplica solo para la columna de "Sub-Categoria"
+              render: function (data, type, row) {
+                if (type === 'display') {
+                  // Mantiene el HTML con los estilos al mostrar la tabla
+                  return data;
+                } else if (type === 'filter') {
+                  // Elimina el HTML para filtrar solo por texto
+                  var tempDiv = document.createElement("div");
+                  tempDiv.innerHTML = data;
+                  return tempDiv.textContent || tempDiv.innerText || "";
+                }
+                return data; // Por defecto retorna los datos originales
+              }
+            }
+          ],
           initComplete: function () {
             this.api()
-              .columns()
+              .columns([2, 3, 4])
               .every(function () {
                 var column = this;
-                // Filtra solo las columnas relevantes
-                if (column.index() >= 2) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)
-                  var select = $(
-                    '<select class="form-select"><option value=""></option></select>'
-                  )
-                    .appendTo($(column.footer()).empty())
-                    .on("change", function () {
-                      var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                var select = $('<select class="form-select"><option value=""></option></select>')
+                  .appendTo($(column.footer()).empty())
+                  .on("change", function () {
+                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column
+                      .search(val ? "^" + val + "$" : "", true, false)
+                      .draw();
+                  });
 
-                      column
-                        .search(val ? "^" + val + "$" : "", true, false)
-                        .draw();
-                    });
-
-                  column
-                    .data()
-                    .unique()
-                    .sort()
-                    .each(function (d, j) {
-                      select.append(
-                        '<option value="' + d + '">' + d + "</option>"
-                      );
-                    });
-                } else {
-                  $(column.footer()).empty(); // Limpiar pie de columna no relevante
-                }
+                column
+                  .data()
+                  .unique()
+                  .sort()
+                  .each(function (d, j) {
+                    // Solo extraemos el texto para las opciones del select
+                    var tempDiv = document.createElement("div");
+                    tempDiv.innerHTML = d;
+                    var cleanText = tempDiv.textContent || tempDiv.innerText || "";
+                    select.append('<option value="' + cleanText + '">' + cleanText + "</option>");
+                  });
               });
           },
         });
@@ -156,4 +181,27 @@ Historial del Sistema
         });
       });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript">
+      document.getElementById('eliminarhistorial').addEventListener('click', function(e) {
+          e.preventDefault(); // Prevenir el envío del formulario
+          
+              Swal.fire({
+                  title: 'Confirmar Eliminación',
+                  html: `Está a punto de eliminar los datos del historial de acciones. <strong>Esta acción no se puede 
+                          deshacer</strong>.<br>
+                          ¿Está seguro de que desea eliminar las asignaciones?`,
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#d33',
+                  cancelButtonColor: '#3085d6',
+                  confirmButtonText: 'Eliminar',
+                  cancelButtonText: 'Cancelar'
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      document.getElementById('eliminarHistorialForm').submit(); // Enviar el formulario si el usuario confirma
+                  }
+              });
+      });
+  </script>
     {% endblock UJS %}

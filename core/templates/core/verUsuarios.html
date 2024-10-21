@@ -40,7 +40,9 @@ Usuarios Registrados
                                         <th>Email <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Email del empleado utilizado"></i></button></th>
                                         <th>Cargo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cargo asignado al empleado"></i></button></th>
                                         <th>Usuario Activo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Representa si el usuario puede iniciar sesión o no"></i></button></th>
+                                        {% if request.user.is_staff %}
                                         <th style="width: 10%">Acciones <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Acciones a realizar con el usuario, editar o desactivar"></i></button></th>
+                                        {% endif %}
                                     </tr>
                                 </thead>
                                 <!-- Aqui deben ir los usuarios -->
@@ -55,6 +57,7 @@ Usuarios Registrados
                                         {% else %}
                                           <td>Desactivado</td>
                                         {% endif %}
+                                        {% if request.user.is_staff %}
                                         <td>
                                             <div class="form-button-action">
                                                 <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task">
@@ -69,6 +72,7 @@ Usuarios Registrados
                                                 </button>
                                             </div>
                                         </td>
+                                        {% endif %}
                                     </tr>
                                   {% endfor %}
                                 </tbody>
@@ -78,7 +82,9 @@ Usuarios Registrados
                                       <th></th>
                                       <th></th>
                                       <th></th>
+                                      {% if request.user.is_staff %}
                                       <th></th>
+                                      {% endif %}
                                   </tr>
                                   </tfoot>
                     </table>
@@ -104,7 +110,7 @@ Usuarios Registrados
           .every(function () {
             var column = this;
             // Filtra solo las columnas relevantes
-            if (column.index() >= 0 && column.index() <= 3) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)(en caso de querer saltar una columna especifica "&& column.index() !== 1")
+            if (column.index() >= 2 && column.index() <= 3 ) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)(en caso de querer saltar una columna especifica "&& column.index() !== 1")
               var select = $(
                 '<select class="form-select"><option value=""></option></select>'
               )

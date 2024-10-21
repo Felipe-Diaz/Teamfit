@@ -207,6 +207,7 @@ class Empleado(models.Model):
     horas_totales = models.IntegerField(default=40) 
     id_recurso = models.IntegerField(unique=True)
     id_empleado = models.IntegerField(unique=True)
+    activo = models.BooleanField(default=False, blank=False, null=False)
 
     class Meta:
         db_table = "EMPLEADO"
@@ -221,7 +222,8 @@ class Asignacion(models.Model):
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE) 
     semana = models.IntegerField() 
     horas_asignadas = models.DecimalField(max_digits=10, decimal_places=2, null=False, blank=False, verbose_name="Horas Asignadas") 
-    anio = models.IntegerField(default=2024) 
+    anio = models.IntegerField(default=2024)
+    enviado = models.BooleanField(null=False, blank=False, default=False, verbose_name='Ha sido eviado a Odoo.') 
 
     class Meta:
         db_table = "ASIGNACION"

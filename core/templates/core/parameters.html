@@ -293,7 +293,64 @@ Parámetros del sistema
                 });
             });
         }
-    
+
+        //Deja Diario por default siempre seleccionado al seleccionar las horas en caso de deseleccionarse tanto semanal como diario
+        const programaciondiario = document.querySelector("input[name='programacion-diario']");
+        const programacionsemanal = document.querySelector("input[name='programacion-semanal']");
+
+        function verificarSeleccionDias() {
+            if (!programaciondiario.checked && !programacionsemanal.checked) {
+                programaciondiario.checked = true;
+            }
+        }
+        programaciondiario.addEventListener("change", verificarSeleccionDias);
+        programacionsemanal.addEventListener("change", verificarSeleccionDias);
+
+        
+        //Deja Lunes por default siempre seleccionado al seleccionar los días de la seana en caso de deseleccionarse todos
+        const plun = document.querySelector("input[name='programacion-lunes']");
+        const pmar = document.querySelector("input[name='programacion-martes']");
+        const pmie = document.querySelector("input[name='programacion-miercoles']");
+        const pjue = document.querySelector("input[name='programacion-jueves']");
+        const pvie = document.querySelector("input[name='programacion-viernes']");
+        const psab = document.querySelector("input[name='programacion-sabado']");
+        const pdom = document.querySelector("input[name='programacion-domingo']");
+
+        function verificarSeleccionDiasSem() {
+            if (!plun.checked && !pmar.checked && !pmie.checked && !pjue.checked && !pvie.checked && !psab.checked && !pdom.checked){
+                plun.checked = true;
+            }
+        }
+        plun.addEventListener("change", verificarSeleccionDiasSem);
+        pmar.addEventListener("change", verificarSeleccionDiasSem);
+        pmie.addEventListener("change", verificarSeleccionDiasSem);
+        pjue.addEventListener("change", verificarSeleccionDiasSem);
+        pvie.addEventListener("change", verificarSeleccionDiasSem);
+        psab.addEventListener("change", verificarSeleccionDiasSem);
+        pdom.addEventListener("change", verificarSeleccionDiasSem);
+
+        function verificarSeleccionDias() {
+            if (!programaciondiario.checked && !programacionsemanal.checked) {
+                programaciondiario.checked = true;
+            }
+        }
+        programaciondiario.addEventListener("change", verificarSeleccionDias);
+        programacionsemanal.addEventListener("change", verificarSeleccionDias);
+
+        //Deja Medio como selección por defecto al deseleccionar todas las opciones de  Escenario a usar
+        const escenariosoptimista = document.querySelector("input[name='escenarios-optimista']");
+        const escenariospesimista = document.querySelector("input[name='escenarios-pesimista']");
+        const escenariosmedia = document.querySelector("input[name='escenarios-media']");
+
+        function verificarSeleccionEscenario() {
+            if (!escenariosoptimista.checked && !escenariospesimista.checked && !escenariosmedia.checked){
+                escenariosmedia.checked = true;
+            }
+        }
+        escenariosmedia.addEventListener("change", verificarSeleccionEscenario);
+        escenariosoptimista.addEventListener("change", verificarSeleccionEscenario);
+        escenariospesimista.addEventListener("change", verificarSeleccionEscenario);
+
         // Autenticación
         const autenticacion = document.querySelector("input[name='categorias-autenticacion']");
         const login = document.querySelector("input[name='categorias-login']");
@@ -382,7 +439,7 @@ Parámetros del sistema
         const minutos = document.querySelector("input[name='programacion-minutos']");
         // const dia = document.querySelector("input[name='programacion-dia']");
 
-        // Sub Category
+        // hoea, minutos, dia
         handleSubCategoryChange(hora, minutos, dia);
 
         // Escenarios

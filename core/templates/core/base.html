@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="{% static 'core/css/plugins.min.css' %}" />
     <link rel="stylesheet" href="{% static 'core/css/kaiadmin.min.css' %}" />
     <link rel="stylesheet" href="{% static 'core/css/estilo.css' %}" />
+
     {% block estiloHead %}
     {% endblock estiloHead %}
   </head>
@@ -77,10 +78,10 @@
           <div class="logo-header" data-background-color="dark">
             <a href="{% url 'index' %}" class="logo">
               <img
-                src="{% static 'core/img/roda-logo.png' %}"
+                src="{% static 'core/img/teamfit-logo.png' %}"
                 alt="navbar brand"
                 class="navbar-brand"
-                height="60"
+                height="40"
         
               />
             </a>
@@ -144,11 +145,13 @@
                 </a>
                 <div class="collapse {% if request.path == '/crearUsuarios' or request.path == '/verUsuarios' %}show{% endif %}" id="sidebarLayouts">
                   <ul class="nav nav-collapse">
+                    {% if request.user.is_staff %}
                     <li class="{% if request.path == '/crearUsuarios' %}active{% endif %}">
                       <a href="{% url 'crearUsuarios' %}">
                         <span class="sub-item">Crear Usuario</span>
                       </a>
                     </li>
+                    {% endif %}
                     <li class="{% if request.path == '/verUsuarios' %}active{% endif %}">
                       <a href="{% url 'verUsuarios' %}">
                         <span class="sub-item">Ver Usuarios</span>
@@ -195,12 +198,14 @@
                     <p>Cluster</p>
                 </a>
               </li>
+              {% if request.user.is_staff %}
               <li class="nav-item {% if request.path == '/parametros' %}active{% endif %}">
                   <a href="{% url 'parametros'%}">
                       <i class="fa fa-cog" aria-hidden="true"></i>
                       <p>Parametros</p>
                   </a>
               </li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -243,6 +248,9 @@
                 {% block titulo %}
                 {% endblock titulo %}
               </h2>
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <img src="{% static 'core/img/roda-logo.png' %}" alt="Logo-Teamfit" style="width: 10%">
+              </div>
               <div class="dropdown">
                 <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
                   <li class="nav-item topbar-user dropdown">
@@ -254,7 +262,7 @@
                     >
                       <div class="avatar-sm">
                         <img
-                          src="{% static 'core/img/Template/profile.jpg' %}"
+                          src="{% static 'core/img/user-image.png' %}"
                           alt="..."
                           class="avatar-img rounded-circle"
                         />

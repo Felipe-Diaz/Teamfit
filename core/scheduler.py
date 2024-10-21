@@ -10,6 +10,14 @@ from .forms import PROGRAMACION_MAPPING
 scheduler = BackgroundScheduler()
 
 def start_scheduler():
+    """
+    **Crea una schedule para borrar historial según los parámetros de la página parámetros**\n
+    Según sí está seleccionado Semanal o Diario además de la hora y días en los que se debe borrar el historial se crea un cron \n
+    **Parametros**\n
+    No requiere ingresar parámetros \n
+    **Return**\n
+    No retorna nada
+    """
     #Código Min Hor * * *
     frecuencia = obtener_frecuencia()
     if frecuencia == 'A1':
@@ -32,6 +40,14 @@ def start_scheduler():
     #     scheduler.start()
 
 def schedule_carga_empleados():
+    """
+    **Crea una schedule para diariamente cargar los datos de los empleados a la DB**\n
+    Crea una schedule que diariamente carga los datos de los empleados a la DB a las 2:30 AM\n
+    **Parametros**\n
+    No requiere ingresar parámetros \n
+    **Return**\n
+    No retorna nada
+    """
     hora = 2
     minuto = 30
     try:
@@ -41,6 +57,14 @@ def schedule_carga_empleados():
         print(f'Error al programar carga empleados')
     
 def obtener_tiempo_eliminacion():
+    """
+    **Obtiene la hora y minutos de los parámetros**\n
+    Obtiene la hora y minutos de los parámetros de la página de parámetros\n
+    **Parametros**\n
+    No requiere ingresar parámetros \n
+    **Return**\n
+    Retorna 2 valores: int(hora), int(minuto)
+    """
     parametro = Parametro.objects.filter(nombre_parametro='historial.mantener').first()
     if parametro:
         tiempo_realizar = parametro.valor.get('tiempo', [])
@@ -51,6 +75,14 @@ def obtener_tiempo_eliminacion():
     return int(hora), int(minuto)
 
 def obtener_frecuencia():
+    """
+    **Obtiene la frecuencia de los parámetros**\n
+    Obtiene la frecuencia de los parámetros, siendo esta diario o semanal\n
+    **Parametros**\n
+    No requiere ingresar parámetros \n
+    **Return**\n
+    Retorna: frecuencia
+    """
     parametro = Parametro.objects.filter(nombre_parametro='historial.mantener').first()
     if parametro:
         frecuencias = parametro.valor.get('valores_programacion', [])
@@ -63,6 +95,14 @@ def obtener_frecuencia():
     return frecuencia
 
 def obtener_dias():
+    """
+    **Obtiene los días de la semana seleccionados en parámetros**\n
+    Ambos valores retornados son listas, una con el número del día, la otra con sus nombres\n
+    **Parametros**\n
+    No requiere ingresar parámetros \n
+    **Return**\n
+    Retorna 2 valores: dias_cron, nombres_dias
+    """
     parametro = Parametro.objects.filter(nombre_parametro='historial.mantener').first()
     if parametro:
         dias_semana = parametro.valor.get('valores_programacion', [])

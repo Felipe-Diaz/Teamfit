@@ -6,7 +6,7 @@ from .views import development_Buttons, llenar_DB, iniciar_sesion, crear_usuario
 from .views import pagina_principal, cerrar_sesion, subirProyectos, ver_proyectos, verHistorial, consul_api
 from .views import ver_usuarios, editar_usuario, eliminarUsuarios, ajuste_parametros, cluster, carga_Odoo, disponibilidad
 from .views import asignaciones_data,eliminar_asignaciones, horas_por_proyecto_data, generar_excel_recursos
-from .views import asignaciones_list, ejecutar_asignacion, generar_excel_asignacion, horas_por_recurso_data, generar_excel_proyectos
+from .views import asignaciones_list, ejecutar_asignacion, generar_excel_asignacion, horas_por_recurso_data, generar_excel_proyectos, vista_carga_empleados
 
 urlpatterns = [ 
     path('subirProyectos/',subirProyectos, name="subirProyectos"),
@@ -28,6 +28,7 @@ urlpatterns = [
     path('consul_api', consul_api, name='consul_api'),
     path('cluster', cluster, name='cluster'),
     path('cargaOdoo', carga_Odoo, name='cargaOdoo'),
+    path('cargar_empleados/', vista_carga_empleados, name='cargar_empleados'),
 
     
     ###Ingresar las URLS del grupo 2 desde acá hacia abajo.

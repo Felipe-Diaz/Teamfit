@@ -1,15 +1,17 @@
-from .models import Asignacion, Empleado, historialCambios, Parametro
+import unicodedata
+from .models import Asignacion, Empleado, historialCambios, Parametro, proyectosAAgrupar
 from django.contrib.auth.models import User
-from django.db.models import Sum
+from django.db.models import Sum, Subquery, Count, Q
 from decimal import Decimal
 from django.utils import timezone
 from .forms import CATEGORIAS_MAPPING, PROGRAMACION_MAPPING, ESCENARIOS_MAPPING
 from .forms import CategoriasForm, ProgramacionForm, EscenariosForm
+import pandas as pd
 ##Funciones relacionadas con la asignación
 def obtener_empleado(proyecto_id, rol, semana, anio, cant_horas):
     """
     **Obtiene un empleado que esté disponible.**\n
-    Primero intenta utilizar al empleado asignado anteriormente, en caso de no tener un asignado a un empleado 
+    Primero intenta utilizar al empleado asignado anteriormente, en caso de no tener asignado a un empleado 
     anteriormente o que este no esté disponible, buscará un empleado disponible dentro de la DB. \n
     **Parametros**\n
       proyecto_id (int): ID del proyecto que se busca asignar \n
@@ -31,7 +33,15 @@ def obtener_empleado(proyecto_id, rol, semana, anio, cant_horas):
             return empleado
         
     if(not asignado):
-        empleados = Empleado.objects.filter(rol=rol)
+        empleados = Empleado.objects.filter(rol=rol, activo=True)\
+            .annotate(cantidad_proyectos=Count(
+                'asignacion__proyecto', 
+                filter=Q(asignacion__semana=semana, asignacion__anio=anio),
+                distinct=True
+            ))\
+            .order_by('cantidad_proyectos')
+        print(empleados)
+        print('-------------------------------')
         for idx, empleado in enumerate(empleados):
             disponible = verificar_disponibilidad(empleado, semana, anio, cant_horas)
             if(disponible):
@@ -65,6 +75,20 @@ def verificar_disponibilidad(id_emp, semana, anio, cant_horas):
     else:
         return True
 
+def obtener_proyectos_sin_asignar():
+    """
+    **Devuelve los proyectos que no hayan sido asignados**\n
+    **Parametros**\n
+        Parametros: Ninguno\n
+    **Return**\n
+        proyectos_no_asignados(list(proyectosAAgrupar)): Una lista de proyectos sin asignar. \n
+        En caso de no haber proyectos retornará None.
+    """
+
+    proyectos = proyectosAAgrupar.objects.filter(fechaFin__gt=timezone.now()).order_by('fechaInicio')
+    proyectos_asignados = Asignacion.objects.values('proyecto')
+    proyectos_no_asignados = proyectos.exclude(id__in=Subquery(proyectos_asignados))
+    return proyectos_no_asignados
 
 ##Funciones relacionadas con obtener la creación del historial
 def obtener_subcategorias():
@@ -376,3 +400,238 @@ def marcar_escenarios_principal_parametros(initial_data):
         if all(initial_data[ESCENARIOS_MAPPING[sub_key]] for sub_key in sub_escenarios):
             initial_data[ESCENARIOS_MAPPING[escenarios]] = True
     return initial_data
+
+#Funciones relacionadas con validar los proyectos:
+
+def entregar_mensaje_df_valido():
+    """
+    **Entrega un Json para entregar una respuesta válida**\n
+    **Parametros**\n
+        Ninguno \n
+    **Return**\n
+        respuesta (Dict): Diccionario con datos de respuesta válido y un mensaje.
+            formato: {'mesg':string,'valido':boolean}.
+    """
+    mesg = 'No se han encontrado datos que puedan provocar conflictos.'
+    respuesta = {'mesg':mesg,'valido':True}
+    return respuesta
+
+def validar_linea_tipo_df(row, tipos_proy):
+    """
+    **valida la linea de negocio y el tipo de una fila en un dataframe**\n
+    **Parametros**\n
+        row (row Dataframe): Fila en la que se aplicará la función \n
+        tipos_proy (Dict): Valores necesarios para la linea de negocio y tipo de proyecto \n
+    **Return**\n
+        Boolean: True si hay problemas, False si no hay
+    """
+    linea = row['lineaNegocio']
+    tipo = row['tipo']
+    tipos = tipos_proy.get(linea, [])
+    
+    if tipo not in tipos:
+        return True
+    else:
+        return False
+
+def validar_agencia(df):
+    """
+    **Valida que la agencia no tenga valores ilegales.**\n
+    **Parametros**\n
+        df (Dataframe): Un objeto de tipo dataframe \n
+    **Return**\n
+        respuesta (dict): Diccionario con el boolean y mensaje
+            formato: {'mesg':string,'valido':boolean}.
+    """
+    if not isinstance(df, pd.DataFrame):
+        mesg = "El archivo entregado no puede ser leido correctamente, intentelo de nuevo más tarde."
+        respuesta =  {'mesg':mesg, 'valido':False}
+        return respuesta
+    try:
+        valores_validos = {'si', 'no', None, '0', '1'}
+        df['C/Agencia_normalizada'] = df['usoAgencia'].apply(normalizar_cadena)
+        valores_no_validos = df[~df['C/Agencia_normalizada'].isin(valores_validos)]
+        if not valores_no_validos.empty:
+            mesg = "La columna 'C/Agencia' contiene valores no válidos. Solo se aceptan 'sí', 'no' o nulos."
+            respuesta = {'mesg': mesg, 'valido': False}
+            return respuesta
+        
+        respuesta = entregar_mensaje_df_valido()
+        return respuesta
+    except Exception as e:
+        print(f'Ha ocurrido un error: \n{e}')
+        mesg = "La columna 'C/Agencia' contiene valores no válidos. Solo se aceptan 'sí', 'no' o nulos."
+        respuesta = {'mesg':mesg,'valido':False}
+        return respuesta
+
+def normalizar_cadena(cadena):
+    if pd.isnull(cadena):
+        return cadena
+    return unicodedata.normalize('NFKD', cadena).encode('ascii', 'ignore').decode('utf-8').lower()
+    
+def validar_columnas_nulas_df(df):
+    """
+    **Valida que las columnas importantes no sean nulas**\n
+    **Parametros**\n
+        df (Dataframe): Un objeto de tipo dataframe \n
+    **Return**\n
+        respuesta (dict): Diccionario con el boolean y mensaje
+            formato: {'mesg':string,'valido':boolean}.
+    """
+    if not isinstance(df, pd.DataFrame):
+        mesg = "El archivo entregado no puede ser leido correctamente, intentelo de nuevo más tarde."
+        respuesta =  {'mesg':mesg, 'valido':False}
+        return respuesta
+    
+    columns_to_check = ['id', 'proyecto', 'lineaNegocio', 'tipo', 'cliente', 'createDate', 'montoOfertaCLP', 'egresosNoHHCLP', 'ocupacionInicio']
+    if df[columns_to_check].isnull().values.any():
+        ids_nulos = df.loc[df[columns_to_check].isnull().any(axis=1), 'id'].tolist()
+        ids_nulos = sorted(ids_nulos)
+        if(len(ids_nulos) > 0):
+            mesg = ("Valores nulos en los siguientes registros: <br> <strong>" + str(ids_nulos[:5]) + "</strong> entre otros. <br>"
+                    "Por favor, verifique los registros indicados. <br>"
+                    '<i class="fa fa-info-circle" data-toggle="tooltip" data-html="true" title="<div>'
+                    '<p>Los datos presentan problemas. Por favor, verifique lo siguiente:</p>'
+                    '<ul>'
+                        "<li>Las Columnas 'id', 'proyecto', 'Línea de Negocio', 'tipo', 'cliente', 'create_date',<br>"
+                        "'Monto Oferta CLP', 'Ocupación Al Iniciar' (%), 'ocupacionInicio', 'InicioProyecto' y 'FinPlanificado' <br>"
+                        '<strong>NO PUEDEN CONTENER DATOS NULOS O VACÍOS</strong></li>'
+                        '<li>Las columnas deben tener exactamente <strong> el mismo nombre que se solicita</strong></li>'
+                    '</ul>'
+                    '</div>"></i>'
+                    )
+            respuesta = {'mesg':mesg,'valido':False}
+            return respuesta
+    else:
+        respuesta = entregar_mensaje_df_valido()
+        return respuesta
+
+def validar_numeros_negativos(df):
+    """
+    **Valida los números negativos de las distintas columnas**\n
+    **Parametros**\n
+        df (Dataframe): Un objeto de tipo dataframe \n
+    **Return**\n
+        respuesta (dict): Diccionario con el boolean y mensaje
+            formato: {'mesg':string,'valido':boolean}.
+    """
+    if not isinstance(df, pd.DataFrame):
+        mesg = "El archivo entregado no puede ser leido correctamente, intentelo de nuevo más tarde."
+        respuesta =  {'mesg':mesg, 'valido':False}
+        return respuesta
+    try:
+        if (df['egresosNoHHCLP'] < 0).any() or (df['montoOfertaCLP'] < 0).any() or (df['ocupacionInicio'] < 0).any() or (df['cliente'] < 0).any() or (df['id'] < 0).any():
+            mesg = "Los valores de 'id', 'Egresos No HH CLP', 'Monto Oferta CLP' y/o ocupacion Inicio deben ser un número no negativo"
+            respuesta = {'mesg': mesg, 'valido': False}
+            return respuesta
+        else:
+            respuesta = entregar_mensaje_df_valido()
+            return respuesta
+    except:
+        mesg = "Algunos valores de 'id', 'Egresos No HH CLP', 'Ocupación Inicio', 'Monto Oferta CLP' o 'cliente' son nulas o no son válidas."
+        respuesta = {'mesg': mesg, 'valido': False}
+        return respuesta
+
+def validar_fechas_df(df):
+    """
+    **Valida las fechas del dataframe**\n
+    **Parametros**\n
+        df (Dataframe): Un objeto de tipo dataframe \n
+    **Return**\n
+        respuesta (dict): Diccionario con el boolean y mensaje
+            formato: {'mesg':string,'valido':boolean}.
+    """
+    if not isinstance(df, pd.DataFrame):
+        mesg = "El archivo entregado no puede ser leido correctamente, intentelo de nuevo más tarde."
+        respuesta =  {'mesg':mesg, 'valido':False}
+        return respuesta
+    
+    try:
+        df['createDate'] = pd.to_datetime(df['createDate']).dt.strftime('%Y-%m-%d')
+        df['Cierre'] = pd.to_datetime(df['cierre']).dt.strftime('%Y-%m-%d')
+        df['InicioProyecto'] = pd.to_datetime(df['InicioProyecto']).dt.strftime('%Y-%m-%d')
+        df['FinPlanificado'] = pd.to_datetime(df['FinPlanificado']).dt.strftime('%Y-%m-%d')
+
+        if df['createDate'].isnull().any() or df['cierre'].isnull().any():
+            mesg = "Algunas fechas en 'create_date' o 'Cierre' son nulas o no son válidas."
+            respuesta = {'mesg': mesg, 'valido': False}
+            return respuesta
+        
+        if df['InicioProyecto'].isnull().any() or df['FinPlanificado'].isnull().any():
+            mesg = "Algunas fechas en 'Inicio Proyecto' o 'Fin Planificado' son nulas o no son válidas."
+            respuesta = {'mesg': mesg, 'valido': False}
+            return respuesta
+        
+        if (df['FinPlanificado'] < df['InicioProyecto']).any():
+            mesg = "La fecha de 'Fin Planificado' no puede ser anterior a 'Inicio Proyecto'."
+            respuesta = {'mesg': mesg, 'valido': False}
+            return respuesta
+        
+        respuesta = entregar_mensaje_df_valido()
+        return respuesta
+        
+    except Exception as e:
+        print(f'Ha ocurrido un error: \n{e}')
+        mesg = "Algunas fechas en 'create_date', 'Cierre', 'Inicio Proyecto' o 'Fin Planificado' son nulas o no son válidas."
+        respuesta = {'mesg': mesg, 'valido': False}
+        return respuesta
+    
+def validar_linea_negocio_tipos(df):
+    """
+    **Valida la línea de negocio y el tipo de todo el dataframe**\n
+    **Parametros**\n
+        df (Dataframe): Un objeto de tipo dataframe \n
+    **Return**\n
+        respuesta (dict): Diccionario con el boolean y mensaje
+            formato: {'mesg':string,'valido':boolean}.
+    """
+    tipo_proy = Parametro.objects.get(nombre_parametro='proyectos.tipo').valor
+    try:
+        df['problema'] = df.apply(lambda row: validar_linea_tipo_df(row, tipo_proy), axis=1)
+        columnas_a_buscar = ['id', 'proyecto']
+        ids_problemas = df[df['problema'] == True][columnas_a_buscar]
+        if(not ids_problemas.empty):
+            mesg = 'Se han encontrado problemas en el tipo y línea de negocio en las siguientes filas: <br> <ul>'
+            problemas_str = ' '.join([f"<li> ID: {row['id']}, Proyecto: {row['proyecto']} </li>" for _, row in ids_problemas.head(5).iterrows()])
+            mesg = mesg + problemas_str + '</ul> Entre otros. Por favor, verifique los datos.'
+            respuesta = {'mesg':mesg, 'valido':False}
+            return respuesta    
+        else:
+            respuesta = entregar_mensaje_df_valido()
+            return respuesta
+    except Exception as e:
+        mesg = 'Han ocurrido problemas con el procesamiento de los datos. Intentelo de nuevo más tarde'
+        respuesta = {'mesg':mesg,'valido':False}
+        return respuesta
+    
+def verificarDf(df):
+    """
+    **Verifica que el df esté funcionando correctamente**\n
+    **Parametros**\n
+        df (Dataframe): Un objeto de tipo dataframe \n
+    **Return**\n
+        respuesta (dict): Diccionario con el boolean y mensaje
+            formato: {'mesg':string,'valido':boolean}.
+    """
+    if not isinstance(df, pd.DataFrame):
+        mesg = "El archivo entregado no puede ser leido correctamente, intentelo de nuevo más tarde."
+        respuesta =  {'mesg':mesg, 'valido':False}
+        return respuesta
+    
+    validaciones = [
+        validar_columnas_nulas_df,
+        validar_numeros_negativos,
+        validar_fechas_df,
+        validar_linea_negocio_tipos,
+        validar_agencia
+    ]
+    
+    for validacion in validaciones:
+        print(validacion)
+        respuesta = validacion(df=df)
+        if not respuesta.get('valido', True):
+            return respuesta
+        
+    mesg = 'No se han encontrado datos que puedan provocar conflictos.'
+    respuesta = {'mesg':mesg, 'valido':True}
+    return respuesta
