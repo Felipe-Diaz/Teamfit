@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'django_plotly_dash',
+    #'django_plotly_dash',
     #'apirest',
 ]
 
@@ -77,6 +77,13 @@ WSGI_APPLICATION = 'Teamfit.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 DATABASES = {
     'default': {
@@ -122,7 +129,7 @@ REST_FRAMEWORK = {
 
 LANGUAGE_CODE = 'es-cl'
 
-TIME_ZONE = 'America/Santiago'
+TIME_ZONE = 'America/Santiago'  # Zona horaria de Santiago, Chile
 
 USE_I18N = True
 
@@ -142,14 +149,23 @@ MEDIA_URL = '/media/'
 
 LOGIN_REDIRECT_URL = 'home'
 
-LOGOUT_REDIRECT_URL = 'index'
+LOGIN_URL = 'index'
+
+LOGOUT_REDIRECT_URL = 'login'
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django_plotly_dash.finders.DashAssetFinder',
 ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Establece el tiempo de expiración de la sesión en segundos
+#SESSION_COOKIE_AGE = 1020  # 1020 segundos = 18 minutos
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Cierra la sesión cuando se cierra el navegador
+#SESSION_SAVE_EVERY_REQUEST = True  # Renueva la sesión con cada request
+
+CSRF_COOKIE_SECURE = True  # Si estás usando HTTPS
+CSRF_COOKIE_HTTPONLY = False

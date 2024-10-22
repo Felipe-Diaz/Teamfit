@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Crear Usuarios
+{% endblock titlePage %}
+{% block titulo %}
+Crear Usuarios
+{% endblock titulo %}
+    {% block content %}
+    <div class = container>
+      <div class = "row">
+          <div class = "col-md-12">
+              <div class = "card">
+                  <div class = "card-body">
+                      <div class = content> 
+                      {% if messages %}
+                          {% for message in messages %}
+                              <div class="alert alert-success" role="alert">
+                                  {{ message }}
+                              </div>
+                          {% endfor %}
+                      {% endif %}
+                      {% if merror %}
+                          {% for message in merror %}
+                              <div class="alert alert-danger" role="alert">
+                                  {{ message }}
+                              </div>
+                          {% endfor %}
+                      {% endif %}
+                              <div class="container">
+                                <form method="post">
+                                  {% csrf_token %}
+                                  {% for field in form %}
+                                    <div class="form-group row align-items-center">
+                                      <label for="{{ field.id_for_label }}" class="col-sm-3 offset-sm-1 col-form-label ">{{ field.label }}</label>
+                                      <div class="col-sm-4">
+                                        {{ field }}
+                                      </div>
+                                      {% if field.help_text %}
+                                        <div class="col-sm-4 offset-sm-4">
+                                          <small id="{{ field.id_for_label }}_help" class="form-text text-muted">{{ field.help_text }}</small>
+                                        </div>
+                                      {% endif %}
+                                      
+                                    </div>
+                                  {% endfor %}
+                                  <div class="text-align-center offset-sm-4">
+                                    <button type="submit" class="btn btn-primary ">Enviar</button>
+                                  </div>
+                                </form>
+                              </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+    {% endblock content %}
+    
+    {% block UJS %}
+    <script>
+        // script.js
+        document.addEventListener('DOMContentLoaded', function() {
+        // Obtener la caja de texto
+        var pass1 = document.getElementById('id_password1');
+        pass1.classList.add('form-control');   // Añade la nueva clase
+
+        var pass2 = document.getElementById('id_password2');
+        pass2.classList.add('form-control');   // Añade la nueva clase
+      });
+    </script>
+    {% endblock UJS %}

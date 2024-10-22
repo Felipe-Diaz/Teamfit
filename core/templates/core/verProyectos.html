@@ -1,0 +1,299 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Ver Proyectos
+{% endblock titlePage %}
+{% block titulo %}
+Ver Proyectos
+{% endblock titulo %}
+{% block estiloHead %}
+<style>
+	.pmodal {
+		position: fixed;
+		z-index: 10000;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+		background-color: rgb(0,0,0);
+		background-color: rgba(0,0,0,0.4);
+		display: none;
+	}
+
+	.pmodal-content {
+		background-color: #fefefe;
+		margin: auto;
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		padding: 20px;
+		border: 1px solid #888;
+		width: 90%;
+	}
+
+	.pclose {
+		color: #aaa;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
+	}
+
+	.pclose:hover,
+	.pclose:focus {
+		color: black;
+		text-decoration: none;
+		cursor: pointer;
+	}
+</style>
+{% endblock estiloHead %}
+
+{% block content %}
+<body>
+<!-- Tabla con filtro de datos incluido -->
+<div class="row">
+	<div class="col-md-12">
+		<br>
+		<br>
+		<br>
+		<br>
+		<div class="card">
+			<div class="card-body">
+				<div class="table-responsive">
+				<table id="multi-filter-select" class="display table table-striped table-hover">
+					<thead>
+						<tr>
+							<th>ID <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="ID única del proyecto"></i></button></th>
+							<th>Proyecto <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Nombre del proyecto"></i></button></th>
+							<th>Tipo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Tipo de Proyecto"></i></button></th>
+							<th>Linea de trabajo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Línea de negocio a la que pertenece el proyecto"></i></button></th>
+							<th>Agencia <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Sí, en caso de que el proyecto cuenta con apoyo financiero de la Agencia de Sostenibilidad Energética"></i></button></th>
+							<th>Ocupación <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Ocupación general de los recursos de la empresa considerando el porfolio de proyectos global en la semana de inicio del proyecto"></i></button></th>
+						</tr>
+					</thead>
+						<tbody>
+							{% for proyectos in proyectos %}
+							<!-- La class y los datos con que tienen "data-" son los relacionados al Pop up -->
+							<tr class="project-row"
+								data-id="{{ proyectos.id }}"
+								data-proyecto="{{ proyectos.proyecto }}"
+								data-tipo="{{ proyectos.tipo }}"
+								data-linea="{{ proyectos.lineaNegocio }}"
+								data-pae="{% if proyectos.usoAgencia %}Si{% else %}No{% endif %}"
+								data-carga="{{ proyectos.ocupacionInicio }}%"
+
+								data-cliente="{{ proyectos.cliente }}"
+								data-pm="{{ proyectos.pm }}"
+								data-createDate="{{ proyectos.createDate }}"
+								data-cierre="{{ proyectos.cierre }}"
+								data-primeraTarea="{{ proyectos.primeraTarea }}"
+								data-ultimaTarea="{{ proyectos.ultimaTarea }}"
+								data-egresosNoHHCLP="{{ proyectos.egresosNoHHCLP }}"
+								data-montoOfertaCLP="{{ proyectos.montoOfertaCLP }}"
+								data-desfaseDias="{{ proyectos.desfaseDias }}">
+
+								<td>{{ proyectos.id }}</td>
+								<td>{{ proyectos.proyecto }}</td>
+								<td>{{ proyectos.tipo }}</td>
+								<td>{{ proyectos.lineaNegocio }}</td>
+								{% if proyectos.usoAgencia %}
+								<td> Si </td>
+								{% else %}
+								<td>No</td>
+								{% endif %}
+								<!-- <td>{{ proyectos.usoAgencia }}</td> -->
+								<td>{{ proyectos.ocupacionInicio }}% </td>
+							</tr>
+							{% empty %}
+						<tr>
+							<td colspan="15">No hay productos disponibles</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+					<tfoot>
+					<tr>
+						<th>ID</th>
+						<th>Proyecto</th>
+						<th>Tipo</th>
+						<th>Linea de trabajo</th>
+						<th>Agencia</th>
+						<th>Ocupación</th>
+					</tr>
+					</tfoot>
+					<tbody>
+					</tbody>
+				</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Pop up que muestra los datos del proyecto -->
+<div id="pproject-modal" class="pmodal" style="display: none;">
+	<div class="pmodal-content">
+		<span class="pclose">&times;</span>
+		<table class="display table table-striped table-hover">
+		<h2 class="text-center">Detalles del Proyecto</h2>
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Proyecto</th>
+				<th>Fecha de Creacion</th>
+				<th>Fecha de Cierre</th>
+			</tr>
+		</thead>
+			<tbody>
+				<!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+				<tr>
+					<td><span id="modal-id"></span></td>
+					<td><span id="modal-proyecto"></span></td>
+					<td><span id="modal-createDate"></span></td>
+					<td><span id="modal-cierre"></span></td>
+				</tr>
+			</tbody>
+		<thead>
+			<tr>
+				<th>Tipo de proyecto</th>
+				<th>Linea de trabajo</th>
+				<th>Carga de Trabajo</th>
+				<th>Agencia</th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+			<tr>
+			<td><span id="modal-tipo"></span></td>
+			<td><span id="modal-linea"></span></td>
+			<td><span id="modal-carga"></span></td>
+			<td><span id="modal-pae"></span></td>
+			</tr>
+		</tbody>
+		<thead>
+			<tr>
+				<th>Cliente</th>
+				<th>Egresos</th>
+				<th>Oferta</th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+			<tr>
+			<td><span id="modal-cliente"></span></td>
+			<td><span id="modal-egresosNoHHCLP"></span></td>
+			<td><span id="modal-montoOfertaCLP"></span></td>
+			</tr>
+		</tbody>
+		</tbody>
+	</table>
+	</div>
+</div>
+</body>
+
+
+{% endblock content %}
+{% block UJS %}
+<script>
+	$(document).ready(function () {
+// Configuración básica de la tabla
+$("#basic-datatables").DataTable({});
+
+// Configuración de la tabla con filtros múltiples
+$("#multi-filter-select").DataTable({
+	pageLength: 10,
+	initComplete: function () {
+	this.api()
+		.columns()
+		.every(function () {
+		var column = this;
+		// Filtra solo las columnas relevantes
+		if (column.index() >= 2 && column.index() <= 4) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)
+			var select = $(
+			'<select class="form-select"><option value=""></option></select>'
+			)
+			.appendTo($(column.footer()).empty())
+			.on("change", function () {
+				var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+				column
+				.search(val ? "^" + val + "$" : "", true, false)
+				.draw();
+			});
+
+			column
+			.data()
+			.unique()
+			.sort()
+			.each(function (d, j) {
+				select.append(
+				'<option value="' + d + '">' + d + "</option>"
+				);
+			});
+		} else {
+			$(column.footer()).empty(); // Limpiar pie de columna no relevante
+		}
+		});
+	},
+});
+
+// Configuración de la tabla para agregar filas
+$("#add-row").DataTable({
+	pageLength: 10,
+});
+
+// Acción para agregar una fila
+var action =
+	'<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+$("#addRowButton").click(function () {
+	$("#add-row")
+	.dataTable()
+	.fnAddData([
+		$("#addName").val(),
+		$("#addPosition").val(),
+		$("#addOffice").val(),
+		action,
+	]);
+	$("#addRowModal").pmodal("hide");
+});
+});
+</script>
+
+<!-- Script utilizado para el pop up -->
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+	const rows = document.querySelectorAll('.project-row');
+	const pmodal = document.getElementById('pproject-modal');
+	const closeBtn = document.querySelector('.pclose');
+
+	rows.forEach(row => {
+		row.addEventListener('click', () => {
+			document.getElementById('modal-id').textContent = row.getAttribute('data-id');
+			document.getElementById('modal-proyecto').textContent = row.getAttribute('data-proyecto');
+			document.getElementById('modal-tipo').textContent = row.getAttribute('data-tipo');
+			document.getElementById('modal-linea').textContent = row.getAttribute('data-linea');
+			document.getElementById('modal-pae').textContent = row.getAttribute('data-pae');
+			document.getElementById('modal-carga').textContent = row.getAttribute('data-carga');
+			document.getElementById('modal-cliente').textContent = row.getAttribute('data-cliente');
+			document.getElementById('modal-createDate').textContent = row.getAttribute('data-createDate');
+			document.getElementById('modal-cierre').textContent = row.getAttribute('data-cierre');
+			document.getElementById('modal-egresosNoHHCLP').textContent = row.getAttribute('data-egresosNoHHCLP');
+			document.getElementById('modal-montoOfertaCLP').textContent = row.getAttribute('data-montoOfertaCLP');
+			pmodal.style.display = 'block';
+		});
+	});
+
+	closeBtn.addEventListener('click', () => {
+		pmodal.style.display = 'none';
+	});
+
+	window.addEventListener('click', (event) => {
+		if (event.target === pmodal) {
+			pmodal.style.display = 'none';
+		}
+	});
+});
+
+</script>
+{% endblock UJS %}

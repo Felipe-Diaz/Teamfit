@@ -1,0 +1,207 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Historial
+{% endblock titlePage %}
+{% block titulo %}
+Historial del Sistema
+{% endblock titulo %}
+  {% block content %}
+    <!-- Tabla con filtro de datos incluido -->
+    <div class="row"> 
+        <div class="col-md-12">
+            <br>
+            <br> 
+            <br>
+            <br> 
+            <div class="card">
+            <div class="row card-header">
+              {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+
+
+              <form id="eliminarHistorialForm" action="{% url 'eliminar_historial' %}" method="post" class="col-md-3 offset-md-10">
+                {% csrf_token %}
+                <button type="submit" id="eliminarhistorial" class="btn btn-danger">Eliminar Datos</button>
+                
+              </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table id="multi-filter-select" class="display table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="ID única del evento"></i></button></th>
+                            <th>Fecha <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Cuando ocurrió el evento"></i></button></th>
+                            <th>Categoría <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Que categoría es el evento, puede ser Autentificación, Configuración, Mantenimiento, Error, Auditoría, Seguridad, Modelo"></i></button></th>
+                            <th>Sub-Categoría <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Subcategoría a la que pertenece el evento:
+                              A1: Login,
+                              A2: Logout,
+                              B1: Cambio de parametros,
+                              B2: Cambio de configuraciones en la base de datos,
+                              C1: Limpieza de datos,
+                              D1: Errores,
+                              E1: Agregó Proyectos,
+                              E2: Agregó usuario,
+                              E3: Desactivo usuario,
+                              E4: Activo usuario,
+                              F1: Cambio un cargo,
+                              F2: Actualizó permisos,
+                              G1: Realizó la clusterización,
+                              G2: Asignó los recursos,
+                              G3: Subió datos a Odoo"></i></button></th>
+                            <th>Usuario <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Quién ha gatillado el evento"></i></button></th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            {% for val in hist %}
+                            <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+                            <tr class="project-row">
+                                <td>{{ val.idHist }}</td>
+                                <td>{{ val.fecha }}</td>
+                                <td>{{ val.categoria }}</td>
+                                {% if val.prioridad == 1 %}
+                                <td><span class="badge rounded-pill bg-info-subtle normal">{{ val.subcategoria }}</span></td>
+                                {% elif val.prioridad == 2 %}
+                                <td><span class="badge rounded-pill bg-success-subtle listo">{{ val.subcategoria }}</span></td>
+                                {% elif val.prioridad == 3 %}
+                                <td><span class="badge rounded-pill bg-warning-subtle control">{{ val.subcategoria }}</span></td>
+                                {% elif val.prioridad == 4 %}
+                                <td><span class="badge rounded-pill bg-danger-subtle importante">{{ val.subcategoria }}</span></td>
+                                {% else %}
+                                <td><span class="badge rounded-pill bg-secondary-subtle detalle">{{ val.subcategoria }}</span></td>
+                                {% endif %}
+                                
+                                <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="15">No se han encontrado datos en el historial</td>
+                            </tr>   
+                            {% endfor %}
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      <th>Categoria</th>
+                      <th>Sub-Categoria</th>
+                      <th>Usuario</th>
+                    </tr>
+                    </tfoot>
+                    <tbody>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    {% endblock content %}
+    {% block UJS %}
+    <script>
+      $(document).ready(function () {
+        // Configuración básica de la tabla
+        $("#basic-datatables").DataTable({
+          order: [[2, 'desc']]
+        });
+
+        $("#multi-filter-select").DataTable({
+          pageLength: 10,
+          order: [[2, 'desc']],
+          columnDefs: [
+            {
+              targets: [3], // Aplica solo para la columna de "Sub-Categoria"
+              render: function (data, type, row) {
+                if (type === 'display') {
+                  // Mantiene el HTML con los estilos al mostrar la tabla
+                  return data;
+                } else if (type === 'filter') {
+                  // Elimina el HTML para filtrar solo por texto
+                  var tempDiv = document.createElement("div");
+                  tempDiv.innerHTML = data;
+                  return tempDiv.textContent || tempDiv.innerText || "";
+                }
+                return data; // Por defecto retorna los datos originales
+              }
+            }
+          ],
+          initComplete: function () {
+            this.api()
+              .columns([2, 3, 4])
+              .every(function () {
+                var column = this;
+                var select = $('<select class="form-select"><option value=""></option></select>')
+                  .appendTo($(column.footer()).empty())
+                  .on("change", function () {
+                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column
+                      .search(val ? "^" + val + "$" : "", true, false)
+                      .draw();
+                  });
+
+                column
+                  .data()
+                  .unique()
+                  .sort()
+                  .each(function (d, j) {
+                    // Solo extraemos el texto para las opciones del select
+                    var tempDiv = document.createElement("div");
+                    tempDiv.innerHTML = d;
+                    var cleanText = tempDiv.textContent || tempDiv.innerText || "";
+                    select.append('<option value="' + cleanText + '">' + cleanText + "</option>");
+                  });
+              });
+          },
+        });
+
+        // Configuración de la tabla para agregar filas
+        $("#add-row").DataTable({
+          pageLength: 10,
+          order: [[2, 'desc']],
+        });
+
+        // Acción para agregar una fila
+        var action =
+          '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+        $("#addRowButton").click(function () {
+          $("#add-row")
+            .dataTable()
+            .fnAddData([
+              $("#addName").val(),
+              $("#addPosition").val(),
+              $("#addOffice").val(),
+              action,
+            ]);
+          $("#addRowModal").modal("hide");
+        });
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript">
+      document.getElementById('eliminarhistorial').addEventListener('click', function(e) {
+          e.preventDefault(); // Prevenir el envío del formulario
+          
+              Swal.fire({
+                  title: 'Confirmar Eliminación',
+                  html: `Está a punto de eliminar los datos del historial de acciones. <strong>Esta acción no se puede 
+                          deshacer</strong>.<br>
+                          ¿Está seguro de que desea eliminar las asignaciones?`,
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#d33',
+                  cancelButtonColor: '#3085d6',
+                  confirmButtonText: 'Eliminar',
+                  cancelButtonText: 'Cancelar'
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      document.getElementById('eliminarHistorialForm').submit(); // Enviar el formulario si el usuario confirma
+                  }
+              });
+      });
+  </script>
+    {% endblock UJS %}

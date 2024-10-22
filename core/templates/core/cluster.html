@@ -1,0 +1,147 @@
+<!-- Carga de bloque base -->
+{% extends 'core/base.html' %}
+<!-- Carga de estilos -->
+{% load static %}
+ <!-- Título del document -->
+{% block titlePage %}
+Teamfit - Cluster
+{% endblock titlePage %}
+<!-- Titulo de navegador -->
+{% block titulo %}
+Cluster
+{% endblock titulo %}
+
+
+<!-- Head -->
+{% block estiloHead %}
+{% endblock estiloHead %}
+
+<!-- Body -->
+{% block content %}
+
+<!-- Tabla con filtro de datos incluido -->
+<div class="row">
+    <div class="col-md-12">
+    <br>
+    <br>
+    <br>
+    <br>
+        <div class="card">
+            <div class="card-body">
+                <div class="col-md-2">
+                </div>
+                <div class="text-center">
+                    <h3><strong>{{mesg}}</strong></h3>
+                </div>
+                <div class="table-responsive">
+                <table id="multi-filter-select" class="display table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="ID del proyecto"></i></button></th>
+                            <th>Proyecto <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Proyecto al que pertenecen las horas"></i></button></th>
+                            <th>Linea de trabajo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Línea de negocio a la que pertenece el proyecto"></i></button></th>
+                            <th>Tipo <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Tipo de proyecto"></i></button></th>
+                            <th>Tipo de semana <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Tipo de semana a la que pertenecen las horas, puede ser Semana de Inicio, Semana Intermedia o Semana Final"></i></button></th>
+                            <th>Rol <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Rol solicitado por el proyecto, puede ser Ingeniero de proyectos o Jefe de proyectos"></i></button></th>
+                            <th>HH Min <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Horas en escenario optimista para el tipo de semana indicado y para el rol"></i></button></th>
+                            <th>HH Max <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Horas en escenario pesimista para el tipo de semana indicado y para el rol"></i></button></th>
+                            <th>HH Prom <button class="icon-button"><i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Horas en escenario medio para el tipo de semana indicado y para el rol"></i></button></th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            {% for p in proyectos %}
+                            <tr class="project-row">
+                                <td>{{ p.proyecto.id }}</td>
+                                <td>{{ p.proyecto.proyecto }}</td>
+                                <td>{{ p.proyecto.lineaNegocio }}</td>
+                                <td>{{ p.proyecto.tipo }}</td>
+                                <td>{{ p.tipoSemana }}</td>
+                                <td>{{ p.horas.rol }}</td>
+                                <td>{{ p.horas.hh_min }}</td>
+                                <td>{{ p.horas.hh_max }}</td>
+                                <td>{{ p.horas.hh_prom }}</td>
+                            </tr>
+                            {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Realizar clusterización</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}
+
+<!-- Javascript -->
+{% block UJS %}
+<script>
+	$(document).ready(function () {
+// Configuración básica de la tabla
+$("#basic-datatables").DataTable({});
+
+// Configuración de la tabla con filtros múltiples
+$("#multi-filter-select").DataTable({
+	pageLength: 10,
+	initComplete: function () {
+	this.api()
+		.columns()
+		.every(function () {
+		var column = this;
+		// Filtra solo las columnas relevantes
+		if (column.index() >= 2 && column.index() <= 4) { // Asumiendo que las columnas a filtrar son a partir de la tercera columna (índice 2)
+			var select = $(
+			'<select class="form-select"><option value=""></option></select>'
+			)
+			.appendTo($(column.footer()).empty())
+			.on("change", function () {
+				var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+				column
+				.search(val ? "^" + val + "$" : "", true, false)
+				.draw();
+			});
+
+			column
+			.data()
+			.unique()
+			.sort()
+			.each(function (d, j) {
+				select.append(
+				'<option value="' + d + '">' + d + "</option>"
+				);
+			});
+		} else {
+			$(column.footer()).empty(); // Limpiar pie de columna no relevante
+		}
+		});
+	},
+});
+
+// Configuración de la tabla para agregar filas
+$("#add-row").DataTable({
+	pageLength: 10,
+});
+
+// Acción para agregar una fila
+var action =
+	'<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+$("#addRowButton").click(function () {
+	$("#add-row")
+	.dataTable()
+	.fnAddData([
+		$("#addName").val(),
+		$("#addPosition").val(),
+		$("#addOffice").val(),
+		action,
+	]);
+	$("#addRowModal").pmodal("hide");
+});
+});
+</script>
+{% endblock UJS %}

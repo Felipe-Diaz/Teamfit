@@ -1,0 +1,214 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titulo %}
+Inicio
+{% endblock titulo %}
+{% block estiloHead %}
+<style>
+	/* body {
+		overflow: hidden;
+	} */
+   
+  .container .card .card-header {
+    background-color: rgb(245, 245, 245);
+    font-size: 1.5rem;
+    border-bottom: 2px solid darkgray;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    letter-spacing: 1px;
+  }
+  .card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+  }
+</style>
+{% endblock estiloHead %}
+{% block content %}
+<body>
+    <!-- Tajetas de informacion Junily  -->
+    <div class="container-fluid" style=" margin-top: 80px;">
+      <div class="row">
+        <!-- Tarjeta 1: Proyectos Subidos -->
+        <div class="col-md-3">
+          <div class="card card-stats card-round text-center">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-project-diagram"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">Proyectos Subidos</h5>
+                    <p class="card-text"><strong>{{ total_proyectos }} proyectos</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Tarjeta 2: Temporada (Mes y Semana) -->
+        <div class="col-md-3">
+          <div class="card card-stats card-round text-center">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-calendar"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">{{ current_month }}</h5>
+                    <p class="card-text"><strong>{{ current_year }} semana {{ current_week }}</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Tarjeta 3: Semanas Restantes en el Año -->
+        <div class="col-md-3">
+          <div class="card card-stats card-round text-center">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-hourglass"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">Semanas Restantes</h5>
+                    <p class="card-text"><strong>{{ remaining_weeks }}</strong> semanas</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Tarjeta 4: Cantidad de Empleados -->
+        <div class="col-md-3">
+          <div class="card card-stats card-round text-center">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-icon">
+                  <div class="icon-big text-center icon-primary bubble-shadow-small">
+                    <i class="fas fa-users"></i>
+                  </div>
+                </div>
+                <div class="col col-stats ms-3 ms-sm-0">
+                  <div class="numbers">
+                    <h5 class="card-title">Empleados</h5>
+                    <p class="card-text"><strong>Ingenieros: {{ ingenieros }} <br> Jefes: {{ jefes }}</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+	<section class="mt-4">
+		<!-- Historial y Proyectos -->
+		<div class="container">
+			<div class="row" >
+			  	<!-- New Customers section -->
+			  	<div class="col-6">
+					<div class="card">
+					  <div class="card-header">
+						  Historial
+					  </div>
+						<div class="table-responsive">
+						  <table class="table">
+							  <thead>
+								  <tr>
+									  <th>ID</th>
+									  <th>Fecha</th>
+									  <th>Categoria</th>
+									  <th>Sub-Categoria</th>
+									  <th>Usuario</th>
+								  </tr>
+								  <tbody>
+								  {% for val in hist %}
+								  <!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+								  <tr class="project-row">
+									  <td>{{ val.idHist }}</td>
+									  <td>{{ val.fecha }}</td>
+									  <td>{{ val.categoria }}</td>
+									  {% if val.prioridad == 3 %}
+									  <td style="color: red;">{{ val.subcategoria }}</td>
+									  {% else %}
+									  <td>{{ val.subcategoria }}</td>
+									  {% endif %}
+									  
+									  <td>{{ val.usuario__first_name}} {{val.usuario__last_name}}</td>
+								  </tr>
+								  {% empty %}
+								  <tr>
+									  <td colspan="15">No se han encontrado datos en el historial</td>
+								  </tr>   
+								  {% endfor %}
+								  </tbody>
+							  </thead>
+						  </table>
+						</div>
+				</div>
+				</div>
+  
+				<div class="col-6">
+			  <div class="card">
+				  <div class="card-header">
+					  Últimos Proyectos
+				  </div>
+				  <div class="table-responsive">
+					<table class="table">
+					  <thead>
+					  <tr>
+						  <th>Id</th>
+						  <th>Proyecto</th>
+						  <th>Linea Negocio</th>
+						  <th>Tipo Proyecto</th>
+					  </tr>
+					  </thead>
+					  <tbody>
+						{% for val in proyectos %}
+						<!-- La class y los dato con que tienen "data-" son los relacionados al Pop up -->
+						<tr class="project-row">
+							<td>{{ val.id }}</td>
+							<td>{{ val.proyecto }}</td>
+							<td>{{ val.lineaNegocio }}</td>
+							<td>{{ val.tipo }}</td>
+						</tr>
+						{% empty %}
+						<tr>
+							<td colspan="15">No se han encontrado proyectos</td>
+						</tr>   
+						{% endfor %}
+					  </tbody>
+				  </table>
+				  </div>
+			  </div>
+		  		</div>
+			</div>
+	  	</div>
+	</section>
+</body>
+{% endblock content %}
+{% block UJS %}
+
+{% endblock UJS %}

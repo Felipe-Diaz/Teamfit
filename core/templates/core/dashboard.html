@@ -1,26 +1,19 @@
+{% extends 'core/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <!-- Incluir estilos y scripts necesarios -->
-    {% load plotly_dash %}
-    {{ app.callback_dependencies }}
-</head>
-<body>
-    <div class="text-left mt-3"></divclass>
-        <a href="{% url 'index' %}"> Volver</a>
+{% block titlePage %}
+Teamfit - Diagramas
+{% endblock titlePage %}
+{% block titulo %}
+Gráficos
+{% endblock titulo %}
+{% block content %}
+    <div class="container">
+        <div>
+            <h1>{{mesg}}</h1>
+        </div>
+        <div>
+            {{ bar|safe }}
+            {{ line|safe }}
+        </div>
     </div>
-    <div>
-        <h1>
-            {{mesg}}
-        </h1>
-        
-    </div>
-    <div>
-        {{ bar|safe }}
-        {{ line|safe }}
-    </div>
-</body>
-</html>
+{% endblock content %}

@@ -1,0 +1,510 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block titlePage %}
+Teamfit - Parametros
+{% endblock titlePage %}
+
+{% block estiloHead %}
+<style>
+    .custom-grey-bg {
+        background-color: rgb(231, 229, 229);
+        padding: 10px;
+    }
+    .gray-bg {
+        background-color: rgb(245, 245, 245);
+    }
+
+    .form-check-input{
+        width: 1.2em;
+        height: 1.2em;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+    .checkbox-container {
+        display: flex;
+        gap: 15px;
+    }
+    .rounded-button {
+        border-radius: 50px;
+        border: none;
+        box-shadow: none;
+        padding: 15px 30px;
+        font-size: 18px;
+    }
+    .toggle-btn {
+        background-color: rgb(231, 229, 229);
+        border: none;
+        font-size: 1.5rem;
+        padding: 0;
+        width: 100%;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: inherit;
+    }
+
+    .toggle-btn:focus {
+        outline: none;
+    }
+
+    .arrow-icon {
+        transition: transform 0.3s;
+        position: absolute;
+        left: 97%;
+    }
+
+    .collapsed .arrow-icon {
+        transform: rotate(180deg);
+    }
+</style>
+{% endblock estiloHead %}
+{% block titulo %}
+Parámetros del sistema
+{% endblock titulo %}
+{% block content %}
+<body>
+    <div class="container-fluid" style="margin-top: 80px;">
+        <div class = "row">
+            <div class = "col-md-12">
+                <div class="container">
+                    {% if messages %}
+                    {% for mesg in messages %}
+                        <div class="alert alert-success container" role="alert">
+                            {{ mesg|safe }}
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% if merror %}
+                        {% for mesg in merror %}
+                            <div class="alert alert-danger container" role="alert">
+                                {{ mesg }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class = "card">
+                    <div>
+                        <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#parametros-content" aria-expanded="true" aria-controls="parametros-content">
+                            <h2 class="custom-grey-bg mb-0 col-md-6"><strong>
+                                Eliminación de Registro
+                            </strong></h2>
+                            <span class="arrow-icon">▼</span>
+                        </button>
+                        <div id="parametros-content" class="collapse show">
+                            <br>
+                            <div class="container">
+                                <p>Las categorías seleccionadas no se eliminarán al vaciar el registro.</p>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <div class="main-checkbox">
+                                        <div class="form-check">
+                                            <!-- Autenticación -->
+                                            <h6 class="gray-bg"> <strong>{{ form_categorias.autenticacion }}  {{form_categorias.autenticacion.label}}</strong></h6>
+                                            <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                                <div class="offset-md-1">{{ form_categorias.login }}{{ form_categorias.login.label }}</div>
+                                                <div style="padding-left: 2%;">{{ form_categorias.logout }}  {{ form_categorias.logout.label }}</div>
+                                            </div>
+                                            <!--  -->
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!-- Configuración -->
+                                        <h6 class="gray-bg"><strong>{{ form_categorias.configuracion }} {{form_categorias.configuracion.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form_categorias.cambio_parametros }}  {{ form_categorias.cambio_parametros.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form_categorias.cambio_conf_bd }}  {{ form_categorias.cambio_conf_bd.label }}</div>
+                                        </div>
+                                        <!--  -->
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Mantenimiento -->
+                                        <h6 class="gray-bg"><strong>{{ form_categorias.mantenimiento }} {{form_categorias.mantenimiento.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form_categorias.limpieza_datos }}  {{ form_categorias.limpieza_datos.label }}</div>
+                                        </div>
+                                        <!--  -->
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Error -->
+                                        <h6 class="gray-bg"><strong>{{ form_categorias.error }} {{form_categorias.error.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form_categorias.errores_sistema }}  {{ form_categorias.errores_sistema.label }}</div>
+                                        </div>
+                                        <!--  -->
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Auditoría -->
+                                        <h6 class="gray-bg"><strong>{{ form_categorias.auditoria }} {{form_categorias.auditoria.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form_categorias.quien_agrego_documentos }}  {{ form_categorias.quien_agrego_documentos.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form_categorias.quien_agrego_usuario }}  {{ form_categorias.quien_agrego_usuario.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form_categorias.quien_desactivo_usuario }}  {{ form_categorias.quien_desactivo_usuario.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form_categorias.quien_activo_usuario }}  {{ form_categorias.quien_activo_usuario.label }}</div>
+                                        </div>
+                                        <!--  -->
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Seguridad -->
+                                        <h6 class="gray-bg"><strong>{{ form_categorias.seguridad }} {{form_categorias.seguridad.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form_categorias.cambio_de_cargo }}  {{ form_categorias.cambio_de_cargo.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form_categorias.actualizacion_permisos }}  {{ form_categorias.actualizacion_permisos.label }}</div>
+                                        </div>
+                                        <!--  -->
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!--Modelo -->
+                                        <h6 class="gray-bg"><strong>{{ form_categorias.modelo }} {{form_categorias.modelo.label}}</strong></h6>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form_categorias.realizacion_clusterizacion }}  {{ form_categorias.realizacion_clusterizacion.label }}</div>
+                                            <div class="offset-md-1">{{ form_categorias.asignacion_de_recursos }}  {{ form_categorias.asignacion_de_recursos.label }}</div>
+                                            <div class="offset-md-1">{{ form_categorias.inyeccion_a_odoo }}  {{ form_categorias.inyeccion_a_odoo.label }}</div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="main-checkbox">
+                                        <!-- Programacion -->
+                                        <h6 class="gray-bg"><strong>Programación</strong></h6>
+                                        <h6>En la siguiente sección se especifica únicamente la programación para la eliminación automática del historial, a continuación indiqué de que forma realizar el proceso.</h6>
+                                        <br>
+                                        <div class="container">
+                                            <h6 class="gray-bg"><strong>Frecuencia</strong></h6>
+                                            <div class="checkbox-container" id="autenticacion-fields">
+                                                <div class="offset-md-1">{{ form_programacion.diario }}  {{ form_programacion.diario.label }}</div>
+                                                <div style="padding-left: 2%;">{{ form_programacion.semanal }}  {{ form_programacion.semanal.label }}</div>
+                                                <!-- <div style="padding-left: 2%;">{{ form_programacion.mensual }}{{ form_programacion.mensual.label }}</div> -->
+                                            </div>
+                                            <div id="dia-checkboxes" style="display: none;"> 
+                                                <hr>
+                                                <h6 class="gray-bg"><strong>Día</strong></h6>
+                                                <div class="checkbox-container">
+                                                    <div class="offset-md-1">{{ form_programacion.lunes }}  {{ form_programacion.lunes.label }}</div>
+                                                    <div style="padding-left: 2%;">{{ form_programacion.martes }}  {{ form_programacion.martes.label }}</div>
+                                                    <div style="padding-left: 2%;">{{ form_programacion.miercoles }}  {{ form_programacion.miercoles.label }}</div>
+                                                    <div style="padding-left: 2%;">{{ form_programacion.jueves }}  {{ form_programacion.jueves.label }}</div>
+                                                    <div style="padding-left: 2%;">{{ form_programacion.viernes }}  {{ form_programacion.viernes.label }}</div>
+                                                    <div style="padding-left: 2%;">{{ form_programacion.sabado }}  {{ form_programacion.sabado.label }}</div>
+                                                    <div style="padding-left: 2%;">{{ form_programacion.domingo }}  {{ form_programacion.domingo.label }}</div>
+                                                </div>
+                                            </div>
+                                            <!-- <div id="hora-minutos" style="display: none;">
+                                                <hr>
+                                                <h6 class="gray-bg"><strong>Hora</strong></h6>
+                                                <div class="checkbox-container" id="autenticacion-fields row">
+                                                    {{ form_programacion.hora }}{{ form_programacion.minutos }}
+                                                </div>
+                                                <hr>
+                                            </div> -->
+                                            <div div id="mensual-fields">
+                                                <hr>
+                                                <div style="display: none;">
+                                                    <h6 class="gray-bg"><strong>Dia</strong></h6>
+                                                    <div class="checkbox-container" id="autenticacion-fields row">
+                                                        {{ form_programacion.dia }}
+                                                    </div>
+                                                </div>
+                                                <br>
+                                                <h6 class="gray-bg"><strong>Hora</strong></h6>
+                                                <div class="checkbox-container" id="autenticacion-fields row">
+                                                    {{ form_programacion.hora }}  {{ form_programacion.minutos }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <div class = "card">
+                    <div>
+                        <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#cluster-content" aria-expanded="true" aria-controls="cluster-content">
+                        <h2 class="custom-grey-bg mb-0 col-md-6"><strong>
+                            Clusterización
+                        </strong></h2>
+                        <span class="arrow-icon">▼</span>
+                        </button>
+                        <div id="cluster-content" class="collapse show">
+                            <div class="container">
+                            </div>
+                            <div class="card-body">
+                                <div class="main-checkbox">
+                                    <div class="form-check" id="escenarios-container">
+                                        <!-- Autenticación -->
+                                        <h6 class="gray-bg"> <strong>Escenario a utilizar</strong></h6>
+                                        <p>En la siguiente sección se especifica unicamente el escenario a utilizar para realizar la asignación de horas.</p>
+                                        <div class="checkbox-container" id="autenticacion-fields row"><!--Sub categorías-->
+                                            <div class="offset-md-1">{{ form_escenarios.optimista }}  {{ form_escenarios.optimista.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form_escenarios.media }}  {{ form_escenarios.media.label }}</div>
+                                            <div style="padding-left: 2%;">{{ form_escenarios.pesimista }}  {{ form_escenarios.pesimista.label }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                        </div>
+                    </div>
+                </div>
+                            <div class="text-align-center offset-sm-5">
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+                            </form>
+            </div>
+        </div>
+    </div>
+    
+</body>
+{% endblock content %}
+
+
+{% block UJS %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Función para manejar la selección de la main
+        function handleMainCategoryChange(mainCategory, subCategories) {
+            mainCategory.addEventListener("change", function () {
+                subCategories.forEach(function (subCategory) {
+                    subCategory.checked = mainCategory.checked;
+                });
+            });
+        }
+    
+        // Función para manejar cambios en subcategorías
+        function handleSubCategoryChange(mainCategory, subCategories) {
+            subCategories.forEach(function (subCategory) {
+                subCategory.addEventListener("change", function () {
+                    // Sí cualquier subcategoría no está seleccionada, se deselecciona la main
+                    if (!subCategory.checked) {
+                        mainCategory.checked = false;
+                    } else {
+                        // Sí todas las sub están seleccionadas se selecciona la main
+                        mainCategory.checked = subCategories.every(function (subCat) {
+                            return subCat.checked;
+                        });
+                    }
+                });
+            });
+        }
+
+        //Deja Diario por default siempre seleccionado al seleccionar las horas en caso de deseleccionarse tanto semanal como diario
+        const programaciondiario = document.querySelector("input[name='programacion-diario']");
+        const programacionsemanal = document.querySelector("input[name='programacion-semanal']");
+
+        function verificarSeleccionDias() {
+            if (!programaciondiario.checked && !programacionsemanal.checked) {
+                programaciondiario.checked = true;
+            }
+        }
+        programaciondiario.addEventListener("change", verificarSeleccionDias);
+        programacionsemanal.addEventListener("change", verificarSeleccionDias);
+
+        
+        //Deja Lunes por default siempre seleccionado al seleccionar los días de la seana en caso de deseleccionarse todos
+        const plun = document.querySelector("input[name='programacion-lunes']");
+        const pmar = document.querySelector("input[name='programacion-martes']");
+        const pmie = document.querySelector("input[name='programacion-miercoles']");
+        const pjue = document.querySelector("input[name='programacion-jueves']");
+        const pvie = document.querySelector("input[name='programacion-viernes']");
+        const psab = document.querySelector("input[name='programacion-sabado']");
+        const pdom = document.querySelector("input[name='programacion-domingo']");
+
+        function verificarSeleccionDiasSem() {
+            if (!plun.checked && !pmar.checked && !pmie.checked && !pjue.checked && !pvie.checked && !psab.checked && !pdom.checked){
+                plun.checked = true;
+            }
+        }
+        plun.addEventListener("change", verificarSeleccionDiasSem);
+        pmar.addEventListener("change", verificarSeleccionDiasSem);
+        pmie.addEventListener("change", verificarSeleccionDiasSem);
+        pjue.addEventListener("change", verificarSeleccionDiasSem);
+        pvie.addEventListener("change", verificarSeleccionDiasSem);
+        psab.addEventListener("change", verificarSeleccionDiasSem);
+        pdom.addEventListener("change", verificarSeleccionDiasSem);
+
+        function verificarSeleccionDias() {
+            if (!programaciondiario.checked && !programacionsemanal.checked) {
+                programaciondiario.checked = true;
+            }
+        }
+        programaciondiario.addEventListener("change", verificarSeleccionDias);
+        programacionsemanal.addEventListener("change", verificarSeleccionDias);
+
+        //Deja Medio como selección por defecto al deseleccionar todas las opciones de  Escenario a usar
+        const escenariosoptimista = document.querySelector("input[name='escenarios-optimista']");
+        const escenariospesimista = document.querySelector("input[name='escenarios-pesimista']");
+        const escenariosmedia = document.querySelector("input[name='escenarios-media']");
+
+        function verificarSeleccionEscenario() {
+            if (!escenariosoptimista.checked && !escenariospesimista.checked && !escenariosmedia.checked){
+                escenariosmedia.checked = true;
+            }
+        }
+        escenariosmedia.addEventListener("change", verificarSeleccionEscenario);
+        escenariosoptimista.addEventListener("change", verificarSeleccionEscenario);
+        escenariospesimista.addEventListener("change", verificarSeleccionEscenario);
+
+        // Autenticación
+        const autenticacion = document.querySelector("input[name='categorias-autenticacion']");
+        const login = document.querySelector("input[name='categorias-login']");
+        const logout = document.querySelector("input[name='categorias-logout']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(autenticacion, [login, logout]);
+        handleSubCategoryChange(autenticacion, [login, logout]);
+
+        // Configuracion
+        const configuracion = document.querySelector("input[name='categorias-configuracion']");
+        const cambio_parametros = document.querySelector("input[name='categorias-cambio_parametros']");
+        const cambio_conf_bd = document.querySelector("input[name='categorias-cambio_conf_bd']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(configuracion, [cambio_parametros, cambio_conf_bd]);
+        handleSubCategoryChange(configuracion, [cambio_parametros, cambio_conf_bd]);
+        
+        // Mantenimiento
+        const mantenimiento = document.querySelector("input[name='categorias-mantenimiento']");
+        const limpieza_datos = document.querySelector("input[name='categorias-limpieza_datos']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(mantenimiento, [limpieza_datos]);
+        handleSubCategoryChange(mantenimiento, [limpieza_datos]);
+        
+        // Error
+        const error = document.querySelector("input[name='categorias-error']");
+        const errores_sistema = document.querySelector("input[name='categorias-errores_sistema']");
+        // Main category y Sub Category
+        handleMainCategoryChange(error, [errores_sistema]);
+        handleSubCategoryChange(error, [errores_sistema]);
+
+        // Auditoría
+        const auditoria = document.querySelector("input[name='categorias-auditoria']");
+        const quien_agrego_documentos = document.querySelector("input[name='categorias-quien_agrego_documentos']");
+        const quien_agrego_usuario = document.querySelector("input[name='categorias-quien_agrego_usuario']");
+        const quien_desactivo_usuario = document.querySelector("input[name='categorias-quien_desactivo_usuario']");
+        const quien_activo_usuario = document.querySelector("input[name='categorias-quien_activo_usuario']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(auditoria, [quien_agrego_documentos, quien_agrego_usuario, quien_desactivo_usuario, quien_activo_usuario]);
+        handleSubCategoryChange(auditoria, [quien_agrego_documentos, quien_agrego_usuario, quien_desactivo_usuario, quien_activo_usuario]);
+
+        // Seguridad
+        const seguridad = document.querySelector("input[name='categorias-seguridad']");
+        const cambio_de_cargo = document.querySelector("input[name='categorias-cambio_de_cargo']");
+        const actualizacion_permisos = document.querySelector("input[name='categorias-actualizacion_permisos']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(seguridad, [cambio_de_cargo, actualizacion_permisos]);
+        handleSubCategoryChange(seguridad, [cambio_de_cargo, actualizacion_permisos]);
+
+        // Modelo
+        const modelo = document.querySelector("input[name='categorias-modelo']");
+        const realizacion_clusterizacion = document.querySelector("input[name='categorias-realizacion_clusterizacion']");
+        const asignacion_de_recursos = document.querySelector("input[name='categorias-asignacion_de_recursos']");
+        const inyeccion_a_odoo = document.querySelector("input[name='categorias-inyeccion_a_odoo']");
+        
+        // Main category y Sub Category
+        handleMainCategoryChange(modelo, [realizacion_clusterizacion, asignacion_de_recursos, inyeccion_a_odoo]);
+        handleSubCategoryChange(modelo, [realizacion_clusterizacion, asignacion_de_recursos, inyeccion_a_odoo]);
+
+        // Frecuencia
+        const diario = document.querySelector("input[name='programacion-diario']");
+        const semanal = document.querySelector("input[name='programacion-semanal']");
+        const mensual = document.querySelector("input[name='programacion-mensual']");
+
+        // Sub Category
+        handleSubCategoryChange(diario, semanal, mensual);
+
+        // Dia
+        const lunes = document.querySelector("input[name='programacion-lunes']");
+        const martes = document.querySelector("input[name='programacion-martes']");
+        const miercoles = document.querySelector("input[name='programacion-miercoles']");
+        const jueves = document.querySelector("input[name='programacion-jueves']");
+        const viernes = document.querySelector("input[name='programacion-viernes']");
+        const sabado = document.querySelector("input[name='programacion-sabado']");
+        const domingo = document.querySelector("input[name='programacion-domingo']");
+
+        // Sub Category
+        handleSubCategoryChange(lunes,martes,miercoles,jueves,viernes,sabado,domingo);
+
+        // Hora
+        const hora = document.querySelector("input[name='programacion-hora']");
+        const minutos = document.querySelector("input[name='programacion-minutos']");
+        // const dia = document.querySelector("input[name='programacion-dia']");
+
+        // hoea, minutos, dia
+        handleSubCategoryChange(hora, minutos, dia);
+
+        // Escenarios
+        const optimista = document.querySelector("input[name='escenarios-optimista']");
+        const media = document.querySelector("input[name='escenarios-media']");
+        const pesimista = document.querySelector("input[name='escenarios-pesimista']");
+
+        handleSubCategoryChange(optimista, media, pesimista);
+    });
+</script>
+<script>
+    const checkboxes = document.querySelectorAll('#autenticacion-fields input[type="checkbox"]');
+    const diaCheckboxes = document.getElementById('dia-checkboxes');
+    const horaMinutosContainer = document.getElementById('hora-minutos');
+    //const mensualFields = document.getElementById('mensual-fields');
+
+    function updateDiaCheckbox() {
+        // Mostrar u ocultar los días según la opción seleccionada
+        if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-semanal"]').checked) {
+            diaCheckboxes.style.display = 'block'; // Mostrar días si es semanal
+            //mensualFields.style.display = 'none'; // Ocultar campos de mensual
+            horaMinutosContainer.style.display = 'block'; // Mostrar hora/minutos si no es mensual
+        } else {
+            diaCheckboxes.style.display = 'none'; // Ocultar días si no es semanal
+        }
+    }
+
+    // function updateHoraMinutosAndMensualFields() {
+    //     // Mostrar u ocultar el div de mensual y manejar la visibilidad de hora
+    //     if (document.querySelector('#autenticacion-fields input[type="checkbox"][name="programacion-mensual"]').checked) {
+    //         mensualFields.style.display = 'block'; // Mostrar campos de mensual
+    //         diaCheckboxes.style.display = 'none'; // Ocultar días si es mensual
+    //         horaMinutosContainer.style.display = 'none'; // Ocultar hora/minutos si es mensual
+    //     } else {
+    //         mensualFields.style.display = 'none'; // Ocultar campos de mensual si no está seleccionado
+    //         horaMinutosContainer.style.display = 'block'; // Mostrar hora/minutos si no es mensual
+    //     }
+    // }
+
+    document.querySelectorAll('#escenarios-container input[type="checkbox"]').forEach((checkbox) => {
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+            document.querySelectorAll('#escenarios-container input[type="checkbox"]').forEach((otherCheckbox) => {
+                if (otherCheckbox !== this) {
+                    otherCheckbox.checked = false;
+                }
+            });
+        }
+    });
+});
+
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            checkboxes.forEach(cb => {
+                if (cb !== checkbox) cb.checked = false;
+            });
+            updateDiaCheckbox();
+            //updateHoraMinutosAndMensualFields(); // Actualiza también la visibilidad del div de mensual y hora
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateDiaCheckbox();
+        //updateHoraMinutosAndMensualFields(); // Llama a la función para establecer el estado inicial
+    });
+</script>
+{% endblock UJS %}
