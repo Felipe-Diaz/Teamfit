@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-import os
 from os import path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-@cxyd1%d*-n&1r&g+@^($iyk3tns&obc1_59a#sex!2nex+@%f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -88,14 +87,11 @@ WSGI_APPLICATION = 'Teamfit.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT'),
-        'OPTIONS': {
-            'sslmode': 'require',  # Es recomendable usar SSL en producción
-        },
+        'NAME': 'teamfit',
+        'USER': 'teamfitadmindb', #TeamfitAdminDB
+        'PASSWORD': 'zmLhdqM1otFuqG4', #zmLhdqM1otFuqG4
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
