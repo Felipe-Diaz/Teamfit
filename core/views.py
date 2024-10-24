@@ -495,9 +495,6 @@ def editar_usuario(request, id):
     }
     return render(request, 'core/editarUsuario.html', data)
 
-#Fin de la funcion para editar un usuario
-
-
 #Desactiva el usuario, validando si existe y si es superuser o no.
 def eliminarUsuarios(request, id):
     if(not request.user.is_staff):
@@ -764,10 +761,6 @@ def cluster(request):
 
 
 def carga_Odoo(request):
-    ###enviar_datos_planning_slot
-    ###tabla asignacion
-    ###obtienes la semana por convertir_datos_asignacion
-    ###id_empleado, id_recurso, horas_asignadas, fecha_inicio, fecha_fin, nombre_proyecto-semana
     if not request.user.is_authenticated:
         return redirect(iniciar_sesion)
     
@@ -868,6 +861,9 @@ def carga_Odoo(request):
 
 #Esta es la función que genera el exel de la tabla horas_por_recurso_data
 def generar_excel_proyectos(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     # Obtener el año y la semana desde el request (ajusta esto según tu lógica)
     anio = request.GET.get('anio')
     semana = request.GET.get('semana')
@@ -922,6 +918,9 @@ def generar_excel_proyectos(request):
 
 #Función que genera el exel de la segunda tabla
 def generar_excel_recursos(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     # Obtener el año y la semana desde el request (ajusta esto según tu lógica)
     anio = request.GET.get('anio')
     semana = request.GET.get('semana')
@@ -974,6 +973,8 @@ def generar_excel_recursos(request):
 
 #Generar Reportes de Asignaciónes
 def generar_excel_asignacion(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
     # Obtener el formato seleccionado desde el request
     formato = request.GET.get('formato')
 
@@ -1068,6 +1069,9 @@ def busqueda_de_datos(queryset, search_value, search_fields):
 
 # PRIMERA TABLA
 def horas_por_recurso_data(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     order_column = request.GET.get('order[0][column]', 0)
     order_dir = request.GET.get('order[0][dir]', 'asc')
 
@@ -1108,6 +1112,9 @@ def horas_por_recurso_data(request):
 
 # Recursos agrupados por proyecto (SEGUNDA TABLA)
 def horas_por_proyecto_data(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     order_column = request.GET.get('order[0][column]', 0)
     order_dir = request.GET.get('order[0][dir]', 'asc')
 
@@ -1144,6 +1151,9 @@ def horas_por_proyecto_data(request):
 
 # TERCERA TABLA
 def asignaciones_data(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     order_column = request.GET.get('order[0][column]', 0)
     order_dir = request.GET.get('order[0][dir]', 'asc')
 
@@ -1236,6 +1246,9 @@ def asignaciones_list(request):
 logger = logging.getLogger(__name__)
 
 def ejecutar_asignacion(request):
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     if request.method == 'POST':
         try:
             control, created = AsignacionControl.objects.get_or_create(id=1)  # Usa un único registro para controlar
@@ -1246,12 +1259,21 @@ def ejecutar_asignacion(request):
                 if control.fecha_ultimo_ejecucion == datetime.today():
                     logger.warning("Intento de ejecutar la asignación más de una vez en el mismo día.")
                     return HttpResponse("La asignación ya ha sido ejecutada hoy.", status=400)
-            
-            
+                
             check_unasigned = obtener_proyectos_sin_asignar()
             if(not check_unasigned):
                 logger.warning("Intento de ejecutar la asignación cuando no hay proyectos.")
                 return HttpResponse("No existen proyectos para asignar. Verifique que se hayan subido los proyectos correctamente", status=400)
+            
+            if(check_unasigned.count<=0):
+                logger.warning("Intento de ejecutar la asignación cuando no hay proyectos")
+                return HttpResponse("No existen proyectos para asignar. Verifique que se hayan subido los proyectos correctamente", status=400)
+
+            empleados = Empleado.objects.all()
+            if(empleados.count() <= 0):
+                logger.warning('Intento de asignar recursos sin empleados obtenidos')
+                return HttpResponse("Ha intentado realizar la asignación sin haber cargado empleados. "
+                                    "Por favor, carque los empleados a través del menú Disponibilidad", status=400)
 
             # Ejecutar la asignación de recursos y capturar el mensaje de retorno
             realizar_asignacion = asignar_recursos()
@@ -1308,6 +1330,9 @@ def eliminar_asignaciones(request):
     """
     Vista para eliminar todas las asignaciones actuales.
     """
+    if not request.user.is_authenticated:
+        return redirect(iniciar_sesion)
+    
     if request.method == 'POST':
         # Eliminar todas las asignaciones
         Asignacion.objects.all().delete()
@@ -1327,6 +1352,7 @@ def asignar_recursos():
     **Return**\n
         VariableReturn (tipo_dato): lore ipsum
     """
+    
     mensaje = ""
     asignacion_realizada = False  # Para verificar si se realizó alguna asignación
 

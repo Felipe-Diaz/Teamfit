@@ -66,6 +66,7 @@
             <div class="card mt-3">
                 <div class="card-body">
                     <div id="table-container" class="table-responsive">
+                        {% if data %}
                         <table class="table table-bordered table-striped table-hover" id="semanas-table">
                             <thead>
                                 <tr class="text-center">
@@ -109,6 +110,9 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% else %}
+                        <h3>No se han encontrado empleados. Por favor, cargue los empleados de Odoo para poder verlos</h3>
+                        {% endif %}
                     </div>
                     <div class="row">
                         <div class="d-grid gap-2 d-md-flex col-lg-6">

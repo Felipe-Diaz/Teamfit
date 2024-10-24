@@ -5,9 +5,10 @@ import re
 import ast
 import json
 from .models import Empleado
+import os
 
-URL_BASE = 'https://teamfit.openscorp.com/api/'
-API_KEY = 'TEAMFIT KEY' 
+URL_BASE = os.getenv('WEBSITE_API')
+API_KEY = os.getenv('WEBSITE_KEY')
 
 """
 **DESCRIPCIÓN INICIAL**\n

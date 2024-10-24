@@ -122,7 +122,7 @@ class UsuarioForm(forms.ModelForm):
     is_staff = forms.BooleanField(
         required=False,
         widget=forms.HiddenInput(),
-        label="Es Staff"  # No se mostrará, ya que es un campo oculto
+        label=""  # No se mostrará, ya que es un campo oculto
     )
     def clean(self):
         cleaned_data = super().clean()

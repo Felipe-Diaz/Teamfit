@@ -27,18 +27,11 @@ urlpatterns = [
     path('cluster', cluster, name='cluster'),
     path('cargaOdoo', carga_Odoo, name='cargaOdoo'),
     path('cargar_empleados/', vista_carga_empleados, name='cargar_empleados'),
-
-    
-    ###Ingresar las URLS del grupo 2 desde acá hacia abajo.
     path('asignaciones/', asignaciones_list, name='asignaciones_list'),
     path('asignaciones/data/', asignaciones_data, name='asignaciones_data'),
     path('horas_por_recurso_data/', horas_por_recurso_data, name='horas_por_recurso_data'),
     path('horas_por_proyecto_data/', horas_por_proyecto_data, name='horas_por_proyecto_data'),
-
-    # Vistas nuevas para los reportes adicionales
     path('disponibilidad/', disponibilidad, name='disponibilidad'),
-
-    # Acciones sobre las asignaciones y generación de reportes
     path('ejecutar_asignacion/', ejecutar_asignacion, name='ejecutar_asignacion'),
     path('eliminar-asignaciones/', eliminar_asignaciones, name='eliminar_asignaciones'),
     path('generar-reporte/', generar_excel_proyectos, name='generar_reporte'),
