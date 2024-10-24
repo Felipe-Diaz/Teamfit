@@ -1,12 +1,8 @@
-from email.policy import default
-from pickle import TRUE
-from tabnanny import verbose
-from tkinter import CASCADE
+from django.db.models import CASCADE
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import datetime
+from datetime import datetime, date
 from django.utils import timezone
-from datetime import date
 
 # Create your models here.
 
