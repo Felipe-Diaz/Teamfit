@@ -7,6 +7,23 @@ from django.utils import timezone
 from .forms import CATEGORIAS_MAPPING, PROGRAMACION_MAPPING, ESCENARIOS_MAPPING
 from .forms import CategoriasForm, ProgramacionForm, EscenariosForm
 import pandas as pd
+
+#Diccionario de Traduccion:
+MONTH_TRANSLATION = {
+    "January": "Enero",
+    "February": "Febrero",
+    "March": "Marzo",
+    "April": "Abril",
+    "May": "Mayo",
+    "June": "Junio",
+    "July": "Julio",
+    "August": "Agosto",
+    "September": "Septiembre",
+    "October": "Octubre",
+    "November": "Noviembre",
+    "December": "Diciembre"
+}
+
 ##Funciones relacionadas con la asignación
 def obtener_empleado(proyecto_id, rol, semana, anio, cant_horas):
     """

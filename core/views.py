@@ -21,7 +21,7 @@ from .apis import cargar_empleados, enviar_datos_planning_slots, convertir_datos
 #Importaciones de util
 from .utils import obtener_empleado, obtener_subcategorias, almacenarHistorial, cambiar_scheduler, obtener_campos_secundarios
 from .utils import obtener_valores_formulario_parametro, obtener_valores_formulario_parametro_escenarios, obtener_valores_formulario_parametro_programacion
-from .utils import obtener_proyectos_sin_asignar, verificarDf
+from .utils import obtener_proyectos_sin_asignar, verificarDf, MONTH_TRANSLATION
 #Importaciones de clusters_data
 from .clusters_data import realizar_clusterizacion
 #Importaciones de módulos de Python
@@ -296,13 +296,14 @@ def pagina_principal(request):
     
     proyectos = proyectosSemanas.objects.select_related('proyecto', 'horas').all()
 
-    try:
-        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')  # Unix / Linux / MacOS
-    except locale.Error:
-        locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')  # Windows
+    # try:
+    #     locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')  # Unix / Linux / MacOS
+    # except locale.Error:
+    #     locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')  # Windows
     
     
     current_month = today.strftime('%B') #Deberia ser Octubre o 'October'.
+    current_month = MONTH_TRANSLATION.get(current_month, current_month)
     current_week = today.strftime('%U')
 
     # Calcular semanas restantes en el año
