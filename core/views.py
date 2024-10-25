@@ -295,12 +295,6 @@ def pagina_principal(request):
     total_proyectos = total_proyectos.count()
     
     proyectos = proyectosSemanas.objects.select_related('proyecto', 'horas').all()
-
-    # try:
-    #     locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')  # Unix / Linux / MacOS
-    # except locale.Error:
-    #     locale.setlocale(locale.LC_TIME, 'Spanish_Spain.1252')  # Windows
-    
     
     current_month = today.strftime('%B') #Deberia ser Octubre o 'October'.
     current_month = MONTH_TRANSLATION.get(current_month, current_month)
