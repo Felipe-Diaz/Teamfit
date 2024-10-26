@@ -25,7 +25,6 @@ from .utils import obtener_proyectos_sin_asignar, verificarDf, MONTH_TRANSLATION
 #Importaciones de clusters_data
 from .clusters_data import realizar_clusterizacion
 #Importaciones de módulos de Python
-import locale
 import logging
 import requests
 import pandas as pd
