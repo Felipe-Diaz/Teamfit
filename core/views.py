@@ -334,7 +334,7 @@ def vista_carga_empleados(request):
     if request.method == "POST":
         success = cargar_empleados()
         if success:
-            messages.success(request, 'Se actualizaron correctamente los empleados. Baterías Recargadas.')
+            messages.success(request, 'Se actualizaron correctamente los empleados.')
             return redirect('disponibilidad')
         else:
             return JsonResponse({'success': False, 'message': 'Error al cargar empleados'})
@@ -1259,7 +1259,7 @@ def ejecutar_asignacion(request):
                 logger.warning("Intento de ejecutar la asignación cuando no hay proyectos.")
                 return HttpResponse("No existen proyectos para asignar. Verifique que se hayan subido los proyectos correctamente", status=400)
             
-            if(check_unasigned.count<=0):
+            if(check_unasigned.count() <=0):
                 logger.warning("Intento de ejecutar la asignación cuando no hay proyectos")
                 return HttpResponse("No existen proyectos para asignar. Verifique que se hayan subido los proyectos correctamente", status=400)
 
