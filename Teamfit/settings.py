@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -165,10 +165,7 @@ STATICFILES_FINDERS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Establece el tiempo de expiración de la sesión en segundos
-#SESSION_COOKIE_AGE = 1020  # 1020 segundos = 18 minutos
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Cierra la sesión cuando se cierra el navegador
-#SESSION_SAVE_EVERY_REQUEST = True  # Renueva la sesión con cada request
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 CSRF_COOKIE_SECURE = True  # Si estás usando HTTPS
 CSRF_COOKIE_HTTPONLY = False
