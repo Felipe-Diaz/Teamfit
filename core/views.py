@@ -380,9 +380,7 @@ def crear_usuarios(request):
             try:
                 user = form.save()
                 cargo = form.cleaned_data.get('cargo')
-                user.save()
                 PerfUsr = PerfilUsuario.objects.update_or_create(user=user, cargo=cargo)
-                ##Se obtienen los datos del usuario creado
                 cat = {'Cat':'E', 'Sub':'2'}
                 almacenado = almacenarHistorial(cat, request.user)
                 messages=["Usuario creado con éxito"]
@@ -390,10 +388,10 @@ def crear_usuarios(request):
                 data['form'] = CrearUsuarioAdmin()
             except Exception as e:
                 merror=[f'Error guardando usuario. Intente de nuevo más tarde.']
+                data['merror'] = merror
                 print(e)
         else:
-            # Storing form errors
-            error_messages = form.errors.as_data()  # Returns a dict with field names as keys and errors as values
+            error_messages = form.errors.as_data()
             merror=[]
             for field, errors in error_messages.items():
                 field_label=form.FIELD_LABELS.get(field, field)
