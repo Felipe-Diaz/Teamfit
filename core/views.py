@@ -838,11 +838,6 @@ def carga_Odoo(request):
                         f"perteneciente a la semana {asignacion['semana']} del año {asignacion['año']}."
                     )
                     messages.error(request, mensaje_error)
-                if(cont == 4):
-                    break
-            if(cont == 4): #eliminar el break antes de entregar
-                break
-            
         if success:
             messages.success(request, "El proceso se ha realizado correctamente.")
         return redirect(carga_Odoo)
