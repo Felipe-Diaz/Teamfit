@@ -343,8 +343,10 @@ def vista_carga_empleados(request):
             messages.success(request, 'Se actualizaron correctamente los empleados. Baterías Recargadas.')
             return redirect('disponibilidad')
         else:
-            return JsonResponse({'success': False, 'message': 'Error al cargar empleados'})
-    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+            messages.error(request, 'Error al cargar empleados. Intentelo de nuevo más tarde')
+            return redirect('disponibilidad')
+    messages.error(request, 'Error al cargar empleados. Intentelo de nuevo más tarde')
+    return redirect('disponibilidad')
 
 #Unicamente carga el historial o log de usuarios
 def verHistorial(request):

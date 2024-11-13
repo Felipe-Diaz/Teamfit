@@ -6,7 +6,7 @@ import ast
 import json
 from .models import Empleado
 
-URL_BASE = 'https://teamfit.openscorp.com/api/'
+URL_BASE = 'http://teamfit.openscorp.com/api/'
 API_KEY = 'RerPuUkAjjx7b2CDhw4XwDS30n3e5rH8qOh' 
 
 """
@@ -112,7 +112,7 @@ def obtener_api_empleados(page=1,page_size=120):
     endpoint = 'employees'
     page = f'page={page}'
     page_size = f'page_size{page_size}'
-    url = URL_BASE + endpoint + '?' + page + '&' + page_size
+    url = URL_BASE + endpoint
     headers = {
         'api-key' : API_KEY
     }
@@ -378,6 +378,10 @@ def obtener_empleados_con_horas():
     """
     empleados = obtener_api_empleados()
     empleados_dict = {}
+    
+    if(not empleados):
+        return False
+    
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
         rol = obtener_trabajo_empleado(id=empleado['job_id'])
@@ -404,6 +408,9 @@ def cargar_empleados():
     empleados = obtener_api_empleados()
     roles_necesario = ['Jefe de Proyectos', 'Ingeniero de Proyecto']
     Empleado.objects.all().update(activo=False)
+    
+    if(not empleados):
+        return False
     
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
