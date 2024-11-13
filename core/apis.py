@@ -379,6 +379,10 @@ def obtener_empleados_con_horas():
     """
     empleados = obtener_api_empleados()
     empleados_dict = {}
+    
+    if(not empleados):
+        return False
+    
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
         rol = obtener_trabajo_empleado(id=empleado['job_id'])
@@ -405,6 +409,9 @@ def cargar_empleados():
     empleados = obtener_api_empleados()
     roles_necesario = ['Jefe de Proyectos', 'Ingeniero de Proyecto']
     Empleado.objects.all().update(activo=False)
+    
+    if(not empleados):
+        return False
     
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
