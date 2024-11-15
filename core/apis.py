@@ -6,7 +6,7 @@ import ast
 import json
 from .models import Empleado
 
-URL_BASE = 'http://teamfit.openscorp.com/api/'
+URL_BASE = 'https://teamfit.opens-cloud.com/api/'
 API_KEY = 'RerPuUkAjjx7b2CDhw4XwDS30n3e5rH8qOh' 
 
 """
@@ -78,13 +78,13 @@ def obtener_api_recursos(page=1,page_size=80):
     """
     endpoint = 'resource'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
     }
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)# , verify=False)
         if(response.status_code == 200):
             response = response.json()
         else:
@@ -111,16 +111,17 @@ def obtener_api_empleados(page=1,page_size=120):
     """
     endpoint = 'employees'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
-    url = URL_BASE + endpoint
+    page_size = f'page_size={page_size}'
+    url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
     }
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)# , verify=False)
         if(response.status_code == 200):
             response = response.json()
         else:
+            print(f'Código de respuesta no es 200: \n--{response}')
             return False
             
         if(response['total']>0):
@@ -144,7 +145,7 @@ def obtener_planning_slots(page=1, page_size=80):
     """
     endpoint = 'planning_slot'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -177,7 +178,7 @@ def obtener_planning_slots_por_semana(page=1, page_size=80, semana=1, anio=2025)
     """
     endpoint = 'planning_slot'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -217,7 +218,7 @@ def obtener_departamento_empleado(page=1, page_size=80, id=1):
     """
     endpoint = 'departments'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -253,14 +254,14 @@ def obtener_trabajo_empleado(page=1, page_size=80, id=1):
     """
     endpoint = 'jobs'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
     }
     
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)# , verify=False)
         if(response.status_code == 200):
             response = response.json()
             trabajos = response['items']
@@ -290,14 +291,14 @@ def obtener_resource_calendar(page=1,page_size=80):
 
     endpoint = 'resource_calendar'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
     }
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)# , verify=False)
         if response.status_code == 200:
             data = response.json()
             if data['total'] > 0:
@@ -409,8 +410,8 @@ def cargar_empleados():
     roles_necesario = ['Jefe de Proyectos', 'Ingeniero de Proyecto']
     Empleado.objects.all().update(activo=False)
     
-    if(not empleados):
-        return False
+    # if(not empleados):
+    #     return False
     
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
