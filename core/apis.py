@@ -79,7 +79,7 @@ def obtener_api_recursos(page=1,page_size=80):
     """
     endpoint = 'resource'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -112,7 +112,7 @@ def obtener_api_empleados(page=1,page_size=120):
     """
     endpoint = 'employees'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -145,7 +145,7 @@ def obtener_planning_slots(page=1, page_size=80):
     """
     endpoint = 'planning_slot'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -178,7 +178,7 @@ def obtener_planning_slots_por_semana(page=1, page_size=80, semana=1, anio=2025)
     """
     endpoint = 'planning_slot'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -218,7 +218,7 @@ def obtener_departamento_empleado(page=1, page_size=80, id=1):
     """
     endpoint = 'departments'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -254,7 +254,7 @@ def obtener_trabajo_empleado(page=1, page_size=80, id=1):
     """
     endpoint = 'jobs'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
@@ -291,7 +291,7 @@ def obtener_resource_calendar(page=1,page_size=80):
 
     endpoint = 'resource_calendar'
     page = f'page={page}'
-    page_size = f'page_size{page_size}'
+    page_size = f'page_size={page_size}'
     url = URL_BASE + endpoint + '?' + page + '&' + page_size
     headers = {
         'api-key' : API_KEY
