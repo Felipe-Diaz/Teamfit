@@ -410,8 +410,8 @@ def cargar_empleados():
     roles_necesario = ['Jefe de Proyectos', 'Ingeniero de Proyecto']
     Empleado.objects.all().update(activo=False)
     
-    # if(not empleados):
-    #     return False
+    if(not empleados):
+        return False
     
     for empleado in empleados:
         horas = obtener_horas_recurso(empleado['resource_calendar_id'])
