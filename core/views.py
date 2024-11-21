@@ -16,7 +16,7 @@ from .models import Asignacion, AsignacionControl, HorasPredecidas, proyectosSem
 from .forms import DispForm, UploadFileForm, LoginForm, CrearUsuarioAdmin
 from .forms import CategoriasForm , UsuarioForm, ProgramacionForm, EscenariosForm
 from .forms import CATEGORIAS_MAPPING, PROGRAMACION_MAPPING, ESCENARIOS_MAPPING
-#Importaciones de apis
+#Importaciones de apis 
 from .apis import cargar_empleados, enviar_datos_planning_slots, convertir_datos_asignacion
 #Importaciones de util
 from .utils import obtener_empleado, obtener_subcategorias, almacenarHistorial, cambiar_scheduler, obtener_campos_secundarios

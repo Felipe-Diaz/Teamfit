@@ -467,7 +467,7 @@ def normalizar_cadena(cadena):
         return cadena
     return unicodedata.normalize('NFKD', cadena).encode('ascii', 'ignore').decode('utf-8').lower()
     
-def validar_columnas_nulas_df(df):
+def validar_columnas_nulas_df(df): 
     """
     **Valida que las columnas importantes no sean nulas**\n
     **Parametros**\n

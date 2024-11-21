@@ -15,8 +15,18 @@ Asignaciones de Recursos
     <div>
         <div class="alert alert-primary alert-dismissible fade show text-center" role="alert" style="font-size: 15px;">
             <i class="fa fa-info-circle"></i>
-            <strong>!AVISO!</strong> Actualmente el sistema está utilizando <strong>{{tipo_horas}}</strong> para realizar la asignación <br>
-            En caso de ser necesario, puede cambiar el tipo de horas utilizadas en la <a href="{% url 'parametros' %}">página de parámetros</a> 
+            <strong>!AVISO!</strong> 
+            <br>
+            <ul>
+                <li>
+                    Actualmente el sistema está utilizando <strong>{{tipo_horas}}</strong> para realizar la asignación.
+                    En caso de ser necesario, puede cambiar el tipo de horas utilizadas en la <strong><a href="{% url 'parametros' %}">página de parámetros</a> </strong>
+                </li>
+                <li>
+                    Esta asignación considera un ambiente óptimo donde no existen semanas de atraso. Por favor, tenga en cuenta que pueden surgir semanas donde no se trabaja
+                </li>
+            </ul>
+            
         </div>
     </div>
 
